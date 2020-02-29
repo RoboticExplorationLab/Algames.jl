@@ -1,0 +1,31 @@
+\begin{tikzpicture}
+\begin{axis}[grid=both, minor y tick num=1, yminorgrids=true, tick align=outside, x label style={at={(axis description cs:0.5,-0.18)},anchor=north}, y label style={at={(axis description cs:-0.18,0.5)},rotate=0,anchor=south}, xlabel={Log Optimality Criterion}, xmajorgrids={false}, xmin={-4.0}, xmax={4.0}, ymin={0.0}]
+    \addplot[ybar interval, mark=none, fill=green!50]
+        table[row sep={\\}]
+        {
+            \\
+            -4.0  3.0  \\
+            -3.6  10.0  \\
+            -3.2  121.0  \\
+            -2.8  357.0  \\
+            -2.4  504.0  \\
+            -2.0  0.0  \\
+            -1.6  0.0  \\
+            -1.2  0.0  \\
+            -0.8  0.0  \\
+            -0.4  0.0  \\
+            0.0  0.0  \\
+            0.4  0.0  \\
+            0.8  0.0  \\
+            1.2  1.0  \\
+            1.6  0.0  \\
+            2.0  1.0  \\
+            2.4  0.0  \\
+            2.8  0.0  \\
+            3.2  0.0  \\
+            3.6  0.0  \\
+            4.0  0.0  \\
+        }
+        ;
+\end{axis}
+\end{tikzpicture}

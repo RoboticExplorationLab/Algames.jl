@@ -1,0 +1,254 @@
+export
+	solve!,
+	step!,
+	record_iteration!,
+	record_inner_iteration!,
+	evaluate_convergence,
+	evaluate_inner_convergence,
+	rollout!,
+	regularization_update!,
+	regularize_primals!
+
+	# Generic solve methods
+"DirectGames solve method (non-allocating)"
+function TO.solve!(solver::DirectGamesSolver{T}) where T<:AbstractFloat
+    TO.set_verbosity!(solver.opts)
+    TO.clear_cache!(solver.opts)
+
+    solver.stats.iterations = 0
+    solver.ρ[1] = 0.0
+	solver.dρ[1] = 0.0
+	solver.η[1] = 0.0 #####
+
+    n,m,pl,p = size(solver.model)
+    n,m,N = size(solver)
+    J = Inf
+    _J = TO.get_J.(solver.obj)
+
+    # Initial rollout
+    rollout!(solver)
+	for k = 1:N
+	    solver.Z̄[k].z = solver.Z[k].z
+	end
+    for i = 1:p
+        cost!(solver.obj[i], solver.Z, fill(Array(pl[i]),N))
+    end
+    J_prev = sum.(_J)
+
+    for i = 1:solver.opts.iterations
+        println("Solver iteration = ", i)
+        J = step!(solver, J_prev)
+        # check for cost blow up
+        if any(J .> solver.opts.max_cost_value)
+            @warn "Cost exceeded maximum cost"
+            return solver
+        end
+
+        dJ = abs.(J .- J_prev)
+        J_prev = copy(J)
+
+		record_iteration!(solver, J, dJ)
+        evaluate_convergence(solver) ? break : nothing #######
+		penalty_update!(solver)
+    end
+    return solver
+end
+
+"""
+Take one step of DirectGames algorithm (non-allocating)
+"""
+function step!(solver::DirectGamesSolver, J)
+	for i = 1:solver.opts.inner_iterations
+		# println("inner iteration = ", i)
+		cost_expansion(solver.C, solver.obj, solver.Z, solver.model.pu, solver.model.p)
+		regularize_primals!(solver.C, solver)
+
+	    TO.evaluate!(solver.constraints, solver.Z)
+	    TO.jacobian!(solver.constraints, solver.Z)
+		TO.update_active_set!(solver.constraints, solver.Z)
+
+		TO.evaluate!(solver.dyn_constraints, solver.Z)
+		TO.discrete_jacobian!(solver.∇F, solver.model, solver.Z)
+
+		update_g_!(solver)
+		if evaluate_inner_convergence(solver)
+			record_inner_iteration!(solver, mean(abs.(solver.g_)), NaN)
+			break
+		end
+		update_H_!(solver)
+		inner_step!(solver)
+	end
+	J = indiv_cost(solver)
+    return J
+end
+
+
+"""
+Stash iteration statistics
+"""
+function record_iteration!(solver::DirectGamesSolver, J, dJ)
+    solver.stats.iterations += 1
+    i = solver.stats.iterations::Int
+	inner_iter = solver.stats.iterations_inner[i]
+	solver.stats.iterations_total += inner_iter
+
+    solver.stats.cost[i] = J
+    solver.stats.dJ[i] = dJ
+
+	TO.evaluate!(solver.constraints, solver.Z)
+	TO.evaluate!(solver.dyn_constraints, solver.Z)
+	TO.max_violation!(solver.constraints)
+	TO.max_violation!(solver.dyn_constraints)
+	cmax = max(maximum(solver.constraints.c_max),
+		maximum(solver.dyn_constraints.c_max))
+	solver.stats.cmax[i] = cmax
+
+    @logmsg TO.InnerLoop :iter value=i
+    @logmsg TO.InnerLoop :cost value=J
+    @logmsg TO.InnerLoop :dJ   value=dJ
+    if solver.opts.verbose
+        print_level(InnerLoop)
+    end
+    return nothing
+end
+
+
+function record_inner_iteration!(solver::DirectGamesSolver, optimality_merit, α)
+    i = solver.stats.iterations::Int + 1
+	solver.stats.iterations_inner[i] += 1
+	j = solver.stats.iterations_inner[i]
+	solver.stats.optimality_merit[i][j] = optimality_merit
+	solver.stats.α[i][j] = α
+	if solver.opts.record_condition
+		solver.stats.H_cond[i][j] = cond(Array(solver.H_))
+	else
+		solver.stats.H_cond[i][j] = NaN
+	end
+    return nothing
+end
+
+
+# """
+# $(SIGNATURES)
+# Check convergence conditions for DirectR
+# """
+function evaluate_convergence(solver::DirectGamesSolver)
+    # Get current iterations
+    i = solver.stats.iterations
+	j = solver.stats.iterations_inner[i]
+	cmax = solver.stats.cmax[i]
+	optimality_merit = solver.stats.optimality_merit[i][j]
+
+    # Check for cost convergence
+    # note the dJ > 0 criteria exists to prevent loop exit when forward pass makes no improvement
+    # if all(0.0 .< solver.stats.dJ[i]) && all(solver.stats.dJ[i] .< solver.opts.cost_tolerance) ####
+    if (mean(abs.(solver.stats.dJ[i])) < solver.opts.cost_tolerance) && (cmax < solver.opts.constraint_tolerance)
+		println("outer converged cost_tolerance & constraint_tolerance")
+        return true
+    end
+
+	if (optimality_merit < solver.opts.optimality_constraint_tolerance) && (cmax < solver.opts.constraint_tolerance)
+		println("outer converged optimality_merit & constraint_tolerance")
+		return true
+	end
+
+    # Check total iterations
+    if i >= solver.opts.iterations
+		@show "outer converged iterations"
+        return true
+    end
+
+    # # Outer loop update if forward pass is repeatedly unsuccessful
+    # if solver.stats.dJ_zero_counter > solver.opts.dJ_counter_limit ####
+	# 	# @show "outer converged dJ_zero_counter"
+    #     return true
+    # end
+
+    return false
+end
+
+function evaluate_inner_convergence(solver::DirectGamesSolver)
+	i = solver.stats.iterations + 1
+	j = solver.stats.iterations_inner[i]
+	# Check optimality
+	# if mean(abs.(solver.g_)) < solver.opts.optimality_constraint_tolerance
+	# We force the solver to take an inner step for each outer step
+	# so that we make progress even if the optimality constraint is respected.
+	# Indeed, the optimality constraint ~scales with the penalty term
+	# so it is small at the beginning.
+	if (mean(abs.(solver.g_)) < solver.opts.optimality_constraint_tolerance) #####&& (j>=1)
+	# if (mean(abs.(solver.g_)) < solver.opts.optimality_constraint_tolerance) && (j>=1)
+		# @show "inner converged optimality"
+		return true
+	end
+
+	# Check total iterations
+    if j >= solver.opts.inner_iterations
+		# @show "inner converged iterations"
+        return true
+    end
+
+	# Outer loop update if line search is repeatedly unsuccessful
+    if solver.stats.dJ_zero_counter > solver.opts.dJ_counter_limit
+		# @show "inner converged dJ zero counter"
+		solver.stats.dJ_zero_counter = 0 # reset to 0 before the new outer loop
+        return true
+    end
+
+    return false
+end
+
+
+
+"Simulate the forward the dynamics open-loop"
+@inline rollout!(solver::DirectGamesSolver) = rollout!(solver.model, solver.Z, solver.x0)
+
+function rollout!(model::AbstractGameModel, Z::Traj, x0)
+    Z[1].z = [x0; control(Z[1])]
+    for k = 2:length(Z)
+        TO.propagate_dynamics(TO.DEFAULT_Q, model, Z[k], Z[k-1])
+    end
+end
+
+
+# """
+# $(SIGNATURES)
+# Update the regularzation for the DirectR backward pass
+# """
+function regularization_update!(solver::DirectGamesSolver,status::Symbol=:increase)
+    # println("reg $(status)")
+	# @show solver.dρ
+	# @show solver.ρ
+	# @show solver.η
+    if status == :increase # increase regularization
+        # @logmsg InnerLoop "Regularization Increased"
+        solver.dρ[1] = max(solver.dρ[1]*solver.opts.bp_reg_increase_factor, solver.opts.bp_reg_increase_factor)
+		solver.ρ[1] = max(solver.ρ[1]*solver.dρ[1], solver.opts.bp_reg_min)
+		# solver.η[1] = max(solver.η[1]*solver.dρ[1], solver.opts.bp_reg_min)
+        # if solver.ρ[1] > solver.opts.bp_reg_max
+        #     @warn "Max regularization exceeded"
+        # end
+    elseif status == :decrease # decrease regularization
+        # TODO: Avoid divides by storing the decrease factor (divides are 10x slower)
+        solver.dρ[1] = min(solver.dρ[1]/solver.opts.bp_reg_increase_factor, 1.0/solver.opts.bp_reg_increase_factor)
+		solver.ρ[1] = solver.ρ[1]*solver.dρ[1]*(solver.ρ[1]*solver.dρ[1]>solver.opts.bp_reg_min)
+		# solver.η[1] = solver.η[1]*solver.dρ[1]*(solver.η[1]*solver.dρ[1]>solver.opts.bp_reg_min)
+    end
+end
+
+
+function regularize_primals!(C::Vector{E}, solver::TO.AbstractSolver) where {T, E<:TO.CostExpansion}
+	n,m,N = size(solver)
+	n,m,pl,p = size(solver.model)
+	η = solver.η
+	ηx = η[1]*Diagonal(@SVector ones(n))
+	for i = 1:p
+		ηu = η[1]*Diagonal(@SVector ones(length(pl[i])))
+		for k = 1:N-1
+			C[i].xx[k] += ηx
+			C[i].uu[k] += ηu
+		end
+		C[i].xx[N] += ηx
+	end
+	return nothing
+end
