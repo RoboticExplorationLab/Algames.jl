@@ -30,24 +30,37 @@ function animation(solver::TO.AbstractSolver, scenario::Scenario{T};
 	no_background::Bool=false) where T
 
 	# vis.core.scope
+	# open_vis ? open(vis) : nothing
 	delete!(vis["/Grid"])
 	delete!(vis["/Axes"])
 	no_background ? delete!(vis["Background"]) : nothing
-	open_vis ? open(vis) : nothing
-	display_actors ?
-		build_actors(vis, scenario, solver_scope(solver)) :
-		delete!(vis.core.tree.children["meshcat"].children[string(solver_scope(solver))], "actors")
-	display_trajectory ?
-		build_trajectory(vis, solver) :
-		delete!(vis.core.tree.children["meshcat"].children[string(solver_scope(solver))], "trajectory")
+
+	scope = solver_scope(solver)
+
 	build_scenario(vis, scenario)
+	if display_actors
+		build_actors(vis, scenario, scope)
+	elseif haskey(vis.core.tree.children, "meshcat") &&
+		haskey(vis.core.tree.children["meshcat"].children, string(scope))
+		delete!(vis.core.tree.children["meshcat"].children[string(solver_scope(solver))], "actors")
+	end
+	if display_trajectory
+		build_trajectory(vis, solver)
+	elseif haskey(vis.core.tree.children, "meshcat") &&
+		haskey(vis.core.tree.children["meshcat"].children, string(scope))
+		delete!(vis.core.tree.children["meshcat"].children[string(scope)], "trajectory")
+	end
 
 	# Animate the scene
 	default_framerate = 3
+	@show "define anim"
 	anim = MeshCat.Animation(anim.clips, default_framerate)
-
+	@show "before sceneanimation"
 	scene_animation(solver, vis, anim)
+	@show "before setanimation"
     MeshCat.setanimation!(vis, anim)
+	@show "after animation"
+	open_vis ? open(vis) : nothing
 	return vis, anim
 end
 
@@ -74,12 +87,14 @@ function build_actors(vis::Visualizer, scenario::Scenario{T}, scope::Symbol) whe
 	colors = ["cornflowerblue", "red", "yellow", "forestgreen",
 		"orange", "gray", "orange", "lime"]
 
+	pkg_path = joinpath(dirname(@__FILE__), "../../")
+
 	path = String(scope)*"/actors/actor_bundle_"
 	for i = 1:length(actors_radii)
 		if actors_types[i] == :car
-			actor = load("resources/object/car_geometry.obj", GLUVMesh)
+			actor = load(joinpath(pkg_path, "resources/object/car_geometry.obj"), GLUVMesh)
 			actor.vertices .*= 0.025
-			actor_image = PngImage("resources/textures/"*colors[i]*".png")
+			actor_image = PngImage(joinpath(pkg_path, "resources/textures/"*colors[i]*".png"))
 			actor_texture = Texture(image=actor_image)
 			actor_material = MeshLambertMaterial(map=actor_texture)
 			setobject!(vis[path*"$i/actor"], actor, actor_material)
@@ -92,9 +107,9 @@ function build_actors(vis::Visualizer, scenario::Scenario{T}, scope::Symbol) whe
 			setobject!(vis[path*"$i/col_cyl"], collision_cylinder, cylinder_material)
 
 		elseif actors_types[i] == :pedestrian
-			actor = load("resources/object/pedestrian_geometry.obj", GLUVMesh)
+			actor = load(joinpath(pkg_path, "resources/object/pedestrian_geometry.obj"), GLUVMesh)
 			actor.vertices .*= 0.001/15
-			actor_image = PngImage("resources/textures/black_boundary.png")
+			actor_image = PngImage(joinpath(pkg_path, "resources/textures/black_boundary.png"))
 			actor_texture = Texture(image=actor_image)
 			actor_material = MeshLambertMaterial(map=actor_texture)
 			setobject!(vis[path*"$i/actor"], actor, actor_material)
@@ -137,8 +152,8 @@ function build_trajectory(vis::Visualizer, solver::TO.AbstractSolver{T}) where {
 			cyl = Cylinder(Point(0.0,0.0,0.0),
 				Point(0.0,0.0,aug_cyl_height), cyl_radius)
 			cyl_material = MeshPhongMaterial(color=RGBA(color_values[i,:]..., 9e-1))
-			setobject!(vis[path*"/cyl_$i"*"_$k"], cyl, cyl_material)
-			settransform!(vis[path*"/cyl_$i"*"_$k"], cyl_pos)
+			setobject!(vis[path*"/cyl_$i/step"*"_$k"], cyl, cyl_material)
+			settransform!(vis[path*"/cyl_$i/step"*"_$k"], cyl_pos)
 		end
 	end
 	return nothing

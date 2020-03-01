@@ -263,6 +263,7 @@ end
 
 function visualize_dynamics(solver::TO.AbstractSolver{T}) where T
     plt = plot()
+    n,m,pu,p = size(solver.model)
     dyn = solver.dyn_constraints.constraints[1].vals
     dyn = [log(10, mean(abs.(dyn[j]))) for j=1:length(dyn)]
     λ_dyn = [[mean(abs.(solver.ν[i][j])) for j=1:length(dyn)] for i = 1:p]

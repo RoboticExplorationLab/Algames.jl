@@ -4,8 +4,9 @@ export
 	add_merging_constraints
 
 function build_scenario(vis::Visualizer, scenario::MergingScenario{T}) where T
+	pkg_path = joinpath(dirname(@__FILE__), "../../../")
     # Plot Road in Meshcat
-    road_image = PngImage("resources/textures/road.png")
+    road_image = PngImage(joinpath(pkg_path, "resources/textures/road.png"))
     road_texture = Texture(image=road_image)
     road_material = MeshLambertMaterial(map=road_texture)
 	thickness = 0.002
@@ -42,7 +43,7 @@ function build_scenario(vis::Visualizer, scenario::MergingScenario{T}) where T
 	# Plot boundaries in MeshCat
 	bound_width = 0.015
 	bound_height = 0.03
-	bound_image = PngImage("resources/textures/black_boundary.png")
+	bound_image = PngImage(joinpath(pkg_path, "resources/textures/black_boundary.png"))
 	bound_texture = Texture(image=bound_image)
 	bound_material = MeshLambertMaterial(map=bound_texture)
 	# Upper Boundary

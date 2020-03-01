@@ -5,6 +5,7 @@ using StaticArrays
 using TrajectoryOptimization
 const TO = TrajectoryOptimization
 
+
 # Define the dynamics model of the game.
 struct InertialUnicycleGame{T} <: AbstractGameModel
     n::Int  # Number of states
@@ -143,31 +144,43 @@ reset!(solver_directgames, reset_type=:full)
 # reset!(solver_directgames, reset_type=:full)
 # @profiler GS.solve!(solver_directgames)
 
-X = TO.states(solver_directgames)
-U = TO.controls(solver_directgames)
-visualize_state(X)
-visualize_control(U,pu)
-visualize_trajectory_car(solver_directgames)
-visualize_collision_avoidance(solver_directgames)
-visualize_circle_collision(solver_directgames)
-visualize_boundary_collision(solver_directgames)
-visualize_dynamics(solver_directgames)
-visualize_optimality_merit(solver_directgames)
-visualize_H_cond(solver_directgames)
-visualize_α(solver_directgames)
-visualize_cmax(solver_directgames)
+# X = TO.states(solver_directgames)
+# U = TO.controls(solver_directgames)
+# visualize_state(X)
+# visualize_control(U,pu)
+# visualize_trajectory_car(solver_directgames)
+# visualize_collision_avoidance(solver_directgames)
+# visualize_circle_collision(solver_directgames)
+# visualize_boundary_collision(solver_directgames)
+# visualize_dynamics(solver_directgames)
+# visualize_optimality_merit(solver_directgames)
+# visualize_H_cond(solver_directgames)
+# visualize_α(solver_directgames)
+# visualize_cmax(solver_directgames)
 
-
+vis=ALGAMES.Visualizer()
+anim=ALGAMES.MeshCat.Animation()
+open(vis)
 vis, anim = animation(solver_directgames, scenario;
-	# vis, anim,
-	# open_vis=true,
-	# display_actors=true,
-	# display_trajectory=false,
+	vis=vis, anim=anim,
+	open_vis=false,
+	display_actors=true,
+	display_trajectory=true,
 	no_background=false)
+
 
 vis, anim = animation(solver_directgames, scenario;
 	vis=vis, anim=anim,
 	open_vis=false,
-	display_actors=false,
+	display_actors=true,
 	display_trajectory=false,
 	no_background=false)
+
+haskey(vis.core.tree.children, "meshcat1")
+haskey(vis.core.tree.children[meshcat], "meshcat")
+
+visss.core.connections
+visss.core.tree.children["meshcat"]
+visss.core.tree.children["meshcat"].children["DirectGamesSolver"]
+visss.core.tree.children["meshcat"].children["DirectGamesSolver"].children["actors"]
+visss.core.tree.children["meshcat"].children["DirectGamesSolver"].children["actors"].children["actor_bundle_1"]

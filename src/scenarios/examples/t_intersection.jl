@@ -6,8 +6,9 @@ export
 	add_rounded_boundary_constraints
 
 function build_scenario(vis::Visualizer, scenario::TIntersectionScenario{T}) where T
+	pkg_path = joinpath(dirname(@__FILE__), "../../../")
     # Plot Road in Meshcat
-    road_image = PngImage("resources/textures/road.png")
+    road_image = PngImage(joinpath(pkg_path, "resources/textures/road.png"))
     road_texture = Texture(image=road_image)
     road_material = MeshLambertMaterial(map=road_texture)
 	thickness = 0.002
@@ -40,7 +41,7 @@ function build_scenario(vis::Visualizer, scenario::TIntersectionScenario{T}) whe
 	# PLot boundaries in MeshCat
 	bound_width = 0.015
 	bound_height = 0.03
-	bound_image = PngImage("resources/textures/black_boundary.png")
+	bound_image = PngImage(joinpath(pkg_path, "resources/textures/black_boundary.png"))
 	bound_texture = Texture(image=bound_image)
 	bound_material = MeshLambertMaterial(map=bound_texture)
 	# Upper Boundary
@@ -63,7 +64,7 @@ function build_scenario(vis::Visualizer, scenario::TIntersectionScenario{T}) whe
 
 	# Plot crosswalks in MeshCat
 	cross_height = 0.003
-	cross_image = PngImage("resources/textures/crosswalk.png")
+	cross_image = PngImage(joinpath(pkg_path, "resources/textures/crosswalk.png"))
 	cross_texture = Texture(image=cross_image)
 	cross_material = MeshLambertMaterial(map=cross_texture)
 	left_cross = HyperRectangle(Vec(-cross_width-road_width/2, -road_width/2, 0.0),
