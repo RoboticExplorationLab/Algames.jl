@@ -1,6 +1,13 @@
 export
     PenaltyiLQGamesSolverOptions,
-    PenaltyiLQGamesSolver
+    PenaltyiLQGamesStats,
+    PenaltyiLQGamesSolver,
+    reset!,
+    get_trajectory,
+    get_objective,
+    get_constraints,
+    get_model,
+    get_initial_state
 
 
 @with_kw mutable struct PenaltyiLQGamesStats{T}

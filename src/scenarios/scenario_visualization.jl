@@ -1,7 +1,8 @@
 export
-	scope,
+	solver_scope,
 	animation,
 	build_actors,
+	build_trajectory,
 	scene_animation,
 	actor_transformations
 
@@ -28,7 +29,7 @@ function animation(solver::TO.AbstractSolver, scenario::Scenario{T};
 	display_trajectory::Bool=false,
 	no_background::Bool=false) where T
 
-	vis.core.scope
+	# vis.core.scope
 	delete!(vis["/Grid"])
 	delete!(vis["/Axes"])
 	no_background ? delete!(vis["Background"]) : nothing

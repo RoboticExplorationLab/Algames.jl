@@ -3,6 +3,7 @@ export
 	MonteCarloSamplerStats,
 	MonteCarloSamplerOptions,
 	reset!,
+	record_sample,
 	get_trajectory,
 	get_objective,
 	get_model,

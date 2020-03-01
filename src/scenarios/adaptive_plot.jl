@@ -1,4 +1,6 @@
-using PGFPlotsX
+export
+    plot_velocity,
+    latex_plot_velocity
 
 function plot_velocity(solver_mpc, solver)
     plt = plot()

@@ -1,80 +1,81 @@
-# using GameSolver
+using ALGAMES
+a = 10
 # using StaticArrays
 # using LinearAlgebra
 # const GS = GameSolver
 
 
-
-using BenchmarkTools
-using Blink
-using Colors: RGBA, RGB
-using CoordinateTransformations
-using Dates
-using FileIO
-using GeometryTypes
-using JLD2
-using LinearAlgebra
-using Logging
-using MeshCat
-using MeshIO
-using Parameters
-using PartedArrays
-using PGFPlotsX
-using Plots
-using Random
-using SparseArrays
-using StaticArrays
-using Statistics
-using StatsBase
-using Test
-using TrajectoryOptimization
-const TO = TrajectoryOptimization
-const GS = TrajectoryOptimization
-
-using TrajectoryOptimization.Dynamics
-using TrajectoryOptimization.Problems
-
-
-include("../../src/solvers/game_model.jl")
-include("../../src/solvers/game_problem.jl")
-include("../../src/solvers/cost_helpers.jl")
-
-include("../../src/solvers/direct/direct_helpers.jl")
-
-include("../../src/solvers/direct/direct_solver.jl")
-include("../../src/solvers/direct/direct_methods.jl")
-include("../../src/solvers/direct/direct_core.jl")
-include("../../src/solvers/direct/newton_gradient.jl")
-include("../../src/solvers/direct/newton_hessian.jl")
-include("../../src/solvers/inds_helpers.jl")
-
-
-include("../../src/solvers/riccati/algames/algames_solver.jl")
-include("../../src/solvers/riccati/algames/algames_methods.jl")
-include("../../src/solvers/riccati/ilqgames/ilqgames_solver.jl")
-include("../../src/solvers/riccati/ilqgames/ilqgames_methods.jl")
-include("../../src/solvers/riccati/penalty_ilqgames/penalty_ilqgames_solver.jl")
-include("../../src/solvers/riccati/penalty_ilqgames/penalty_ilqgames_methods.jl")
-
-include("../../src/sampler/monte_carlo_sampler.jl")
-include("../../src/sampler/monte_carlo_methods.jl")
-
-include("../../src/scenarios/scenario.jl")
-include("../../src/scenarios/examples/merging.jl")
-include("../../src/scenarios/examples/straight.jl")
-include("../../src/scenarios/examples/t_intersection.jl")
-
-include("../../src/solvers/MPC/mpc_solver.jl")
-include("../../src/solvers/MPC/mpc_methods.jl")
-
-include("../../src/scenarios/scenario_visualization.jl")
-
-include("../../src/utils/constraints.jl")
-include("../../src/utils/monte_carlo_visualization_latex.jl")
-include("../../src/utils/monte_carlo_visualization.jl")
-include("../../src/utils/plot_visualization.jl")
-include("../../src/utils/tests.jl")
-include("../../src/utils/timing.jl")
+#
+# using BenchmarkTools
+# using Blink
+# using Colors: RGBA, RGB
+# using CoordinateTransformations
+# using Dates
+# using FileIO
+# using GeometryTypes
+# using JLD2
+# using LinearAlgebra
+# using Logging
+# using MeshCat
+# using MeshIO
+# using Parameters
+# using PartedArrays
+# using PGFPlotsX
+# using Plots
+# using Random
+# using SparseArrays
+# using StaticArrays
+# using Statistics
+# using StatsBase
+# using Test
+# using TrajectoryOptimization
+# const TO = TrajectoryOptimization
+# const GS = TrajectoryOptimization
+#
+# using TrajectoryOptimization.Dynamics
+# using TrajectoryOptimization.Problems
+#
+#
+# include("../../src/solvers/game_model.jl")
+# include("../../src/solvers/game_problem.jl")
+# include("../../src/solvers/cost_helpers.jl")
+#
+# include("../../src/solvers/direct/direct_helpers.jl")
+#
+# include("../../src/solvers/direct/direct_solver.jl")
+# include("../../src/solvers/direct/direct_methods.jl")
+# include("../../src/solvers/direct/direct_core.jl")
+# include("../../src/solvers/direct/newton_gradient.jl")
+# include("../../src/solvers/direct/newton_hessian.jl")
+# include("../../src/solvers/inds_helpers.jl")
+#
+#
+# include("../../src/solvers/riccati/algames/algames_solver.jl")
+# include("../../src/solvers/riccati/algames/algames_methods.jl")
+# include("../../src/solvers/riccati/ilqgames/ilqgames_solver.jl")
+# include("../../src/solvers/riccati/ilqgames/ilqgames_methods.jl")
+# include("../../src/solvers/riccati/penalty_ilqgames/penalty_ilqgames_solver.jl")
+# include("../../src/solvers/riccati/penalty_ilqgames/penalty_ilqgames_methods.jl")
+#
+# include("../../src/sampler/monte_carlo_sampler.jl")
+# include("../../src/sampler/monte_carlo_methods.jl")
+#
+# include("../../src/scenarios/scenario.jl")
+# include("../../src/scenarios/examples/merging.jl")
+# include("../../src/scenarios/examples/straight.jl")
+# include("../../src/scenarios/examples/t_intersection.jl")
+#
+# include("../../src/solvers/MPC/mpc_solver.jl")
+# include("../../src/solvers/MPC/mpc_methods.jl")
+#
+# include("../../src/scenarios/scenario_visualization.jl")
+#
+# include("../../src/utils/constraints.jl")
+# include("../../src/utils/monte_carlo_visualization_latex.jl")
+# include("../../src/utils/monte_carlo_visualization.jl")
+# include("../../src/utils/plot_visualization.jl")
+# include("../../src/utils/tests.jl")
+# include("../../src/utils/timing.jl")
 
 
 # Define the dynamics model of the game.

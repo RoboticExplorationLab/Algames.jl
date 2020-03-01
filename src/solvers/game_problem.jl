@@ -1,8 +1,17 @@
 export
     GameProblem,
-    change_integration
-
-
+    change_integration,
+    integration,
+    states,
+    controls,
+    initial_trajectory!,
+    initial_states!,
+    initial_controls!,
+    max_violation,
+    num_constraints,
+    get_constraints,
+    change_integration,
+    rollout!
 
 # """$(TYPEDEF) Trajectory Optimization Problem.
 # Contains the full definition of a trajectory optimization problem, including:

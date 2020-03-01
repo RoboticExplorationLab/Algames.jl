@@ -1,6 +1,14 @@
 export
 	solve!,
-	update_traj!
+	update_traj!,
+	step!,
+	need_resolve,
+	generate_new_x0,
+	mpc_propagate_dynamics,
+	record_iteration!,
+	evaluate_convergence,
+	resample!
+
 
 # Generic solve methods
 "MPCGames solve method (non-allocating)"
@@ -19,11 +27,11 @@ function TO.solve!(solver::MPCGamesSolver{T}; wait::Bool=false) where {T<:Abstra
 			sleep(0.2)
 		end
 		# Update the solver.
-		new_obj = [LQRObjective(Diagonal(solver.Q[i]),
+		new_obj = [TO.LQRObjective(Diagonal(solver.Q[i]),
 								Diagonal(solver.R[i][pu[i]]),
 								Diagonal(solver.Qf[i]),
 								new_xf,
-								N) for i=1:p]
+								N,checks=false) for i=1:p]
 		solver = MPCGamesSolver(solver, solver.solver.obj, new_x0, new_xf)
 		update_traj!(solver, δt, new_x0)
         evaluate_convergence(solver) ? break : nothing
@@ -244,65 +252,64 @@ function evaluate_convergence(solver::MPCGamesSolver)
 end
 
 
-function resample!(solver::MPCGamesSolver{T}) where T
-	N_mpc = solver.opts.N_mpc
-	dt_mpc = solver.opts.mpc_tf /(N_mpc-1)
-	M = solver.stats.iterations
-	ct = 1
-	x0 = solver.stats.x0[1]
-	solver.Z[1] = TO.KnotPoint(TO.state(x0),TO.control(x0),dt_mpc,0.)
-	rest = 0.
-	for j = 1:M
-		@show j
-		x0 = solver.stats.x0[j]
-		u = TO.control(x0)
-		Δt = copy(x0.dt) + rest
-		@show rest
-		@show "start" Δt
-		@show ct
-		while Δt > dt_mpc
-			# dt = min(dt_mpc, Δt)
-			xlast = TO.state(solver.Z[ct])
-			ulast = TO.control(solver.Z[ct])
-			if rest != 0.
-				xlast = TO.state(x0)
-				ulast = TO.control(x0)
-			end
-			# xlast = TO.state(Z[ct])
-			# ulast = TO.control(Z[ct])
-			xnext = TO.state(solver.Z[j+1])
-			unext = TO.control(solver.Z[j+1])
-			# Linear interpolation between last applied control and the next one
-			x = xlast + (xnext - xlast)*(dt_mpc-rest)/Δt
-			u = ulast + (unext - ulast)*(dt_mpc-rest)/Δt
-			# x = discrete_dynamics(
-			# 	TO.DEFAULT_Q,
-			# 	solver.solver.model,
-			# 	x,
-			# 	u,
-			# 	0.0,
-			# 	dt_mpc-rest)
-			@show Δt-dt_mpc
-			Δt -= dt_mpc
-			rest = 0.
-			ct += 1
-			if ct > N_mpc
-				break
-			end
-			solver.Z[ct] = TO.KnotPoint(x,u,dt_mpc,0.)
-		end
-		rest = Δt
-	end
-	@show "reached MMMM"
-	return nothing
-end
+# function resample!(solver::MPCGamesSolver{T}) where T
+# 	N_mpc = solver.opts.N_mpc
+# 	dt_mpc = solver.opts.mpc_tf /(N_mpc-1)
+# 	M = solver.stats.iterations
+# 	ct = 1
+# 	x0 = solver.stats.x0[1]
+# 	solver.Z[1] = TO.KnotPoint(TO.state(x0),TO.control(x0),dt_mpc,0.)
+# 	rest = 0.
+# 	for j = 1:M
+# 		@show j
+# 		x0 = solver.stats.x0[j]
+# 		u = TO.control(x0)
+# 		Δt = copy(x0.dt) + rest
+# 		@show rest
+# 		@show "start" Δt
+# 		@show ct
+# 		while Δt > dt_mpc
+# 			# dt = min(dt_mpc, Δt)
+# 			xlast = TO.state(solver.Z[ct])
+# 			ulast = TO.control(solver.Z[ct])
+# 			if rest != 0.
+# 				xlast = TO.state(x0)
+# 				ulast = TO.control(x0)
+# 			end
+# 			# xlast = TO.state(Z[ct])
+# 			# ulast = TO.control(Z[ct])
+# 			xnext = TO.state(solver.Z[j+1])
+# 			unext = TO.control(solver.Z[j+1])
+# 			# Linear interpolation between last applied control and the next one
+# 			x = xlast + (xnext - xlast)*(dt_mpc-rest)/Δt
+# 			u = ulast + (unext - ulast)*(dt_mpc-rest)/Δt
+# 			# x = discrete_dynamics(
+# 			# 	TO.DEFAULT_Q,
+# 			# 	solver.solver.model,
+# 			# 	x,
+# 			# 	u,
+# 			# 	0.0,
+# 			# 	dt_mpc-rest)
+# 			@show Δt-dt_mpc
+# 			Δt -= dt_mpc
+# 			rest = 0.
+# 			ct += 1
+# 			if ct > N_mpc
+# 				break
+# 			end
+# 			solver.Z[ct] = TO.KnotPoint(x,u,dt_mpc,0.)
+# 		end
+# 		rest = Δt
+# 	end
+# 	@show "reached MMMM"
+# 	return nothing
+# end
 
 # rollout!(mpc_solver)
 # update traj
 
 
 function resample!(solver::MPCGamesSolver{T}) where T
-	println("NOOOOOOOOOOOOOOOOOOO")
 	N_mpc = solver.opts.N_mpc
 	dt_mpc = solver.opts.mpc_tf /(N_mpc-1)
 	M = solver.stats.iterations
@@ -311,7 +318,6 @@ function resample!(solver::MPCGamesSolver{T}) where T
 	solver.Z[1] = TO.KnotPoint(TO.state(x0),TO.control(x0),dt_mpc,0.)
 	rest = 0.
 	for j = 2:M-1
-		@show j
 		xprev = TO.state(solver.stats.x0[j-1])
 		uprev = TO.control(solver.stats.x0[j-1])
 		xnext = TO.state(solver.stats.x0[j])
@@ -321,7 +327,6 @@ function resample!(solver::MPCGamesSolver{T}) where T
 		while Δt > dt_mpc
 			Δt -= dt_mpc
 			α += (dt_mpc-rest)/copy(solver.stats.x0[j-1].dt)
-			@show α
 			x = xprev + (xnext - xprev)*α
 			u = uprev + (unext - uprev)*α
 			rest = 0.
@@ -333,43 +338,5 @@ function resample!(solver::MPCGamesSolver{T}) where T
 		end
 		rest = Δt
 	end
-	#
-	# 	@show rest
-	# 	@show "start" Δt
-	# 	@show ct
-	# 	while Δt > dt_mpc
-	# 		# dt = min(dt_mpc, Δt)
-	# 		xlast = TO.state(solver.Z[ct])
-	# 		ulast = TO.control(solver.Z[ct])
-	# 		if rest != 0.
-	# 			xlast = TO.state(x0)
-	# 			ulast = TO.control(x0)
-	# 		end
-	# 		# xlast = TO.state(Z[ct])
-	# 		# ulast = TO.control(Z[ct])
-	# 		xnext = TO.state(solver.Z[j+1])
-	# 		unext = TO.control(solver.Z[j+1])
-	# 		# Linear interpolation between last applied control and the next one
-	# 		x = xlast + (xnext - xlast)*(dt_mpc-rest)/Δt
-	# 		u = ulast + (unext - ulast)*(dt_mpc-rest)/Δt
-	# 		# x = discrete_dynamics(
-	# 		# 	TO.DEFAULT_Q,
-	# 		# 	solver.solver.model,
-	# 		# 	x,
-	# 		# 	u,
-	# 		# 	0.0,
-	# 		# 	dt_mpc-rest)
-	# 		@show Δt-dt_mpc
-	# 		Δt -= dt_mpc
-	# 		rest = 0.
-	# 		ct += 1
-	# 		if ct > N_mpc
-	# 			break
-	# 		end
-	# 		solver.Z[ct] = TO.KnotPoint(x,u,dt_mpc,0.)
-	# 	end
-	# 	rest = Δt
-	# end
-	@show "reached MMMM"
 	return nothing
 end

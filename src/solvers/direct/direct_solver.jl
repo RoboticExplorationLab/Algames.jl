@@ -9,6 +9,7 @@ export
     get_initial_state,
     cost
 
+
 @with_kw mutable struct DirectGamesStats{T}
     iterations::Int = 0
     iterations_total::Int = 0
@@ -442,22 +443,6 @@ function reset!(solver::DirectGamesSolver{T}, reset_stats=true; reset_type::Symb
     return nothing
 end
 
-# function mpc_reset!(solver::DirectGamesSolver{T}, reset_stats=true) where T
-#     n,m,N = size(solver)
-#     if reset_stats
-#         n,m,pu,p = size(solver.model)
-#         reset!(solver.stats,
-#     		solver.opts.iterations,
-#     		solver.opts.inner_iterations,p)
-#     end
-#     TO.reset!(solver.constraints)     ###### maybe neeeeed to be reset
-#     TO.reset!(solver.dyn_constraints) ###### maybe neeeeed to be reset
-#     solver.ρ[1] = 0.0
-#     solver.dρ[1] = 0.0
-#     solver.η[1] = 0.0 ######
-#     return nothing
-# end
-
 Base.size(solver::DirectGamesSolver{T,I,L,O,n,m,L1,D,E1,nmi,nm,mi,l2n2mi,l2n2m,l2nmi,l2nm}) where {T,I,L,O,n,m,L1,D,E1,nmi,nm,mi,l2n2mi,l2n2m,l2nmi,l2nm} = n,m,solver.N
 @inline TO.get_trajectory(solver::DirectGamesSolver) = solver.Z
 @inline TO.get_objective(solver::DirectGamesSolver) = solver.obj
@@ -518,12 +503,3 @@ function DirectGamesSolver(solver_::DirectGamesSolver{T,I}, obj::Vector{O},
         solver_.logger)
     return solver
 end
-
-
-# sinds = StaticInds(
-#     SVector{0}(zeros(Int,0)),
-#     SVector{n}(1:n),
-#     SVector{m}(1:m),
-#     SVector{n+m}(1:n+m),
-#     SVector{2*n+m}(1:2*n+m),
-#     SVector{2*n+2*m}(1:2*n+2*m))

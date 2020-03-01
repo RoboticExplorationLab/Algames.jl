@@ -92,6 +92,7 @@ end
 function primal_dual_update!(solver::DirectGamesSolver, α::T) where {T}
 	# @show "primal dual update"
 	n,m,N = size(solver)
+	n,m,pu,p = size(solver.model)
 	# handles u1
 	solver.Z[1].z += α * [@SVector zeros(n); solver.δY[solver.uinds[1]]]
 	for k = 2:N-1

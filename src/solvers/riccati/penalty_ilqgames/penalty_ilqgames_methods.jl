@@ -1,3 +1,17 @@
+export
+	solve!,
+	set_penalty!,
+	step!,
+	penalty_expansion!,
+	record_iteration!,
+	gradient_todorov!,
+	evaluate_convergence,
+	nash_feedback_backwardpass!,
+	nash_open_loop_backwardpass!,
+	forwardpass!,
+	rollout!,
+	regularization_update!
+
 # Generic solve methods
 "PenaltyiLQGames solve method (non-allocating)"
 function TO.solve!(solver::PenaltyiLQGamesSolver{T}) where T<:AbstractFloat

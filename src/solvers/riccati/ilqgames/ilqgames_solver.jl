@@ -1,6 +1,12 @@
 export
+    iLQGamesStats,
     iLQGamesSolverOptions,
-    iLQGamesSolver
+    iLQGamesSolver,
+    reset!,
+    get_trajectory,
+    get_objective,
+    get_model,
+    get_initial_state
 
 
 @with_kw mutable struct iLQGamesStats{T}

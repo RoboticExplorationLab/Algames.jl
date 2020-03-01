@@ -1,3 +1,15 @@
+export
+    solve!,
+    step!,
+    record_iteration!,
+    gradient_todorov!,
+    evaluate_convergence,
+    nash_feedback_backwardpass!,
+    nash_open_loop_backwardpass!,
+    forwardpass!,
+    rollout!,
+    regularization_update!
+
 # Generic solve methods
 "iLQGames solve method (non-allocating)"
 function TO.solve!(solver::iLQGamesSolver{T}) where T<:AbstractFloat

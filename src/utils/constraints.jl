@@ -85,17 +85,6 @@ end
 
 function add_collision_avoidance(conSet::ConstraintSet,
     actors_radii::Vector{T}, px::Vector{Vector{Int}}, p::Int, con_inds::UnitRange) where T
-    # for i = 1:p
-    #     for j = 1:i-1
-	# 		for k in con_inds
-	#             radiusi = @SVector fill(actors_radii[i][k], 1)
-	#             radiusj = @SVector fill(actors_radii[j][k], 1)
-	#             col_con = CollisionConstraint(conSet.n, radiusi, radiusj,
-	#                 px[i][1], px[i][2], px[j][1], px[j][2])
-	#             add_constraint!(conSet, col_con, k:k)
-	# 		end
-    #     end
-    # end
 	for i = 1:p
         for j = 1:i-1
             radiusi = @SVector fill(actors_radii[i], 1)

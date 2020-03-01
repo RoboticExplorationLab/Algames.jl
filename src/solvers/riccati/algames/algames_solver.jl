@@ -1,8 +1,17 @@
 export
-    ALGamesSolver,
+    ALGamesStats,
     ALGamesSolverOptions,
-    get_constraints
-
+    ALGamesSolver,
+    reset!,
+    set_verbosity!,
+    cost,
+    get_trajectory,
+    get_objective,
+    get_model,
+    get_initial_state,
+    get_constraints,
+    cost!,
+    cost_expansion!
 
 @with_kw mutable struct ALGamesStats{T}
     iterations::Int = 0
@@ -275,196 +284,3 @@ function cost_expansion!(E, obj::ALObjective, Z::Traj)
         cost_expansion(E, con, Z)
     end
 end
-
-
-
-
-
-
-# export
-#     ALGamesSolver,
-#     ALGamesSolverOptions
-#
-# @with_kw mutable struct ALGamesStats{T}
-#     iterations::Int = 0
-#     iterations_total::Int = 0
-#     iterations_inner::Vector{Int} = zeros(Int,0)
-#     # cost::Vector{T} = zeros(0)
-#     cost::Vector{Vector{T}} = [zeros(p)]
-#     c_max::Vector{T} = zeros(0)
-#     penalty_max::Vector{T} = zeros(0)
-# end
-#
-# function reset!(stats::ALGamesStats, L=0, p=0)
-#     stats.iterations = 0
-#     stats.iterations_total = 0
-#     stats.iterations_inner = zeros(Int,L)
-#     # stats.cost = zeros(L)*NaN
-#     stats.cost = fill(zeros(p),L)*NaN
-#     stats.c_max = zeros(L)*NaN
-#     stats.penalty_max = zeros(L)*NaN
-# end
-#
-#
-# # """$(TYPEDEF)
-# # Solver options for the augmented Lagrangian solver.
-# # $(FIELDS)
-# # """
-# @with_kw mutable struct StaticALGamesSolverOptions{T} <: TO.AbstractSolverOptions{T}
-#     "Print summary at each iteration."
-#     verbose::Bool=false
-#
-#     "unconstrained solver options."
-#     opts_uncon::TO.AbstractSolverOptions{T} = StaticiLQGamesSolverOptions{T}()
-#
-#     "type of game theoretic equilibrium, Nash or Stackelberg."
-#     eq_type::Symbol = :nash # :nash :stackelberg
-#
-#     "type of information pattern, Memoryless Perfect State (MPS) leads to a feedback equilibrium, Open-Loop (OL) leads to an open-loop equilibrium."
-#     info_pattern::Symbol = :feedback # :feedback :open_loop
-#
-#     "dJ < ϵ, cost convergence criteria for unconstrained solve or to enter outerloop for constrained solve."
-#     cost_tolerance::T = 1.0e-4
-#
-#     "dJ < ϵ_int, intermediate cost convergence criteria to enter outerloop of constrained solve."
-#     cost_tolerance_intermediate::T = 1.0e-3
-#
-#     "gradient_norm < ϵ, gradient norm convergence criteria."
-#     gradient_norm_tolerance::T = 1.0e-5
-#
-#     "gradient_norm_int < ϵ, gradient norm intermediate convergence criteria."
-#     gradient_norm_tolerance_intermediate::T = 1.0e-5
-#
-#     "max(constraint) < ϵ, constraint convergence criteria."
-#     constraint_tolerance::T = 1.0e-3
-#
-#     "max(constraint) < ϵ_int, intermediate constraint convergence criteria."
-#     constraint_tolerance_intermediate::T = 1.0e-3
-#
-#     "maximum outerloop updates."
-#     iterations::Int = 30
-#
-#     "minimum Lagrange multiplier."
-#     dual_min::T = -1.0e8
-#
-#     "maximum Lagrange multiplier."
-#     dual_max::T = 1.0e8
-#
-#     "maximum penalty term."
-#     penalty_max::T = 1.0e8
-#
-#     "initial penalty term."
-#     penalty_initial::T = 1.0
-#
-#     "penalty update multiplier; penalty_scaling > 0."
-#     penalty_scaling::T = 10.0
-#
-#     "penalty update multiplier when μ should not be update, typically 1.0 (or 1.0 + ϵ)."
-#     penalty_scaling_no::T = 1.0
-#
-#     "ratio of current constraint to previous constraint violation; 0 < constraint_decrease_ratio < 1."
-#     constraint_decrease_ratio::T = 0.25
-#
-#     "type of outer loop update (default, feedback)."
-#     outer_loop_update_type::Symbol = :default
-#
-#     "numerical tolerance for constraint violation."
-#     active_constraint_tolerance::T = 0.0
-#
-#     "terminal solve when maximum penalty is reached."
-#     kickout_max_penalty::Bool = false
-#
-# end
-#
-#
-#
-# struct StaticALGamesSolver{T,S<:TO.AbstractSolver} <: TO.AbstractSolver{T}
-#     opts::StaticALGamesSolverOptions{T}
-#     stats::ALGamesStats{T}
-#     stats_uncon::Vector{STATS} where STATS
-#     solver_uncon::S
-# end
-#
-# StaticALGamesSolver(prob::StaticGameProblem{Q,T},
-#     opts::StaticALGamesSolverOptions{T}=StaticALGamesSolverOptions{T}()) where {Q,T} =
-#     TO.AbstractSolver(prob,opts)
-#
-# # """$(TYPEDSIGNATURES)
-# # Form an augmented Lagrangian cost function from a Problem and AugmentedLagrangianSolver.
-# #     Does not allocate new memory for the internal arrays, but points to the arrays in the solver.
-# # """
-# function AbstractSolver(prob::StaticGameProblem{Q,T}, opts::StaticALGamesSolverOptions{T}) where {Q,T<:TO.AbstractFloat}
-#     # Init solver statistics
-#     stats = ALGamesStats{T}()
-#     stats_uncon = Vector{StaticiLQGamesSolverOptions{T}}()
-#
-#     solver_uncon = AbstractSolver(prob, opts.opts_uncon)
-#     solver = StaticALGamesSolver(opts,stats,stats_uncon,solver_uncon)
-#     reset!(solver)
-#     return solver
-# end
-#
-# function reset!(solver::StaticALGamesSolver)
-#     reset!(solver.stats, solver.opts.iterations)
-#     reset!(solver.solver_uncon)
-# end
-#
-#
-# function convertProblem(prob::StaticGameProblem, solver::StaticALGamesSolver)
-#     alobj = StaticALGamesObjective(prob.obj, prob.constraints)
-#     rollout!(prob)
-#     StaticGameProblem(prob.model, alobj, ConstraintSets(prob.N),
-#         prob.x0, prob.xf, deepcopy(prob.Z), deepcopy(prob.Z̄), prob.N, prob.dt, prob.tf)
-# end
-#
-#
-#
-#
-# struct StaticALGamesObjective{T} <: TO.AbstractObjective
-#     obj::Objective
-#     constraints::ConstraintSets{T}
-# end
-#
-# get_J(obj::StaticALGamesObjective) = obj.obj.J
-#
-# TrajectoryOptimization.num_constraints(prob::StaticGameProblem{Q,T,<:StaticALGamesObjective}) where {T,Q} = prob.obj.constraints.p
-#
-# function Base.copy(obj::StaticALGamesObjective)
-#     StaticALGamesObjective(obj.obj, ConstraintSets(copy(obj.constraints.constraints), length(obj.obj)))
-# end
-#
-# function cost!(obj::StaticALGamesObjective, Z::Traj)
-#     # Calculate unconstrained cost
-#     cost!(obj.obj, Z)
-#
-#     # Calculate constrained cost
-#     evaluate!(obj.constraints, Z)
-#     update_active_set!(obj.constraints, Z, Val(0.0))
-#     for con in obj.constraints.constraints
-#         cost!(obj.obj.J, con, Z)
-#     end
-# end
-#
-# function cost_expansion(E, obj::StaticALGamesObjective, Z::Traj)
-#     # Update constraint jacobians
-#     jacobian!(obj.constraints, Z)
-#
-#     ix, iu = Z[1]._x, Z[1]._u
-#
-#     # Calculate expansion of original objective
-#     cost_expansion(E, obj.obj, Z)
-#
-#     # Add in expansion of constraints
-#     for con in obj.constraints.constraints
-#         cost_expansion(E, con, Z)
-#     end
-# end
-#
-# StaticALGamesProblem{T,Q,L,N,M,NM} = StaticGameProblem{Q,T,L,<:StaticALGamesObjective,N,M,NM}
-# function get_constraints(prob::StaticGameProblem)
-#     if prob isa StaticALGamesProblem
-#         prob.obj.constraints
-#     else
-#         prob.constraints
-#     end
-# end

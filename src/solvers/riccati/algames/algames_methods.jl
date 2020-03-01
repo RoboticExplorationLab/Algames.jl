@@ -1,3 +1,12 @@
+export
+	solve!,
+	step!,
+	record_iteration!,
+	set_tolerances!,
+	evaluate_convergence,
+	dual_update!,
+	penalty_update!
+
 
 function TO.solve!(solver::ALGamesSolver{T,S}) where {T,S}
 	TO.set_verbosity!(solver.opts)

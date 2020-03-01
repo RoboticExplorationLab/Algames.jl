@@ -1,8 +1,12 @@
 export
 	MPCGamesStats,
-    MPCGamesSolverOptions,
-    MPCGamesSolver,
-	reset!
+	MPCGamesSolverOptions,
+	MPCGamesSolver,
+	reset!,
+	get_trajectory,
+	get_objective,
+	get_model,
+	get_initial_state
 
 @with_kw mutable struct MPCGamesStats{T,n,m,L}
     iterations::Int = 0
@@ -205,26 +209,26 @@ function MPCGamesSolver(solver_::MPCGamesSolver{T,I,n,m,L},
     return solver
 end
 
-function MPCGamesSolver(solver_::MPCGamesSolver{T,I,n,m,L},
-	obj::Vector{O},
-	x0::SVector{n,T},
-	xf::SVector{n,T},
-	) where {T,I,n,m,L,O}
-    solver = MPCGamesSolver{T,I,n,m,L}(
-		DirectGamesSolver(solver_.solver, obj, x0, xf),
-		solver_.opts,
-		solver_.stats,
-		solver_.x0,
-		solver_.xf,
-		solver_.dxf,
-		solver_.tf,
-		solver_.Q,
-		solver_.R,
-		solver_.Qf,
-		solver_.Z,
-		solver_.logger)
-    return solver
-end
+# function MPCGamesSolver(solver_::MPCGamesSolver{T,I,n,m,L},
+# 	obj::Vector{O},
+# 	x0::SVector{n,T},
+# 	xf::SVector{n,T},
+# 	) where {T,I,n,m,L,O}
+#     solver = MPCGamesSolver{T,I,n,m,L}(
+# 		DirectGamesSolver(solver_.solver, obj, x0, xf),
+# 		solver_.opts,
+# 		solver_.stats,
+# 		solver_.x0,
+# 		solver_.xf,
+# 		solver_.dxf,
+# 		solver_.tf,
+# 		solver_.Q,
+# 		solver_.R,
+# 		solver_.Qf,
+# 		solver_.Z,
+# 		solver_.logger)
+#     return solver
+# end
 
 function MPCGamesSolver(solver_::MPCGamesSolver{T,I,n,m,L},
 	obj::Vector{O},
