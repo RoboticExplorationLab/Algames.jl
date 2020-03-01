@@ -138,6 +138,7 @@ end
 
 function visualize_control(U::AbstractArray, pu::AbstractArray)
     plt = plot()
+    p = length(pu)
     N = length(U)+1
     U_traj = [[[U[k][j] for k=1:N-1] for j in pu[i]] for  i=1:p]
     for i = 1:p
@@ -173,7 +174,7 @@ function visualize_state(X::AbstractArray)
     return nothing
 end
 
-function visualize_collision_avoidance(solver::TO.AbstractSolver)
+function visualize_collision_avoidance(solver::TO.AbstractSolver{T}) where T
     plt = plot()
     for (j,con) in enumerate(solver.constraints.constraints)
         if typeof(con.con) == CollisionConstraint{T,1}
@@ -200,7 +201,7 @@ function visualize_collision_avoidance(solver::TO.AbstractSolver)
     return nothing
 end
 
-function visualize_circle_collision(solver::TO.AbstractSolver)
+function visualize_circle_collision(solver::TO.AbstractSolver{T}) where T
     plt = plot()
     for con in solver.constraints.constraints
         if typeof(con.con) == CircleConstraint{T,length(con.con)}
@@ -229,7 +230,7 @@ function visualize_circle_collision(solver::TO.AbstractSolver)
     return nothing
 end
 
-function visualize_boundary_collision(solver::TO.AbstractSolver)
+function visualize_boundary_collision(solver::TO.AbstractSolver{T}) where T
     plt = plot()
     for con in solver.constraints.constraints
         if typeof(con.con) == BoundaryConstraint{T,2}
@@ -260,7 +261,7 @@ function visualize_boundary_collision(solver::TO.AbstractSolver)
     return nothing
 end
 
-function visualize_dynamics(solver::TO.AbstractSolver)
+function visualize_dynamics(solver::TO.AbstractSolver{T}) where T
     plt = plot()
     dyn = solver.dyn_constraints.constraints[1].vals
     dyn = [log(10, mean(abs.(dyn[j]))) for j=1:length(dyn)]

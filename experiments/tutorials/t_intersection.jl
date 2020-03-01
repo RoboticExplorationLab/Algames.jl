@@ -93,10 +93,10 @@ R = [0.1*Diagonal(@SVector ones(length(pu[1]))),
 obj = [LQRObjective(Q[i],R[i],Qf[i],xf,N) for i=1:p]
 
 # Define the initial trajectory
-u0 = SVector{m}(zeros(m))
-U0 = [copy(u0) for k = 1:N]
+# u0 = SVector{m}(zeros(m))
+# U0 = [copy(u0) for k = 1:N]
 xs = SVector{n}(zeros(n))
-us = SVector{m}(u0)
+us = SVector{m}(zeros(m))
 Z = [KnotPoint(xs,us,dt) for k = 1:N]
 Z[end] = KnotPoint(xs,m)
 
