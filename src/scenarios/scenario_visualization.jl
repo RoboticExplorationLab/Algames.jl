@@ -53,13 +53,9 @@ function animation(solver::TO.AbstractSolver, scenario::Scenario{T};
 
 	# Animate the scene
 	default_framerate = 3
-	@show "define anim"
 	anim = MeshCat.Animation(anim.clips, default_framerate)
-	@show "before sceneanimation"
 	scene_animation(solver, vis, anim)
-	@show "before setanimation"
     MeshCat.setanimation!(vis, anim)
-	@show "after animation"
 	open_vis ? open(vis) : nothing
 	return vis, anim
 end

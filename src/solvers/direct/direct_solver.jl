@@ -80,7 +80,7 @@ end
     constraint_tolerance::T = 1.0e-3
 
     "DirectGames iterations."
-    iterations::Int = 300
+    iterations::Int = 10
 
     "DirectGames inner iterations."
     inner_iterations::Int = 20
@@ -95,7 +95,7 @@ end
     line_search_upper_bound::T = 10.0
 
     "maximum number of backtracking steps during forward pass line search."
-    iterations_linesearch::Int = 20
+    iterations_linesearch::Int = 10
 
     # Regularization
     "initial regularization."

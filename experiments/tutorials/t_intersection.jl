@@ -175,12 +175,3 @@ vis, anim = animation(solver_directgames, scenario;
 	display_actors=true,
 	display_trajectory=false,
 	no_background=false)
-
-haskey(vis.core.tree.children, "meshcat1")
-haskey(vis.core.tree.children[meshcat], "meshcat")
-
-visss.core.connections
-visss.core.tree.children["meshcat"]
-visss.core.tree.children["meshcat"].children["DirectGamesSolver"]
-visss.core.tree.children["meshcat"].children["DirectGamesSolver"].children["actors"]
-visss.core.tree.children["meshcat"].children["DirectGamesSolver"].children["actors"].children["actor_bundle_1"]
