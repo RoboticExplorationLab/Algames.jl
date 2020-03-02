@@ -126,6 +126,9 @@ end
     "maximum control value, evaluated during rollout, if exceded solve will error."
     max_control_value::T = 1.0e8
 
+    "Minimum number of inner steps taken in the inner loop before kicking out to the outer loop."
+    min_steps_per_iteration::Int = 1
+
     log_level::Base.CoreLogging.LogLevel = TO.InnerLoop
 end
 

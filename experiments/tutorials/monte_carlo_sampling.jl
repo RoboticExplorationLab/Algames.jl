@@ -115,7 +115,7 @@ end
 
 # Discretization info
 tf = 3.0  # final time
-N = 41    # number of knot points
+N = 21    # number of knot points
 dt = tf / (N-1) # time step duration
 
 # Define initial and final states (be sure to use Static Vectors!)
@@ -189,7 +189,7 @@ add_scenario_constraints(conSet, scenario, px, con_inds; constraint_type=:constr
 prob = GameProblem(model, obj, conSet, x0, xf, Z, N, tf)
 opts = DirectGamesSolverOptions{T}(
     iterations=10,
-	record_condition=true, ##################
+	record_condition=false, ##################
     inner_iterations=20,
     iterations_linesearch=10,
 	optimality_constraint_tolerance=1e-2,
@@ -216,7 +216,7 @@ opts_penalty = PenaltyiLQGamesSolverOptions{T}(
     cost_tolerance=1e-4,
     iterations_linesearch=5,
     line_search_lower_bound=0.0,
-    line_search_upper_bound=0.02)
+    line_search_upper_bound=0.05)
 solver_penalty = PenaltyiLQGamesSolver(prob_penalty, opts_penalty)
 pen = ones(length(solver_penalty.constraints))*100.0
 set_penalty!(solver_penalty, pen)
@@ -277,7 +277,7 @@ state_noise = @SVector [
     0.06, 0.06, 2*pi/72, 0.05]
 opts_monte_carlo = MonteCarloSamplerOptions{n,T}(
     noise=state_noise,
-    iterations=10)
+    iterations=200)
 sampler = MonteCarloSampler(solver, opts_monte_carlo)
 sampler_penalty = MonteCarloSampler(solver_penalty, opts_monte_carlo)
 
@@ -288,11 +288,11 @@ monte_carlo_sampling(sampler_penalty)
 using PGFPlotsX
 using StatsBase
 include("../../src/utils/monte_carlo_visualization.jl")
-visualize_H_cond(sampler_direct; save=true)
-visualize_solve_time(sampler_direct; save=true)
-visualize_cmax(sampler_direct; save=true)
-visualize_iterations_total(sampler_direct; save=true)
-visualize_optimality_merit(sampler_direct; save=true)
+visualize_H_cond(sampler; save=true)
+visualize_solve_time(sampler; save=true)
+visualize_cmax(sampler; save=true)
+visualize_iterations_total(sampler; save=true)
+visualize_optimality_merit(sampler; save=true)
 
 visualize_H_cond(sampler_penalty; save=true)
 visualize_solve_time(sampler_penalty; save=true)

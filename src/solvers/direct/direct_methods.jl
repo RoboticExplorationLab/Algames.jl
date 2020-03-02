@@ -176,8 +176,8 @@ function evaluate_inner_convergence(solver::DirectGamesSolver)
 	# so that we make progress even if the optimality constraint is respected.
 	# Indeed, the optimality constraint ~scales with the penalty term
 	# so it is small at the beginning.
-	# if (mean(abs.(solver.g_)) < solver.opts.optimality_constraint_tolerance) #####&& (j>=1)
-	if (mean(abs.(solver.g_)) < solver.opts.optimality_constraint_tolerance) && (j>=1)
+	if (mean(abs.(solver.g_)) < solver.opts.optimality_constraint_tolerance) &&
+		(j>=solver.opts.min_steps_per_iteration)
 		@debug "Inner loop converged optimality"
 		return true
 	end
