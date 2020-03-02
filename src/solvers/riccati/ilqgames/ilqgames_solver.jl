@@ -308,7 +308,7 @@ Base.size(solver::iLQGamesSolver{T,I,L,O,n,m}) where {T,I,L,O,n,m} = solver.mode
 @inline TO.get_model(solver::iLQGamesSolver) = solver.model
 @inline TO.get_initial_state(solver::iLQGamesSolver) = solver.x0
 
-function cost(solver::iLQGamesSolver, Z=solver.Z)
+function TO.cost(solver::iLQGamesSolver, Z=solver.Z)
     n,m,pl,p = size(solver.model)
     n,m,N = size(solver)
     for i = 1:p

@@ -1,4 +1,77 @@
-using ALGAMES
+# using ALGAMES
+
+using BenchmarkTools
+using Blink
+using Colors: RGBA, RGB
+using CoordinateTransformations
+using Dates
+using FileIO
+using GeometryTypes
+using JLD2
+using LinearAlgebra
+using Logging
+using MeshCat
+using MeshIO
+using Parameters
+using PartedArrays
+using PGFPlotsX
+using Plots
+using Random
+using SparseArrays
+using StaticArrays
+using Statistics
+using StatsBase
+using Test
+using TrajectoryOptimization
+const TO = TrajectoryOptimization
+
+using TrajectoryOptimization.Dynamics
+using TrajectoryOptimization.Problems
+
+include("../../src/solvers/game_model.jl")
+include("../../src/solvers/game_problem.jl")
+include("../../src/solvers/cost_helpers.jl")
+
+include("../../src/solvers/direct/direct_helpers.jl")
+
+include("../../src/solvers/direct/direct_solver.jl")
+include("../../src/solvers/direct/direct_methods.jl")
+include("../../src/solvers/direct/direct_core.jl")
+include("../../src/solvers/direct/newton_gradient.jl")
+include("../../src/solvers/direct/newton_hessian.jl")
+include("../../src/solvers/inds_helpers.jl")
+
+
+include("../../src/solvers/riccati/algames/algames_solver.jl")
+include("../../src/solvers/riccati/algames/algames_methods.jl")
+include("../../src/solvers/riccati/ilqgames/ilqgames_solver.jl")
+include("../../src/solvers/riccati/ilqgames/ilqgames_methods.jl")
+include("../../src/solvers/riccati/penalty_ilqgames/penalty_ilqgames_solver.jl")
+include("../../src/solvers/riccati/penalty_ilqgames/penalty_ilqgames_methods.jl")
+
+include("../../src/sampler/monte_carlo_sampler.jl")
+include("../../src/sampler/monte_carlo_methods.jl")
+
+include("../../src/scenarios/scenario.jl")
+include("../../src/scenarios/examples/merging.jl")
+include("../../src/scenarios/examples/straight.jl")
+include("../../src/scenarios/examples/t_intersection.jl")
+
+include("../../src/solvers/MPC/mpc_solver.jl")
+include("../../src/solvers/MPC/mpc_methods.jl")
+
+include("../../src/scenarios/scenario_visualization.jl")
+include("../../src/scenarios/adaptive_plot.jl")
+
+include("../../src/utils/constraints.jl")
+include("../../src/utils/monte_carlo_visualization_latex.jl")
+include("../../src/utils/monte_carlo_visualization.jl")
+include("../../src/utils/plot_visualization.jl")
+include("../../src/utils/tests.jl")
+include("../../src/utils/timing.jl")
+
+
+# using ALGAMES
 using BenchmarkTools
 using LinearAlgebra
 using StaticArrays
@@ -135,12 +208,14 @@ opts_directgames = DirectGamesSolverOptions{T}(
     inner_iterations=20,
     iterations_linesearch=10,
     info_pattern=:open_loop,
-	optimality_constraint_tolerance=1e-2)
+	optimality_constraint_tolerance=1e-2,
+	log_level=Logging.Debug)
 solver_directgames = DirectGamesSolver(prob_direct, opts_directgames)
 reset!(solver_directgames, reset_type=:full)
 @time solve!(solver_directgames)
 
 @btime timing_solve(solver_directgames)
+
 # reset!(solver_directgames, reset_type=:full)
 # @profiler GS.solve!(solver_directgames)
 

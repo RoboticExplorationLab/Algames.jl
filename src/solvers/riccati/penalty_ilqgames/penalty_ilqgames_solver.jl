@@ -238,7 +238,7 @@ function PenaltyiLQGamesSolver(prob::GameProblem{I,T}, opts=PenaltyiLQGamesSolve
     stats = PenaltyiLQGamesStats{T}() # = Dict{Symbol,Any}(:timer=>TimerOutput())
     pen = ones(length(prob.constraints))
     # Init solver results
-    n,m,pl,p,N = size(prob)
+    n,m,pu,p,N = size(prob)
     n̄ = TO.state_diff_size(prob.model)
 
     x0 = SVector{n}(prob.x0)
@@ -253,10 +253,10 @@ function PenaltyiLQGamesSolver(prob::GameProblem{I,T}, opts=PenaltyiLQGamesSolve
     ∇F = [SMatrix{n,n+m+1}(zeros(T,n,n+m+1)) for k = 1:N-1]
     G = [TO.state_diff_jacobian(prob.model, x0) for k = 1:N]
 
-    S = [TO.CostExpansion(n̄,length(pl[i]),N) for i=1:p]
+    S = [TO.CostExpansion(n̄,length(pu[i]),N) for i=1:p]
     # Cost expansion of different sizes depending on the number of control for each player
     Q = [TO.CostExpansion(n,m,N) for i=1:p]
-    C = [TO.CostExpansion(n̄,length(pl[i]),N) for i=1:p]
+    C = [TO.CostExpansion(n̄,length(pu[i]),N) for i=1:p]
 
     ρ = zeros(T,1)
     dρ = zeros(T,1)
@@ -285,7 +285,7 @@ function reset!(solver::PenaltyiLQGamesSolver{T}, reset_stats=true; reset_type::
     # - :full
     # - :mpc
     n,m,N = size(solver)
-    n,m,pl,p = size(solver.model)
+    n,m,pu,p = size(solver.model)
     if reset_stats
         reset!(solver.stats, solver.opts.iterations, p)
     end
@@ -306,7 +306,7 @@ end
 
 
 # function full_reset!(solver::PenaltyiLQGamesSolver{T}, reset_stats=true) where T
-#     n,m,pl,p = size(solver.model)
+#     n,m,pu,p = size(solver.model)
 #     if reset_stats
 #         reset!(solver.stats, solver.opts.iterations, p)
 #     end
@@ -330,11 +330,11 @@ Base.size(solver::PenaltyiLQGamesSolver{T,I,L,O,n,m}) where {T,I,L,O,n,m} = solv
 @inline TO.get_model(solver::PenaltyiLQGamesSolver) = solver.model
 @inline TO.get_initial_state(solver::PenaltyiLQGamesSolver) = solver.x0
 
-function cost(solver::PenaltyiLQGamesSolver, Z=solver.Z)
-    n,m,pl,p = size(solver.model)
+function TO.cost(solver::PenaltyiLQGamesSolver, Z=solver.Z)
+    n,m,pu,p = size(solver.model)
     n,m,N = size(solver)
     for i = 1:p
-        cost!(solver.obj[i], Z, fill(pl[i],N))
+        cost!(solver.obj[i], Z, fill(pu[i],N))
     end
     return sum.(get_J.(solver.obj))
 end

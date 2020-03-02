@@ -167,7 +167,7 @@ end
 # cost(::AbstractSolver)
 # ```
 # Compute the cost for the current trajectory"
-@inline cost(prob::GameProblem) = cost(prob.obj, prob.Z)
+@inline TO.cost(prob::GameProblem) = cost(prob.obj, prob.Z)
 
 "Copy the problem"
 function TO.copy(prob::GameProblem{Q}) where Q
@@ -176,14 +176,14 @@ function TO.copy(prob::GameProblem{Q}) where Q
 end
 
 
-function max_violation(prob::GameProblem, Z::Traj=prob.Z)
+function TO.max_violation(prob::GameProblem, Z::Traj=prob.Z)
     conSet = get_constraints(prob)
     evaluate!(conSet, Z)
     max_violation!(conSet)
     return maximum(conSet.c_max)
 end
 
-num_constraints(prob::GameProblem) = get_constraints(prob).p
+TO.num_constraints(prob::GameProblem) = get_constraints(prob).p
 
 @inline TO.get_constraints(prob::GameProblem) = prob.constraints
 

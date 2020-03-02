@@ -151,8 +151,6 @@ struct DirectGamesSolver{T,I<:QuadratureRule,L,O,n,m,L1,D,E1,nmi,nm,mi,l2n2mi,l2
     uinds_H::Vector{Vector{SVector{mi,Int}}}
     νinds::Vector{Vector{SVector{n,Int}}}
     νinds_p::Vector{SVector{n,Int}}
-    # sinds::StaticInds
-    # sinds_p::StaticIndsP
     sinds::StaticInds{n,m,nm,l2nm,l2n2m}
     stage_view_H::Vector{Vector{SubArray{T,2,SparseMatrixCSC{T,Int},Tuple{SVector{nmi,Int},SVector{nm,Int}},false}}}
     state_view_H::Vector{Vector{SubArray{T,2,SparseMatrixCSC{T,Int},Tuple{SVector{n,Int},SVector{n,Int}},false}}}
@@ -204,8 +202,6 @@ struct DirectGamesSolver{T,I<:QuadratureRule,L,O,n,m,L1,D,E1,nmi,nm,mi,l2n2mi,l2
             uinds_H::Vector{Vector{SVector{mi,Int}}},
             νinds::Vector{Vector{SVector{n,Int}}},
             νinds_p::Vector{SVector{n,Int}},
-            # sinds::StaticInds,
-            # sinds_p::StaticIndsP,
             sinds::StaticInds{n,m,nm,l2nm,l2n2m},
             stage_view_H::Vector{Vector{SubArray{T,2,SparseMatrixCSC{T,Int},Tuple{SVector{nmi,Int},SVector{nm,Int}},false}}},
             state_view_H::Vector{Vector{SubArray{T,2,SparseMatrixCSC{T,Int},Tuple{SVector{n,Int},SVector{n,Int}},false}}},
@@ -244,8 +240,6 @@ struct DirectGamesSolver{T,I<:QuadratureRule,L,O,n,m,L1,D,E1,nmi,nm,mi,l2n2mi,l2
             uinds_H,
             νinds,
             νinds_p,
-            # sinds,
-            # sinds_p,
             sinds,
             stage_view_H,
             state_view_H,
@@ -370,8 +364,6 @@ function DirectGamesSolver(prob::GameProblem{I,T}, opts=DirectGamesSolverOptions
         uinds_H,
         νinds,
         νinds_p,
-        # sinds,
-        # sinds_p,
         sinds,
         stage_view_H,
         state_view_H,
@@ -449,7 +441,7 @@ Base.size(solver::DirectGamesSolver{T,I,L,O,n,m,L1,D,E1,nmi,nm,mi,l2n2mi,l2n2m,l
 @inline TO.get_model(solver::DirectGamesSolver) = solver.model
 @inline TO.get_initial_state(solver::DirectGamesSolver) = solver.x0
 
-function cost(solver::DirectGamesSolver, Z=solver.Z)
+function TO.cost(solver::DirectGamesSolver, Z=solver.Z)
     n,m,pu,p = size(solver.model)
     n,m,N = size(solver)
     for i = 1:p
@@ -471,8 +463,6 @@ function DirectGamesSolver(solver_::DirectGamesSolver{T,I}, obj::Vector{O},
         solver_.uinds_H,
         solver_.νinds,
         solver_.νinds_p,
-        # solver_.sinds,
-        # solver_.sinds_p,
         solver_.sinds,
         solver_.stage_view_H,
         solver_.state_view_H,

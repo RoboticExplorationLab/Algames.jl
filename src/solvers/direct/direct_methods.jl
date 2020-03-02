@@ -26,7 +26,7 @@ function TO.solve!(solver::DirectGamesSolver{T}) where T<:AbstractFloat
     _J = TO.get_J.(solver.obj)
 
     # Initial rollout
-    rollout!(solver)
+    TO.rollout!(solver)
 	for k = 1:N
 	    solver.Z̄[k].z = solver.Z[k].z
 	end
@@ -36,7 +36,7 @@ function TO.solve!(solver::DirectGamesSolver{T}) where T<:AbstractFloat
     J_prev = sum.(_J)
 
     for i = 1:solver.opts.iterations
-        println("Solver iteration = ", i)
+		@info "Solver iteration = ", i
         J = step!(solver, J_prev)
         # check for cost blow up
         if any(J .> solver.opts.max_cost_value)
@@ -143,18 +143,18 @@ function evaluate_convergence(solver::DirectGamesSolver)
     # note the dJ > 0 criteria exists to prevent loop exit when forward pass makes no improvement
     # if all(0.0 .< solver.stats.dJ[i]) && all(solver.stats.dJ[i] .< solver.opts.cost_tolerance) ####
     if (mean(abs.(solver.stats.dJ[i])) < solver.opts.cost_tolerance) && (cmax < solver.opts.constraint_tolerance)
-		println("outer converged cost_tolerance & constraint_tolerance")
+		TO.Logging.@info "Outer loop converged: cost_tolerance & constraint_tolerance"
         return true
     end
 
 	if (optimality_merit < solver.opts.optimality_constraint_tolerance) && (cmax < solver.opts.constraint_tolerance)
-		println("outer converged optimality_merit & constraint_tolerance")
+		TO.Logging.@info "Outer loop converged: optimality_merit & constraint_tolerance"
 		return true
 	end
 
     # Check total iterations
     if i >= solver.opts.iterations
-		@show "outer converged iterations"
+		TO.Logging.@info "Outer loop converged: iterations"
         return true
     end
 
@@ -176,25 +176,24 @@ function evaluate_inner_convergence(solver::DirectGamesSolver)
 	# so that we make progress even if the optimality constraint is respected.
 	# Indeed, the optimality constraint ~scales with the penalty term
 	# so it is small at the beginning.
-	if (mean(abs.(solver.g_)) < solver.opts.optimality_constraint_tolerance) #####&& (j>=1)
-	# if (mean(abs.(solver.g_)) < solver.opts.optimality_constraint_tolerance) && (j>=1)
-		# @show "inner converged optimality"
+	# if (mean(abs.(solver.g_)) < solver.opts.optimality_constraint_tolerance) #####&& (j>=1)
+	if (mean(abs.(solver.g_)) < solver.opts.optimality_constraint_tolerance) && (j>=1)
+		@debug "Inner loop converged optimality"
 		return true
 	end
 
 	# Check total iterations
     if j >= solver.opts.inner_iterations
-		# @show "inner converged iterations"
+		@debug "Inner loop converged iterations"
         return true
     end
 
 	# Outer loop update if line search is repeatedly unsuccessful
     if solver.stats.dJ_zero_counter > solver.opts.dJ_counter_limit
-		# @show "inner converged dJ zero counter"
+		@debug "Inner loop converged dJ zero counter"
 		solver.stats.dJ_zero_counter = 0 # reset to 0 before the new outer loop
         return true
     end
-
     return false
 end
 
@@ -216,10 +215,6 @@ end
 # Update the regularzation for the DirectR backward pass
 # """
 function regularization_update!(solver::DirectGamesSolver,status::Symbol=:increase)
-    # println("reg $(status)")
-	# @show solver.dρ
-	# @show solver.ρ
-	# @show solver.η
     if status == :increase # increase regularization
         # @logmsg InnerLoop "Regularization Increased"
         solver.dρ[1] = max(solver.dρ[1]*solver.opts.bp_reg_increase_factor, solver.opts.bp_reg_increase_factor)
