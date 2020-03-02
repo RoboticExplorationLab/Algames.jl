@@ -41,7 +41,7 @@ end
     live_plotting::Symbol=:off # :state, :control
 
     "Save samples."
-    save_sampling::Bool=true
+    save_sampling::Bool=false
 
     "Number of Monte Carlo samples."
     iterations::Int = 10
