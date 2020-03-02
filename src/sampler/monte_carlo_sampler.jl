@@ -46,6 +46,9 @@ end
     "Number of Monte Carlo samples."
     iterations::Int = 10
 
+	"Compute H_ condition number."
+	record_condition::Bool=false
+
 	"Amplitude of the uniformly distributed noise added to the dynamics."
     noise::SVector{n,T}=SVector{n}(zeros(n))
 
@@ -143,9 +146,14 @@ function record_sample(sampler::MonteCarloSampler{T},
 	if string(typeof(sampler.solver).name) == "DirectGamesSolver"
 		k = sampler.solver.stats.iterations_inner[j]
 		cmax = sampler.solver.stats.cmax[j]
-		H_cond = cond(Array(sampler.solver.H_))
 		iterations_total = sampler.solver.stats.iterations_total
 		optimality_merit = sampler.solver.stats.optimality_merit[j][k]
+
+		if sampler.opts.record_condition
+			H_cond = cond(Array(sampler.solver.H_))
+		else
+			H_cond = NaN
+		end
 
 	    sampler.stats.solve_time[i] = δt
 	    sampler.stats.cmax[i] = cmax

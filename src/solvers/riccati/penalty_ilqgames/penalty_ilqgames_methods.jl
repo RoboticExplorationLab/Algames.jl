@@ -24,7 +24,7 @@ function TO.solve!(solver::PenaltyiLQGamesSolver{T}) where T<:AbstractFloat
     # reset!(solver)
     Z = solver.Z; Z̄ = solver.Z̄;
 
-    n,m,pl,p = size(solver.model)
+    n,m,pu,p = size(solver.model)
     n,m,N = size(solver)
     J = Inf
     _J = TO.get_J.(solver.obj)
@@ -34,8 +34,8 @@ function TO.solve!(solver::PenaltyiLQGamesSolver{T}) where T<:AbstractFloat
     rollout!(solver)
 
     for i = 1:p
-        # cost!(solver.obj[i], prob.Z, fill(pl[i],N)) #### works
-        cost!(solver.obj[i], solver.Z, fill(pl[i],N))
+        # cost!(solver.obj[i], prob.Z, fill(pu[i],N)) #### works
+        cost!(solver.obj[i], solver.Z, fill(pu[i],N))
     end
     for i = 1:p
         for con in solver.constraints
@@ -47,7 +47,7 @@ function TO.solve!(solver::PenaltyiLQGamesSolver{T}) where T<:AbstractFloat
 
     set_penalty!(solver.constraints, solver.pen)
     for i = 1:solver.opts.iterations
-        println("Solver iteration = ", i)
+        TO.Logging.@info "Solver iteration = ", i
         J, ΔV, α = step!(solver, J_prev)
 
 		# check for cost blow up
@@ -191,19 +191,19 @@ function evaluate_convergence(solver::PenaltyiLQGamesSolver)
     # Check for cost convergence
     # note the dJ > 0 criteria exists to prevent loop exit when forward pass makes no improvement
 	if mean(abs.(solver.stats.dJ[i])) < solver.opts.cost_tolerance && (solver.stats.cmax[i] < solver.opts.constraint_tolerance)
-        println("dJ tolerance < cost_tolerance")
+        TO.Logging.@info "dJ tolerance < cost_tolerance"
         return true
     end
 
     # Check for gradient convergence
     if solver.stats.gradient[i] < solver.opts.gradient_norm_tolerance && (solver.stats.cmax[i] < solver.opts.constraint_tolerance)
-        println("gradient tolerance < gradient_norm_tolerance")
+        TO.Logging.@info "gradient tolerance < gradient_norm_tolerance"
         return true
     end
 
     # Check total iterations
     if i >= solver.opts.iterations
-        println("iterations convergence")
+        TO.Logging.@info "iterations convergence"
         return true
     end
 
@@ -217,7 +217,7 @@ end
 # """
 function nash_feedback_backwardpass!(solver::PenaltyiLQGamesSolver{T,QUAD}) where {T,QUAD<:QuadratureRule}
     n,m,N = size(solver)
-    n,m,pl,p = size(solver.model)
+    n,m,pu,p = size(solver.model)
 
     # Objective
     obj = solver.obj
@@ -257,7 +257,7 @@ function nash_feedback_backwardpass!(solver::PenaltyiLQGamesSolver{T,QUAD}) wher
             Q[i].ux[k] = fdu'*S[i].xx[k+1]*fdx
         end
         for i = 1:p
-            H = Hermitian(Array((C[i].uu[k] + Q[i].uu[k][pl[i], pl[i]])))
+            H = Hermitian(Array((C[i].uu[k] + Q[i].uu[k][pu[i], pu[i]])))
             if !isposdef(H)
                 @warn "Player $i's value function 2nd order approximation is not positive definite"
             end
@@ -272,13 +272,13 @@ function nash_feedback_backwardpass!(solver::PenaltyiLQGamesSolver{T,QUAD}) wher
                 Quu_reg = Q[i].uu[k] + solver.ρ[1]*I
                 Qux_reg = Q[i].ux[k]
             end
-            solver.N_[pl[i],:] = Quu_reg[:,pl[i]]'
-            solver.N_[pl[i],pl[i]] += C[i].uu[k]' # gik_uiui^T
-            solver.M_[pl[i],:] = - Qux_reg[pl[i],:]
-            solver.M_[pl[i],:] += - C[i].ux[k] # gik_uix
+            solver.N_[pu[i],:] = Quu_reg[:,pu[i]]'
+            solver.N_[pu[i],pu[i]] += C[i].uu[k]' # gik_uiui^T
+            solver.M_[pu[i],:] = - Qux_reg[pu[i],:]
+            solver.M_[pu[i],:] += - C[i].ux[k] # gik_uix
 
-            solver.m_[pl[i]] = - Q[i].u[k][pl[i]]
-            solver.m_[pl[i]] += - C[i].u[k] # gik_ui
+            solver.m_[pu[i]] = - Q[i].u[k][pu[i]]
+            solver.m_[pu[i]] += - C[i].u[k] # gik_ui
         end
 
         # Compute gains
@@ -291,9 +291,9 @@ function nash_feedback_backwardpass!(solver::PenaltyiLQGamesSolver{T,QUAD}) wher
                 Q[i].ux[k]'*K[k] +
                 K[k]'*Q[i].ux[k]
             S[i].xx[k] += C[i].xx[k] + # gik_xx
-                K[k][pl[i],:]' * C[i].uu[k] * K[k][pl[i],:] + # gik_uiui
-                C[i].ux[k]' * K[k][pl[i],:] + # gik_uix
-                K[k][pl[i],:]' * C[i].ux[k] # gik_uix
+                K[k][pu[i],:]' * C[i].uu[k] * K[k][pu[i],:] + # gik_uiui
+                C[i].ux[k]' * K[k][pu[i],:] + # gik_uix
+                K[k][pu[i],:]' * C[i].ux[k] # gik_uix
             S[i].xx[k] = 0.5*(S[i].xx[k] + S[i].xx[k]')
 
             S[i].x[k] = Q[i].x[k] +
@@ -301,9 +301,9 @@ function nash_feedback_backwardpass!(solver::PenaltyiLQGamesSolver{T,QUAD}) wher
                 Q[i].ux[k]'* d[k] +
                 K[k]'* Q[i].uu[k] * d[k]
             S[i].x[k] += C[i].x[k] + # gik_x
-                K[k][pl[i],:]'* C[i].u[k] + # gik_ui
-                C[i].ux[k]'* d[k][pl[i]] + # gik_uix
-                K[k][pl[i],:]'* C[i].uu[k]'* d[k][pl[i]] # gik_uiui
+                K[k][pu[i],:]'* C[i].u[k] + # gik_ui
+                C[i].ux[k]'* d[k][pu[i]] + # gik_uix
+                K[k][pu[i],:]'* C[i].uu[k]'* d[k][pu[i]] # gik_uiui
         end
 
         # calculated change is cost-to-go over entire trajectory
@@ -318,7 +318,7 @@ end
 
 function nash_open_loop_backwardpass!(solver::PenaltyiLQGamesSolver{T,QUAD}) where {T,QUAD<:QuadratureRule}
     n,m,N = size(solver)
-    n,m,pl,p = size(solver.model)
+    n,m,pu,p = size(solver.model)
 
     # Objective
     obj = solver.obj
@@ -359,17 +359,17 @@ function nash_open_loop_backwardpass!(solver::PenaltyiLQGamesSolver{T,QUAD}) whe
             #     Quu_reg = Q[i].uu[k] + solver.ρ[1]*I
             #     Qux_reg = Q[i].ux[k]
             # end
-            solver.N_[pl[i],:] = fdu[:,pl[i]]'*S[i].xx[k+1]*fdu
-            solver.N_[pl[i],pl[i]] += C[i].uu[k] # gik_uiui
-            solver.M_[pl[i],:] = - fdu[:,pl[i]]'*S[i].xx[k+1]*fdx
-            solver.M_[pl[i],:] += - C[i].ux[k] # gik_uix
+            solver.N_[pu[i],:] = fdu[:,pu[i]]'*S[i].xx[k+1]*fdu
+            solver.N_[pu[i],pu[i]] += C[i].uu[k] # gik_uiui
+            solver.M_[pu[i],:] = - fdu[:,pu[i]]'*S[i].xx[k+1]*fdx
+            solver.M_[pu[i],:] += - C[i].ux[k] # gik_uix
 
-            solver.m_[pl[i]] = - fdu[:,pl[i]]'*S[i].x[k+1]
-            solver.m_[pl[i]] += - C[i].u[k] # gik_ui
+            solver.m_[pu[i]] = - fdu[:,pu[i]]'*S[i].x[k+1]
+            solver.m_[pu[i]] += - C[i].u[k] # gik_ui
         end
 
         for i = 1:p
-            if !isposdef(Array(solver.N_[pl[i],pl[i]]))
+            if !isposdef(Array(solver.N_[pu[i],pu[i]]))
                 @warn "Player $i 's value function 2nd order approximation is not positive definite"
             end
         end
@@ -386,9 +386,9 @@ function nash_open_loop_backwardpass!(solver::PenaltyiLQGamesSolver{T,QUAD}) whe
         # Calculate cost-to-go (using unregularized Cuu Quu and Cux Qux)
         for i = 1:p
             S[i].xx[k] = C[i].xx[k] + # gik_xx
-                C[i].ux[k]'* K[k][pl[i],:] + # gik_xui
+                C[i].ux[k]'* K[k][pu[i],:] + # gik_xui
                 fdx'* Q[i].xx[k]
-            S[i].x[k] = C[i].ux[k]'* d[k][pl[i]] + # gik_xui
+            S[i].x[k] = C[i].ux[k]'* d[k][pu[i]] + # gik_xui
                 fdx'* Q[i].x[k] + # gik_ui
                 C[i].x[k] # gik_x
         end
@@ -410,9 +410,10 @@ end
 # projecting the system on the dynamically feasible subspace. Performs a line search to ensure
 # adequate progress on the nonlinear problem.
 # """
-function forwardpass!(solver::PenaltyiLQGamesSolver, ΔV, J_prev)
+function forwardpass!(solver::PenaltyiLQGamesSolver{T}, ΔV, J_prev) where T
     # println("ΔV = ", [round.(ΔVi, digits=3) for ΔVi in ΔV])
 	n,m,pu,p = size(solver.model)
+	n,m,N = size(solver)
     Z = solver.Z; Z̄ = solver.Z̄
     obj = solver.obj
 
@@ -427,12 +428,12 @@ function forwardpass!(solver::PenaltyiLQGamesSolver, ΔV, J_prev)
     while (z ≤ solver.opts.line_search_lower_bound || z > solver.opts.line_search_upper_bound) #### && J >= J_prev
         # Check that maximum number of line search decrements has not occured
         if iter > solver.opts.iterations_linesearch
-            println("iter > solver.opts.iterations_linesearch")
+            TO.Logging.@info "iter > solver.opts.iterations_linesearch"
             for k in eachindex(Z)
                 Z̄[k].z = Z[k].z
             end
             for i = 1:p
-                cost!(obj[i], Z̄, fill(pl[i],N))
+                cost!(obj[i], Z̄, fill(pu[i],N))
             end
             # cost!(obj, Z̄)
             for i = 1:p
@@ -459,7 +460,7 @@ function forwardpass!(solver::PenaltyiLQGamesSolver, ΔV, J_prev)
 
         # Check if rollout completed
         if ~flag
-            println("flagged")
+            TO.Logging.@info "flagged"
             # Reduce step size if rollout returns non-finite values (NaN or Inf)
             # @logmsg InnerIters "Non-finite values in rollout"
             iter += 1
@@ -493,7 +494,6 @@ function forwardpass!(solver::PenaltyiLQGamesSolver, ΔV, J_prev)
         iter += 1
         α /= 2.0
     end
-    # println("α = ", α*2.0)
 
     @logmsg TO.InnerLoop :expected value=expected
     @logmsg TO.InnerLoop :z value=z
@@ -544,7 +544,6 @@ end
 # Update the regularzation for the iLQR backward pass
 # """
 function regularization_update!(solver::PenaltyiLQGamesSolver,status::Symbol=:increase)
-    # println("reg $(status)")
     if status == :increase # increase regularization
         # @logmsg InnerLoop "Regularization Increased"
         solver.dρ[1] = max(solver.dρ[1]*solver.opts.bp_reg_increase_factor, solver.opts.bp_reg_increase_factor)

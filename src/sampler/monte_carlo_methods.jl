@@ -3,7 +3,7 @@ export
 
 
 function monte_carlo_sampling(sampler::MonteCarloSampler{T}; display_threshold::Int=50) where {n1,T}
-    Random.seed!(100)
+	Random.seed!(100)
 	n,m,N = size(sampler)
 	n,m,pu,p = size(sampler.solver.model)
 	s = sampler.opts.iterations
@@ -11,12 +11,14 @@ function monte_carlo_sampling(sampler::MonteCarloSampler{T}; display_threshold::
         # Set x0 and xf with noise
 		δx0 = (SVector{n}(rand(n)) .- 0.5) .* sampler.opts.noise
         noisy_x0 = sampler.x0 + δx0
-		noisy_xf = xf
-		noisy_obj = [LQRObjective(Diagonal(sampler.Q[i]),
-							Diagonal(sampler.R[i][pu[i]]),
+		noisy_xf = sampler.xf
+		noisy_obj = [TO.LQRObjective(
+							Diagonal(sampler.Q[i]),
+							Diagonal(SVector{length(pu[i])}(sampler.R[i][pu[i]])),
 							Diagonal(sampler.Qf[i]),
 							noisy_xf,
 							N) for i=1:p]
+
         sampler = MonteCarloSampler(sampler, noisy_obj, noisy_x0, noisy_xf)
 
 		# Check that the initial state is feasible.

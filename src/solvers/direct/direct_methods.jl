@@ -36,7 +36,7 @@ function TO.solve!(solver::DirectGamesSolver{T}) where T<:AbstractFloat
     J_prev = sum.(_J)
 
     for i = 1:solver.opts.iterations
-		@info "Solver iteration = ", i
+		TO.Logging.@info "Solver iteration = ", i
         J = step!(solver, J_prev)
         # check for cost blow up
         if any(J .> solver.opts.max_cost_value)

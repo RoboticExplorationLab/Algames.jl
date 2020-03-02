@@ -38,8 +38,7 @@ function visualize_trajectory_car(solver::TO.AbstractSolver{T}, x0::SVector{n1,T
 
     X = TO.states(solver)
     U = TO.controls(solver)./2000.
-    plt = plot(legend=false)
-    N = length(X)
+    plt = plot()
     X_traj = [[[X[k][j] for k=1:N] for j in px[i]] for  i=1:p]
     U_traj = [[[U[k][j] for k=1:N-1] for j in pu[i]] for  i=1:p]
     colors = [:blue, :red, :yellow, :green, :green]
@@ -53,7 +52,7 @@ function visualize_trajectory_car(solver::TO.AbstractSolver{T}, x0::SVector{n1,T
                 p2 = Array(con.con.p2)
 
                 plot!([p1[1], p2[1]], [p1[2], p2[2]],
-                    legend=false,
+                    label="",
                     color=colors[i1],
                     marker=:circle,
                     linewidth=2.5)
@@ -69,8 +68,12 @@ function visualize_trajectory_car(solver::TO.AbstractSolver{T}, x0::SVector{n1,T
                 plot!(circle_shape(con.con.x[l],
                                     con.con.y[l],
                                     con.con.radius[l]),
-                    seriestype=[:shape,], lw=2.5, c=colors[i1],
-                    linecolor=colors[i1], legend=false, fillalpha=0.3,
+                    seriestype=[:shape,],
+                    lw=2.5,
+                    c=colors[i1],
+                    linecolor=colors[i1],
+                    label="",
+                    fillalpha=0.3,
                     aspect_ratio=1)
             end
         end
@@ -84,29 +87,33 @@ function visualize_trajectory_car(solver::TO.AbstractSolver{T}, x0::SVector{n1,T
                 arrow = :arrow,
                 linealpha = 0.5,
                 linewidth = 4,
-                linecolor = colors[i])
+                linecolor = colors[i],
+                label="")
         end
     end
 
     #Collision avoidance
+    labels = ["Player $i" for i=1:p]
     for con in conSet
         if typeof(con.con) == CollisionConstraint{T,length(con.con)}
             i1 = findall(x->x==[con.con.x1,con.con.y1], px)[1]
             i2 = findall(x->x==[con.con.x2,con.con.y2], px)[1]
             for l in 1:length(con.con.x1)
-                for k = 2:N
+                for k = 1:N
                     plot!(circle_shape(X_traj[i1][1][k],
                         X_traj[i1][2][k],
                         con.con.radius1[l]),
                         seriestype=[:shape,], lw=0.1, c=colors[i1],
-                        linecolor=:black, legend=false, fillalpha=0.2,
+                        linecolor=:black, label=labels[i1], fillalpha=0.2,
                         aspect_ratio=1)
                     plot!(circle_shape(X_traj[i2][1][k],
                         X_traj[i2][2][k],
                         con.con.radius2[l]),
                         seriestype=[:shape,], lw=0.1, c=colors[i2],
-                        linecolor=:black, legend=false, fillalpha=0.2,
+                        linecolor=:black, label=labels[i2], fillalpha=0.2,
                         aspect_ratio=1)
+                        labels[i1] = ""
+                        labels[i2] = ""
                 end
             end
         end
@@ -119,7 +126,7 @@ function visualize_trajectory_car(solver::TO.AbstractSolver{T}, x0::SVector{n1,T
             marker=:circle,
             linewidth=2.0,
             linestyle=:dot,
-            label="Traj1")
+            label="")
         # Plot start and end
         plot!([x0[px[i][1]], xf[px[i][1]]],
             [x0[px[i][2]], xf[px[i][2]]],
@@ -127,7 +134,8 @@ function visualize_trajectory_car(solver::TO.AbstractSolver{T}, x0::SVector{n1,T
             color=:orange,
             marker=:circle,
             linewidth=4.0,
-            label="StartEnd$i")
+            # label="StartEnd$i",
+            label="")
     end
     if save_figure == true
         savefig("plots/car_trajectory_" * Dates.format(now(), "HH:MM:SS:sss") * ".jpg")
@@ -140,16 +148,21 @@ function visualize_control(U::AbstractArray, pu::AbstractArray)
     plt = plot()
     p = length(pu)
     N = length(U)+1
+    colors = [:blue, :red, :yellow, :green, :green]
     U_traj = [[[U[k][j] for k=1:N-1] for j in pu[i]] for  i=1:p]
     for i = 1:p
+        first_plot = true
         for j = 1:length(pu[i])
+            first_plot ? label = "player_$i" : label = ""
+            first_plot = false
             plot!(U_traj[i][j],
-                # color=:blue,
+                color=colors[i],
                 marker=:circle,
                 linewidth=1.0+i,
                 linestyle=:dot,
-                title="Control",
-                label="u_traj")
+                title="Control Inputs Trajectory",
+                xlabel="Trajectory time steps",
+                label=label)
         end
     end
     display(plt)
@@ -160,15 +173,18 @@ function visualize_state(X::AbstractArray)
     plt = plot()
     N = length(X)
     n = length(X[1])
+    colors = [:blue, :red, :yellow, :green, :green]
+    first_plot = true
     x_traj = [[X[k][j] for k=1:N-1] for j=1:n]
-    for i=1:n
-        Plots.plot!(x_traj[i],
-            # color=:blue,
+    for j=1:n
+        Plots.plot!(x_traj[j],
+            color=colors[j%length(colors)+1],
             marker=:circle,
-            linewidth=1.0+0.5*i,
+            linewidth=1.0+0.5*j,
             linestyle=:dot,
-            title="State",
-            label="x$i")
+            title="State Trajectory",
+            xlabel="Trajectory time steps",
+            label="x_$j")
     end
     Plots.display(plt)
     return nothing
@@ -176,25 +192,31 @@ end
 
 function visualize_collision_avoidance(solver::TO.AbstractSolver{T}) where T
     plt = plot()
+    first_plot = true
     for (j,con) in enumerate(solver.constraints.constraints)
         if typeof(con.con) == CollisionConstraint{T,1}
             col = solver.constraints.constraints[j].vals
             λ_col = solver.constraints.constraints[j].λ
             col = [col[i][1] for i=1:length(col)]
             λ_col = [λ_col[i][1] for i=1:length(col)]
+
+            first_plot ? labels = ["Collision constraint", "Collision multipliers"] : labels = ["",""]
+            first_plot = false
             plot!(col,
-                # color=:blue,
+                color=:orange,
                 marker=:circle,
                 linewidth=1.0,
                 linestyle=:dot,
-                title="Collision avoidance",
-                label="col_$j")
+                title="Collision Avoidance Constraint",
+                xlabel="Trajectory time steps",
+                label=labels[1],
+                legend=:bottomleft)
             plot!(λ_col,
-                # color=:blue,
+                color=:blue,
                 marker=:circle,
                 linewidth=1.0,
                 linestyle=:dot,
-                label="λ_col_$j")
+                label=labels[2])
         end
     end
     display(plt)
@@ -203,6 +225,7 @@ end
 
 function visualize_circle_collision(solver::TO.AbstractSolver{T}) where T
     plt = plot()
+    first_plot = true
     for con in solver.constraints.constraints
         if typeof(con.con) == CircleConstraint{T,length(con.con)}
             for j = 1:length(con.con)
@@ -210,19 +233,24 @@ function visualize_circle_collision(solver::TO.AbstractSolver{T}) where T
                 λ_cir = con.λ
                 cir = [cir[i][j] for i=1:length(cir)]
                 λ_cir = [λ_cir[i][j] for i=1:length(cir)]
+
+                first_plot ? labels = ["Collision constraint", "Collision multipliers"] : labels = ["",""]
+                first_plot = false
                 plot!(cir,
-                    # color=:blue,
+                    color=:orange,
                     marker=:circle,
                     linewidth=1.0,
                     linestyle=:dot,
-                    title="Collision circle",
-                    label="cir_$j")
+                    title="Circle Collision Constraint",
+                    xlabel="Trajectory time steps",
+                    label=labels[1],
+                    legend=:bottomleft,)
                 plot!(λ_cir,
-                    # color=:blue,
+                    color=:blue,
                     marker=:circle,
                     linewidth=1.0,
                     linestyle=:dot,
-                    label="λ_cir_$j")
+                    label=labels[2])
             end
         end
     end
@@ -232,6 +260,7 @@ end
 
 function visualize_boundary_collision(solver::TO.AbstractSolver{T}) where T
     plt = plot()
+    first_plot = true
     for con in solver.constraints.constraints
         if typeof(con.con) == BoundaryConstraint{T,2}
             for j = 1:length(con.con)
@@ -239,20 +268,24 @@ function visualize_boundary_collision(solver::TO.AbstractSolver{T}) where T
                 λ_bound = con.λ
                 bound = [bound[i][j] for i=1:length(bound)]
                 λ_bound = [λ_bound[i][j] for i=1:length(bound)]
+                first_plot ? labels = ["Collision constraint", "Collision multipliers"] : labels = ["",""]
+                first_plot = false
                 plot!(bound,
-                    # color=:blue,
+                    color=:orange,
                     marker=:circle,
                     linewidth=1.0,
                     linestyle=:dot,
-                    title="Collision boundary",
-                    legend=false,
+                    title="Boundary Collision Constraint",
+                    xlabel="Trajectory time steps",
+                    label=labels[1],
+                    legend=:bottomleft,
                     )
                 plot!(λ_bound,
-                    # color=:blue,
+                    color=:blue,
                     marker=:circle,
                     linewidth=1.0,
                     linestyle=:dot,
-                    legend=false,
+                    label=labels[2],
                     )
             end
         end
@@ -268,18 +301,21 @@ function visualize_dynamics(solver::TO.AbstractSolver{T}) where T
     dyn = [log(10, mean(abs.(dyn[j]))) for j=1:length(dyn)]
     λ_dyn = [[mean(abs.(solver.ν[i][j])) for j=1:length(dyn)] for i = 1:p]
     plot!(dyn,
+        color=:orange,
         marker=:circle,
         linewidth=1.0,
         linestyle=:dot,
-        legend=:bottomleft,
-        title="Dynamics",
-        label="log dyn")
+        legend=:left,
+        title="Dynamics Constraint Violation and Multipliers",
+        xlabel="Trajectory time steps",
+        label="log( ||dynamics_viol.||_1)")
     plot!(λ_dyn,
+        color=:blue,
         marker=:circle,
         linewidth=1.0,
         linestyle=:dot,
         legend=:bottomleft,
-        label="lambda_dyn")
+        label="dynamics_multipliers")
     display(plt)
     return nothing
 end
@@ -305,18 +341,19 @@ function visualize_optimality_merit(solver::TO.AbstractSolver)
             w = inner_iter
             h = maximum(opt_f) - minimum(opt_f) + 1.0
             plot!(rectangle_shape(x,y,w,h),
+                label="Outer Loop $i",
                 opacity=0.3)
         end
         count += inner_iter
     end
     plot!(opt,
-        # color=:blue,
         marker=:circle,
         linewidth=1.0,
         linestyle=:dot,
-        legend=:bottomleft,
-        title="Optimality Merit",
-        label="opt")
+        title="Optimality Constraint Satisfaction",
+        ylabel="log(||G||_2)",
+        xlabel="Solver Iterations",
+        label="log(||G||_2)")
     display(plt)
     return nothing
 end
@@ -342,18 +379,20 @@ function visualize_H_cond(solver::TO.AbstractSolver)
             w = inner_iter
             h = maximum(cond_f) - minimum(cond_f) + 1.0
             plot!(rectangle_shape(x,y,w,h),
+                label="Outer Loop $i",
                 opacity=0.3)
         end
         count += inner_iter
     end
     plot!(cond,
-        # color=:blue,
         marker=:circle,
         linewidth=1.0,
         linestyle=:dot,
-        legend=:bottomleft,
-        title="Condition H",
-        label="log cond")
+        legend=:topleft,
+        title="Condition Number of Newton's Method",
+        xlabel="Solver iterations",
+        ylabel="log(cond(H))",
+        label="log(cond(H))")
     display(plt)
     return nothing
 end
@@ -379,18 +418,19 @@ function visualize_α(solver::TO.AbstractSolver)
             w = inner_iter
             h = maximum(α_f) - minimum(α_f) + 1.0
             plot!(rectangle_shape(x,y,w,h),
+                label="Outer Loop $i",
                 opacity=0.3)
         end
         count += inner_iter
     end
     plot!(α,
-        # color=:blue,
         marker=:circle,
         linewidth=1.0,
         linestyle=:dot,
-        legend=:bottomleft,
-        title="Line Search alpha",
-        label="alpha")
+        label="log_2(alpha)",
+        ylabel="log_2(alpha)",
+        xlabel="Solver Iterations",
+        title="Log_2 Newton Step Size")
     display(plt)
     return nothing
 end
@@ -399,13 +439,13 @@ function visualize_α(solver::PenaltyiLQGamesSolver)
     plt = plot()
     α = log.(2, solver.stats.α)
     plot!(α,
-        # color=:blue,
+        legend=false,
         marker=:circle,
         linewidth=1.0,
         linestyle=:dot,
-        legend=:bottomleft,
-        title="α",
-        label="log α")
+        ylabel="log_2(alpha)",
+        xlabel="Solver Iterations",
+        title="Log_2 Newton Step Size")
     display(plt)
     return nothing
 end
@@ -414,13 +454,13 @@ function visualize_cmax(solver::TO.AbstractSolver)
     plt = plot()
     cmax = log.(10, solver.stats.cmax)
     plot!(cmax,
-        # color=:blue,
+        legend=false,
         marker=:circle,
         linewidth=1.0,
         linestyle=:dot,
-        legend=:bottomleft,
-        title="Cmax",
-        label="log cmax")
+        ylabel="log|Constraint_violation|_inf",
+        xlabel="Solver Iterations",
+        title="Log Maximum Constraint Violation")
     display(plt)
     return nothing
 end

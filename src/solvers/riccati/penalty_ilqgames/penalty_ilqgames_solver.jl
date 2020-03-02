@@ -60,10 +60,10 @@ end
     gradient_type::Symbol = :todorov
 
     "gradient_norm < ϵ, gradient norm convergence criteria."
-    gradient_norm_tolerance::T = 1.0e-5
+    gradient_norm_tolerance::T = 1.0e-2
 
     "PenaltyiLQGames iterations."
-    iterations::Int = 300
+    iterations::Int = 200
 
     "max(constraint) < ϵ, constraint convergence criteria."
     constraint_tolerance::T = 1.0e-3
@@ -75,13 +75,13 @@ end
     square_root::Bool = false
 
     "forward pass approximate line search lower bound, 0 < line_search_lower_bound < line_search_upper_bound."
-    line_search_lower_bound::T = 1.0e-8
+    line_search_lower_bound::T = 0.0
 
     "forward pass approximate line search upper bound, 0 < line_search_lower_bound < line_search_upper_bound < ∞."
-    line_search_upper_bound::T = 10.0
+    line_search_upper_bound::T = 0.05
 
     "maximum number of backtracking steps during forward pass line search."
-    iterations_linesearch::Int = 20
+    iterations_linesearch::Int = 10
 
     # Regularization
     "initial regularization."
