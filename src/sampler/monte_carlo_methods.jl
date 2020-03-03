@@ -39,7 +39,7 @@ function monte_carlo_sampling(sampler::MonteCarloSampler{T}; display_threshold::
 		# if display || sampler.solver.stats.iterations > display_threshold
 		if sampler.opts.live_plotting == :on
 			visualize_trajectory_car(sampler.solver)
-			animation(sampler.solver, scenario)
+			# animation(sampler.solver, scenario)
 		end
         record_sample(sampler, δt)
 		s -= 1
