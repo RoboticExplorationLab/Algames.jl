@@ -2,13 +2,9 @@
 
 A package for solving constrained dynamic games written in Julia. Currently, the following methods are implemented with a common interface:
 
-[ALGAMES (Augmented Lagrangian Games Theoretic Solver)](https://rexlab.stanford.edu/papers/ALGAMES.pdf): A fast solver for constrained dynamics games formulated as MDPs that features:
-  * General nonlinear cost functions, including minimum time problems
+[ALGAMES (Augmented Lagrangian Games Theoretic Solver)](https://rexlab.stanford.edu/papers/ALGAMES.pdf): A fast solver for constrained dynamics games that features:
+  * General nonlinear cost functions
   * General nonlinear state and input constraints
-  * Infeasible state initialization
-  * Square-root methods for improved numerical conditioning
-  * Active-set projection method for solution polishing
-
 
 All methods utilize Julia's extensive autodifferentiation capabilities via [ForwardDiff.jl](http://www.juliadiff.org/ForwardDiff.jl/) so that the user does not need to specify derivatives of dynamics, cost, or constraint functions.
 
@@ -72,14 +68,11 @@ N = 41    # number of knot points
 dt = tf / (N-1) # time step duration
 
 # Define initial and final states (be sure to use Static Vectors!)
-x0 = @SVector [
-					   -0.50,  0.10,  0.50,  0.00, #player 1
-					   -0.50, -0.10,  0.40,  0.00, #player 2
-                ]
-xf = @SVector [
-              0.50, -0.10,  0.40,  0.00, # player 1
-              0.50,  0.10,  0.50,  0.80, # player 2
-               ]
+x0 = @SVector [-0.50,  0.10,  0.50,  0.00, #player 1
+							 -0.50, -0.10,  0.40,  0.00] #player 2
+xf = @SVector [ 0.50, -0.10,  0.40,  0.00, # player 1
+                0.50,  0.10,  0.50,  0.80] # player 2
+
 
 # Define a quadratic cost
 diag_Q1 = @SVector [ # Player 1 state cost
@@ -129,7 +122,8 @@ solve!(solver)
 ```
 
 ## Examples
-Notebooks with more detailed examples can be found [here](https://github.com/RoboticExplorationLab/ALGAMES.jl/tree/master/experiments/notebooks), including all the examples from our [RSS 2020 paper](https://github.com/RoboticExplorationLab/ALGAMES.jl/tree/master/experiments/rss_2020).
+Notebooks with more detailed examples can be found [here](https://github.com/RoboticExplorationLab/ALGAMES.jl/tree/master/experiments/notebooks).
+<!-- , including all the examples from our [RSS 2020 paper](https://github.com/RoboticExplorationLab/ALGAMES.jl/tree/master/experiments/rss_2020). -->
 
 <!-- ## Documentation
 Detailed documentation for getting started with the package can be found [here](https://roboticexplorationlab.github.io/TrajectoryOptimization.jl/dev/). -->
