@@ -2,9 +2,14 @@
 
 A package for solving constrained dynamic games written in Julia. Currently, the following methods are implemented with a common interface:
 
-[ALGAMES (Augmented Lagrangian Games Theoretic Solver)](https://rexlab.stanford.edu/papers/ALGAMES.pdf): A fast solver for constrained dynamics games that features:
+[ALGAMES (Augmented Lagrangian Games Theoretic Solver)](https://rexlab.stanford.edu/papers/ALGAMES.pdf): A fast solver for constrained dynamic games that features:
   * General nonlinear cost functions
   * General nonlinear state and input constraints
+This package also features:
+  * Several autonomous driving environments (ramp merging, intersection crossing, etc.).
+	* A Model Predictive Control (MPC) implementation of ALGAMES.
+  * Plotting and visualization tools.
+
 
 All methods utilize Julia's extensive autodifferentiation capabilities via [ForwardDiff.jl](http://www.juliadiff.org/ForwardDiff.jl/) so that the user does not need to specify derivatives of dynamics, cost, or constraint functions.
 
