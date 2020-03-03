@@ -12,6 +12,7 @@ This package also features:
   * A Model Predictive Control (MPC) implementation of ALGAMES
   * Plotting and visualization tools
 
+![](plots/gif/merging_3pl_2x.gif)
 
 All methods utilize Julia's extensive autodifferentiation capabilities via [ForwardDiff.jl](http://www.juliadiff.org/ForwardDiff.jl/) so that the user does not need to specify derivatives of dynamics, cost, or constraint functions.
 
@@ -129,7 +130,13 @@ solve!(solver)
 ```
 
 ## Examples
-Notebooks with more detailed examples can be found [here](https://github.com/RoboticExplorationLab/ALGAMES.jl/tree/master/experiments/notebooks), including all the examples from our [RSS 2020 paper](https://github.com/RoboticExplorationLab/ALGAMES.jl/tree/master/experiments/rss_2020).
+Notebooks with more detailed examples can be found [here](https://github.com/RoboticExplorationLab/ALGAMES.jl/tree/master/experiments/notebooks), including all the examples from our [RSS 2020 paper](https://github.com/RoboticExplorationLab/ALGAMES.jl/tree/master/experiments/rss_2020). Among these examples we solve a ramp merging problem and an intersection crossing problem:
+![](plots/gif/intersection_3pl_2x.gif)
+![](plots/gif/merging_3pl_2x.gif)
+
+We also perform a Monte Carlo analysis of ALGAMES to evaluate the robustness and speed of the solver to noise in the initial condition.
+![](plots/gif/monte_carlo_merging.gif)
+
 
 <!-- ## Documentation
 Detailed documentation for getting started with the package can be found [here](https://roboticexplorationlab.github.io/TrajectoryOptimization.jl/dev/). -->
