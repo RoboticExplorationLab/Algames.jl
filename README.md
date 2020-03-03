@@ -122,8 +122,7 @@ solve!(solver)
 ```
 
 ## Examples
-Notebooks with more detailed examples can be found [here](https://github.com/RoboticExplorationLab/ALGAMES.jl/tree/master/experiments/notebooks).
-<!-- , including all the examples from our [RSS 2020 paper](https://github.com/RoboticExplorationLab/ALGAMES.jl/tree/master/experiments/rss_2020). -->
+Notebooks with more detailed examples can be found [here](https://github.com/RoboticExplorationLab/ALGAMES.jl/tree/master/experiments/notebooks), including all the examples from our [RSS 2020 paper](https://github.com/RoboticExplorationLab/ALGAMES.jl/tree/master/experiments/rss_2020).
 
 <!-- ## Documentation
 Detailed documentation for getting started with the package can be found [here](https://roboticexplorationlab.github.io/TrajectoryOptimization.jl/dev/). -->
