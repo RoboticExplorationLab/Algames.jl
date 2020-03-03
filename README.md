@@ -12,7 +12,7 @@ This package also features:
   * A Model Predictive Control (MPC) implementation of ALGAMES
   * Plotting and visualization tools
 
-![](plots/gif/merging_3pl_2x.gif)
+![](plots/gif/merging_4pl_2x_white.gif)
 
 All methods utilize Julia's extensive autodifferentiation capabilities via [ForwardDiff.jl](http://www.juliadiff.org/ForwardDiff.jl/) so that the user does not need to specify derivatives of dynamics, cost, or constraint functions.
 
