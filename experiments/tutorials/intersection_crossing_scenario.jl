@@ -48,17 +48,21 @@ N = 41    # number of knot points
 dt = tf / (N-1) # time step duration
 
 # Define initial and final states (be sure to use Static Vectors!)
-# Define initial and final states (be sure to use Static Vectors!)
-x0 = @SVector [
-               -0.80, -0.05,  0.00, 0.60, #lane1
-               -1.00, -0.05,  0.00, 0.60, #lane2
-               -0.90, -0.30, pi/12, 0.63, #lane4
+x0 = @SVector [ # Initial state
+               -0.50, -0.15,  0.00,  0.60, #lane1
+               1.40,   0.15,  pi,    0.60, #lane2
+               0.43,  -0.30,  pi/2,  0.12, #lane4
                 ]
-xf = @SVector [
-                1.10, -0.05,  0.00, 0.60, #lane1
-                0.70, -0.05,  0.00, 0.60, #lane2
-                0.90, -0.05,  0.00, 0.60, #lane4
+xf = @SVector [ # Final State
+               1.30,  -0.15,  0.00, 0.60, #lane1
+               -0.30,  0.15,  pi,   0.60, #lane2
+               0.43,   0.35,  pi/2, 0.30, #lane4
                ]
+dxf = @SVector [ # Variation of the fnal state when executing an MPC
+               0.60,  0.00,  0.00,  0.00, #lane1
+              -0.60,  0.00,  0.00,  0.00, #lane2
+               0.00,  0.12,  0.00,  0.00, #lane2
+              ]
 
 # Define a quadratic cost
 diag_Q1 = @SVector [ # Player 1 state cost
@@ -95,68 +99,67 @@ us = SVector{m}(zeros(m))
 Z = [KnotPoint(xs,us,dt) for k = 1:N]
 Z[end] = KnotPoint(xs,m)
 
+
 # Build problem
 actor_radius = 0.08
 actors_radii = [actor_radius for i=1:p]
-actors_types = [:car for i=1:p]
-road_length = 6.0
-road_width = 0.30
-ramp_length = 3.2
-ramp_angle = pi/12
-scenario = MergingScenario(road_length, road_width, ramp_length, ramp_angle,
-	actors_radii, actors_types)
+actors_types = [:car, :car, :pedestrian] # For visualization
+top_road_length = 4.0
+road_width = 0.60
+bottom_road_length = 1.0
+cross_width = 0.25
+bound_radius = 0.05
+lanes = [1, 2, 5] # Lane indices for each player
+scenario = TIntersectionScenario(
+    top_road_length, road_width, bottom_road_length,
+    cross_width, car_radii, actors_types, bound_radius)
 
-
-# Create constraint sets
-algames_conSet = ConstraintSet(n,m,N)
-ilqgames_conSet = ConstraintSet(n,m,N)
+# Create constraints
+conSet = ConstraintSet(n,m,N)
 con_inds = 2:N # Indices where the constraints will be applied
 
 # Add collision avoidance constraints
-add_collision_avoidance(algames_conSet, car_radii, px, p, con_inds)
-add_collision_avoidance(ilqgames_conSet, car_radii, px, p, con_inds)
-
-# Add scenario specific constraints (road boundaries)
-add_scenario_constraints(algames_conSet, scenario, px, con_inds; constraint_type=:constraint)
-add_scenario_constraints(ilqgames_conSet, scenario, px, con_inds; constraint_type=:constraint);
+add_collision_avoidance(conSet, car_radii, px, p, con_inds)
+# Add scenario specific constraints
+add_scenario_constraints(conSet, scenario, lanes, px, con_inds; constraint_type=:constraint)
 
 
-algames_prob = GameProblem(model, obj, algames_conSet, x0, xf, Z, N, tf);
-ilqgames_prob = GameProblem(model, obj, ilqgames_conSet, x0, xf, Z, N, tf);
-
-# AlGAMES
-algames_opts = DirectGamesSolverOptions{T}(
+prob = GameProblem(model, obj, conSet, x0, xf, Z, N, tf)
+opts = DirectGamesSolverOptions{T}(
     iterations=10,
     inner_iterations=20,
-    iterations_linesearch=10)
-algames_solver = DirectGamesSolver(algames_prob, algames_opts);
+    iterations_linesearch=10,
+	log_level=Logging.Debug)
+solver = DirectGamesSolver(prob, opts)
+reset!(solver, reset_type=:full)
+@time solve!(solver)
 
-# iLQGames
-ilqgames_opts = PenaltyiLQGamesSolverOptions{T}(
-    iterations=200,
-    iterations_linesearch=10)
-ilqgames_solver = PenaltyiLQGamesSolver(ilqgames_prob, ilqgames_opts)
+solver.opts.log_level = AG.Logging.Warn
+@btime timing_solve(solver)
 
-# Tune this penalty parameter to get better constraint satisfaction for iLQGames
-pen = 100.0 * ones(length(ilqgames_solver.constraints))
-set_penalty!(ilqgames_solver, pen);
+# reset!(solver, reset_type=:full)
+# @profiler AG.solve!(solver)
 
+X = TO.states(solver)
+U = TO.controls(solver)
+visualize_state(X)
+visualize_control(U,pu)
+visualize_trajectory_car(solver)
+visualize_collision_avoidance(solver)
+visualize_circle_collision(solver)
+visualize_boundary_collision(solver)
+visualize_dynamics(solver)
+visualize_optimality_merit(solver)
+visualize_H_cond(solver)
+visualize_α(solver)
+visualize_cmax(solver)
 
-
-@time solve!(algames_solver);
-@time solve!(ilqgames_solver);
-
-reset!(algames_solver, reset_type=:full)
-algames_solver.opts.log_level = TO.Logging.Warn
-@btime timing_solve(algames_solver);
-
-reset!(ilqgames_solver, reset_type=:full)
-ilqgames_solver.opts.log_level = TO.Logging.Warn
-@btime timing_solve(ilqgames_solver);
-
-visualize_optimality_merit(algames_solver)
-visualize_α(algames_solver)
-visualize_cmax(algames_solver)
-
-visualize_α(ilqgames_solver)
-visualize_cmax(ilqgames_solver)
+vis=Visualizer()
+anim=MeshCat.Animation()
+open(vis)
+# Execute this line after the MeshCat tab is open
+vis, anim = animation(solver, scenario;
+	vis=vis, anim=anim,
+	open_vis=false,
+	display_actors=true,
+	display_trajectory=false)

@@ -1,81 +1,10 @@
-
-using BenchmarkTools
-using Blink
-using Colors: RGBA, RGB
-using CoordinateTransformations
-using Dates
-using FileIO
-using GeometryTypes
-using JLD2
-using LinearAlgebra
-using Logging
-using MeshCat
-using MeshIO
-using Parameters
-using PartedArrays
-using PGFPlotsX
-using Plots
-using Random
-using SparseArrays
-using StaticArrays
-using Statistics
-using StatsBase
-using Test
-using TrajectoryOptimization
-const TO = TrajectoryOptimization
-
-using TrajectoryOptimization.Dynamics
-using TrajectoryOptimization.Problems
-
-include("../../src/solvers/game_model.jl")
-include("../../src/solvers/game_problem.jl")
-include("../../src/solvers/cost_helpers.jl")
-
-include("../../src/solvers/direct/direct_helpers.jl")
-
-include("../../src/solvers/direct/direct_solver.jl")
-include("../../src/solvers/direct/direct_methods.jl")
-include("../../src/solvers/direct/direct_core.jl")
-include("../../src/solvers/direct/newton_gradient.jl")
-include("../../src/solvers/direct/newton_hessian.jl")
-include("../../src/solvers/inds_helpers.jl")
-
-
-include("../../src/solvers/riccati/algames/algames_solver.jl")
-include("../../src/solvers/riccati/algames/algames_methods.jl")
-include("../../src/solvers/riccati/ilqgames/ilqgames_solver.jl")
-include("../../src/solvers/riccati/ilqgames/ilqgames_methods.jl")
-include("../../src/solvers/riccati/penalty_ilqgames/penalty_ilqgames_solver.jl")
-include("../../src/solvers/riccati/penalty_ilqgames/penalty_ilqgames_methods.jl")
-
-include("../../src/sampler/monte_carlo_sampler.jl")
-include("../../src/sampler/monte_carlo_methods.jl")
-
-include("../../src/scenarios/scenario.jl")
-include("../../src/scenarios/examples/merging.jl")
-include("../../src/scenarios/examples/straight.jl")
-include("../../src/scenarios/examples/t_intersection.jl")
-
-include("../../src/solvers/MPC/mpc_solver.jl")
-include("../../src/solvers/MPC/mpc_methods.jl")
-
-include("../../src/scenarios/scenario_visualization.jl")
-include("../../src/scenarios/adaptive_plot.jl")
-
-include("../../src/utils/constraints.jl")
-include("../../src/utils/monte_carlo_visualization_latex.jl")
-include("../../src/utils/monte_carlo_visualization.jl")
-include("../../src/utils/plot_visualization.jl")
-include("../../src/utils/tests.jl")
-include("../../src/utils/timing.jl")
-
-
-# using ALGAMES
+using ALGAMES
 using BenchmarkTools
 using LinearAlgebra
 using StaticArrays
 using TrajectoryOptimization
 const TO = TrajectoryOptimization
+const AG = ALGAMES
 
 # Define the dynamics model of the game.
 struct InertialUnicycleGame{T} <: AbstractGameModel
@@ -176,246 +105,83 @@ ramp_angle = pi/12
 scenario = MergingScenario(road_length, road_width, ramp_length,
 	ramp_angle, actors_radii, actors_types)
 
-# Create constraints
-conSet = ConstraintSet(n,m,N)
+
+# Create constraint sets
+algames_conSet = ConstraintSet(n,m,N)
+ilqgames_conSet = ConstraintSet(n,m,N)
 con_inds = 2:N # Indices where the constraints will be applied
 
 # Add collision avoidance constraints
-add_collision_avoidance(conSet, actors_radii, px, p, con_inds)
-# Add scenario specific constraints
-add_scenario_constraints(conSet, scenario, px, con_inds; constraint_type=:constraint)
+add_collision_avoidance(algames_conSet, actors_radii, px, p, con_inds)
+add_collision_avoidance(ilqgames_conSet, actors_radii, px, p, con_inds)
 
+# Add scenario specific constraints (road boundaries)
+add_scenario_constraints(algames_conSet, scenario, px, con_inds; constraint_type=:constraint)
+add_scenario_constraints(ilqgames_conSet, scenario, px, con_inds; constraint_type=:constraint);
 
-prob = GameProblem(model, obj, conSet, x0, xf, Z, N, tf)
-opts = DirectGamesSolverOptions{T}(
+algames_prob = GameProblem(model, obj, algames_conSet, x0, xf, Z, N, tf)
+ilqgames_prob = GameProblem(model, obj, ilqgames_conSet, x0, xf, Z, N, tf);
+
+algames_opts = DirectGamesSolverOptions{T}(
     iterations=10,
-	record_condition=false, ##################
     inner_iterations=20,
     iterations_linesearch=10,
-	optimality_constraint_tolerance=1e-2,
-	log_level=Logging.Debug)
-solver = DirectGamesSolver(prob, opts)
-reset!(solver, reset_type=:full)
-@time solve!(solver)
+    log_level=ALGAMES.Logging.Warn)
+algames_solver = DirectGamesSolver(algames_prob, algames_opts)
 
-# @btime timing_solve(solver)
-
-
-
-conSet_penalty = ConstraintSet(n,m,N)
-
-add_collision_avoidance(conSet_penalty, actors_radii, px, p, con_inds)
-
-add_scenario_constraints(conSet_penalty, scenario, px, con_inds; constraint_type=:constraint)
-
-prob_penalty = GameProblem(model, obj, conSet_penalty, x0, xf, Z, N, tf)
-
-opts_penalty = PenaltyiLQGamesSolverOptions{T}(
+ilqgames_opts = PenaltyiLQGamesSolverOptions{T}(
     iterations=200,
     gradient_norm_tolerance=1e-2,
     cost_tolerance=1e-4,
     iterations_linesearch=5,
     line_search_lower_bound=0.0,
-    line_search_upper_bound=0.05)
-solver_penalty = PenaltyiLQGamesSolver(prob_penalty, opts_penalty)
-pen = ones(length(solver_penalty.constraints))*100.0
-set_penalty!(solver_penalty, pen)
-@time solve!(solver_penalty)
-# reset!(solver_directgames, reset_type=:full)
-# @profiler GS.solve!(solver_directgames)
+    line_search_upper_bound=0.02,
+    log_level=ALGAMES.Logging.Warn)
+ilqgames_solver = PenaltyiLQGamesSolver(ilqgames_prob, ilqgames_opts)
+pen = ones(length(ilqgames_solver.constraints))*100.0
+set_penalty!(ilqgames_solver, pen)
 
-X = TO.states(solver)
-U = TO.controls(solver)
-visualize_state(X)
-visualize_control(U,pu)
-visualize_trajectory_car(solver)
-visualize_collision_avoidance(solver)
-visualize_circle_collision(solver)
-visualize_boundary_collision(solver)
-visualize_dynamics(solver)
-visualize_optimality_merit(solver)
-visualize_H_cond(solver)
-visualize_α(solver)
-visualize_cmax(solver)
-
-X = TO.states(solver_penalty)
-U = TO.controls(solver_penalty)
-visualize_state(X)
-visualize_control(U,pu)
-visualize_trajectory_car(solver_penalty)
-visualize_collision_avoidance(solver_penalty)
-visualize_circle_collision(solver_penalty)
-visualize_boundary_collision(solver_penalty)
-visualize_α(solver_penalty)
-visualize_cmax(solver_penalty)
+@time solve!(algames_solver);
+@time solve!(ilqgames_solver);
 
 
-
-
-# vis=Visualizer()
-# anim=MeshCat.Animation()
-# open(vis)
-# vis, anim = animation(solver_directgames, scenario;
-# 	vis=vis, anim=anim,
-# 	open_vis=false,
-# 	display_actors=true,
-# 	display_trajectory=false,
-# 	no_background=false)
-#
-#
-# vis, anim = animation(solver_directgames, scenario;
-# 	vis=vis, anim=anim,
-# 	open_vis=false,
-# 	display_actors=true,
-# 	display_trajectory=false,
-# 	no_background=false)
-
-
-state_noise = @SVector [
+# Define a noise that will be added to the initial state of the system x0.
+# By sampling x0 randomly we generate a class of similar dynamic games.
+# In this case, we add noise to the initial speeds, positions and orientations of the vehicles.
+state_noise = @SVector [ # Uniform noise around x0
     0.06, 0.06, 2*pi/72, 0.05,
     0.06, 0.06, 2*pi/72, 0.05,
     0.06, 0.06, 2*pi/72, 0.05]
 opts_monte_carlo = MonteCarloSamplerOptions{n,T}(
-    noise=state_noise,
-    iterations=200)
-sampler = MonteCarloSampler(solver, opts_monte_carlo)
-sampler_penalty = MonteCarloSampler(solver_penalty, opts_monte_carlo)
+    noise=state_noise, # noise added to the initial state
+    iterations=200) # number of Monte Carlo samples
 
-monte_carlo_sampling(sampler)
-monte_carlo_sampling(sampler_penalty)
+algames_sampler = MonteCarloSampler(algames_solver, opts_monte_carlo)
+ilqgames_sampler = MonteCarloSampler(ilqgames_solver, opts_monte_carlo)
 
+monte_carlo_sampling(algames_sampler)
+monte_carlo_sampling(ilqgames_sampler)
 
-using PGFPlotsX
-using StatsBase
-include("../../src/utils/monte_carlo_visualization.jl")
-visualize_H_cond(sampler; save=true)
-visualize_solve_time(sampler; save=true)
-visualize_cmax(sampler; save=true)
-visualize_iterations_total(sampler; save=true)
-visualize_optimality_merit(sampler; save=true)
+# ALGAMES
+# Time required to solve the problem
+visualize_solve_time(algames_sampler; save=false)
 
-visualize_H_cond(sampler_penalty; save=true)
-visualize_solve_time(sampler_penalty; save=true)
-visualize_cmax(sampler_penalty; save=true)
-visualize_iterations_total(sampler_penalty; save=true)
-visualize_optimality_merit(sampler_penalty; save=true)
+# Maximum constraint violation
+visualize_cmax(algames_sampler; save=false)
+
+# Number of iterations (Newton step for ALGAMES, Riccati backwardpass for iLQGames)
+visualize_iterations_total(algames_sampler; save=false)
+
+# Optimality constraint satisfaction
+visualize_optimality_merit(algames_sampler; save=false)
 
 
-include("../../src/utils/monte_carlo_visualization_latex.jl")
-axis_H_cond = visualize_latex_H_cond(sampler_direct; save=true)
-axis_solve_time = visualize_latex_solve_time(sampler_direct; save=true)
-axis_cmax = visualize_latex_cmax(sampler_direct; save=true)
-axis_iterations_total = visualize_latex_iterations_total(sampler_direct; save=true)
-axis_optimality_merit = visualize_latex_optimality_merit(sampler_direct; save=true)
+# ilQGames
+# Time required to solve the problem
+visualize_solve_time(ilqgames_sampler; save=false)
 
-include("../../src/utils/monte_carlo_visualization_latex.jl")
-axis_H_cond = visualize_latex_H_cond(sampler_penalty; save=true)
-axis_solve_time = visualize_latex_solve_time(sampler_penalty; save=true)
-axis_cmax = visualize_latex_cmax(sampler_penalty; save=true)
-axis_iterations_total = visualize_latex_iterations_total(sampler_penalty; save=true)
-axis_optimality_merit = visualize_latex_optimality_merit(sampler_penalty; save=true)
+# Maximum constraint violation
+visualize_cmax(ilqgames_sampler; save=false)
 
-gp = visualize_latex_sampler(sampler_direct; save=true)
-gp = visualize_latex_sampler(sampler_penalty; save=true)
-
-
-
-a = 100
-a = 100
-a = 100
-a = 100
-a = 100
-
-
-cmax_direct = [[sampler_direct.stats.cmax[i], i] for i in 1:sampler_direct.stats.iterations]
-sort(cmax_direct)
-cmax_viol_direct = []
-for i = 1:sampler_direct.stats.iterations
-    if sampler_direct.stats.cmax[i] > 1e-3
-        push!(cmax_viol_direct, i)
-    end
-end
-cmax_viol_direct
-
-opt_direct = [[sampler_direct.stats.optimality_merit[i], i] for i in 1:sampler_direct.stats.iterations]
-sort(opt_direct)
-opt_viol_direct = []
-for i = 1:sampler_direct.stats.iterations
-    if sampler_direct.stats.optimality_merit[i] > 1e-2
-        push!(opt_viol_direct, i)
-    end
-end
-opt_viol_direct
-
-
-
-
-
-
-
-
-cmax_penalty = [[sampler_penalty.stats.cmax[i], i] for i in 1:sampler_penalty.stats.iterations]
-sort(cmax_penalty)
-cmax_viol_penalty = []
-for i = 1:sampler_penalty.stats.iterations
-    if sampler_penalty.stats.cmax[i] > 1e-3
-        push!(cmax_viol_penalty, i)
-    end
-end
-cmax_viol_penalty
-
-opt_penalty = [[sampler_penalty.stats.optimality_merit[i], i] for i in 1:sampler_penalty.stats.iterations]
-sort(opt_penalty)
-opt_viol_penalty = []
-for i = 1:sampler_penalty.stats.iterations
-    if sampler_penalty.stats.optimality_merit[i] > 1e-2
-        push!(opt_viol_penalty, i)
-    end
-end
-opt_viol_penalty
-
-
-
-
-
-
-
-# # using Plots
-# using PGFPlots
-# # using ImageMagick
-# # pgfplots()
-# histogram(randn(1000), bins=:scott, weights=repeat(1:5, outer=200))
-#
-#
-#
-# save("myfile.tex", a)
-# PGFPlots.save("const" * ".tikz", include_preamble=false, a)
-#
-#
-# push!(group_plot, axis)
-
-
-sort(sampler_direct.stats.cmax)
-sort(sampler_direct.stats.optimality_merit)[1:850]
-sort(sampler_direct.stats.solve_time)[1:860]
-sort(sampler_direct.stats.iterations_total)[end-14:end]
-sort(sampler_penalty.stats.iterations_total)[end-14:end]
-
-
-mean(sampler_direct.stats.solve_time)
-median(sampler_direct.stats.solve_time)
-var(sampler_direct.stats.solve_time)
-
-mean(sampler_direct.stats.iterations_total)
-median(sampler_direct.stats.iterations_total)
-var(sampler_direct.stats.iterations_total)
-
-sort(sampler_penalty.stats.cmax)
-
-mean(sampler_penalty.stats.solve_time)
-median(sampler_penalty.stats.solve_time)
-var(sampler_penalty.stats.solve_time)
-
-mean(sampler_penalty.stats.iterations_total)
-median(sampler_penalty.stats.iterations_total)
-var(sampler_penalty.stats.iterations_total)
+# Number of iterations (Newton step for ALGAMES, Riccati backwardpass for iLQGames)
+visualize_iterations_total(ilqgames_sampler; save=false)
