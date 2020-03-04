@@ -52,12 +52,12 @@ dt = tf / (N-1)
 x0 = @SVector [
                -0.50, -0.15,  0.00, 0.60, #lane1
                 1.40,  0.15,  pi,   0.60, #lane2
-                0.43, -0.30,  pi/2, 0.12, #lane4
+                0.43, -0.30,  pi/2, 0.20, #lane4
                 ]
 xf = @SVector [
                 1.30, -0.15,  0.00, 0.60, #lane1
                -0.30,  0.15,  pi,   0.60, #lane2
-                0.43,  0.35,  pi/2, 0.25, #lane4
+                0.43,  0.35,  pi/2, 0.20, #lane4
                ]
 
 # Define the movement of the goal state xf with time
@@ -68,7 +68,7 @@ xf = @SVector [
 dxf = @SVector [
                0.60,  0.00,  0.00,  0.00, #lane1
               -0.60,  0.00,  0.00,  0.00, #lane2
-               0.00,  0.12,  0.00,  0.00, #lane4
+               0.00,  0.20,  0.00,  0.00, #lane4
               ]
 
 # Define a quadratic cost
@@ -107,7 +107,7 @@ Z = [KnotPoint(xs,us,dt) for k = 1:N]
 Z[end] = KnotPoint(xs,m)
 
 # Build problem
-pr = 4
+pr = 3
 actor_radius = 0.08
 actors_radii = [actor_radius for i=1:p]
 actors_radii_prog = [[actor_radius + (j-1)*0.01 for i=1:p] for j=1:pr]
@@ -139,7 +139,7 @@ add_scenario_constraints(algames_conSet, scenario, lanes, px, con_inds; constrai
 algames_prob = GameProblem(model, obj, algames_conSet, x0, xf, Z, N, tf)
 algames_opts = DirectGamesSolverOptions{T}(
     iterations=10,
-	min_steps_per_iteration=1,
+	min_steps_per_iteration=0,
 	record_condition=false,
     inner_iterations=20,
     iterations_linesearch=10,
@@ -147,7 +147,6 @@ algames_opts = DirectGamesSolverOptions{T}(
 algames_solver = DirectGamesSolver(algames_prob, algames_opts)
 @time solve!(algames_solver)
 
-visualize_trajectory_car(algames_solver)
 
 state_noise = 5. * SVector{n}([
 	0.008, 0.008, 2*pi/72, 0.03, #+-50cm, +-50cm, +-25deg, +-12.5% per second
@@ -157,10 +156,8 @@ opts_mpc = MPCGamesSolverOptions{n,T}(
 	# live_plotting=:on,
 	iterations=1000,
 	N_mpc=50,
-	mpc_tf=6.0,
+	mpc_tf=4.0,
 	min_δt=0.005,
-	selfish_inds=[9,10,11,12],
-	selfish_dx=[0., 0.12, 0., 0.],
 	noise=state_noise)
 mpc_solver = MPCGamesSolver(algames_solver, dxf, opts_mpc)
 reset!(mpc_solver, reset_type=:full)
@@ -203,7 +200,7 @@ for k = 1:samples
 end
 
 # Average MPC frequency
-freq = length(times) / sum(times) # 40 Hz
+freq = length(times) / sum(times) # 176 Hz
 # Mean solve time
 mean_solve_time = sum(times) / length(times) #
 # Maximum constraint violation across samples.

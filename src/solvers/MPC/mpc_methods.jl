@@ -21,20 +21,22 @@ function TO.solve!(solver::MPCGamesSolver{T}; wait::Bool=false) where {T<:Abstra
 	n,m,pu,p = size(solver.solver.model)
 
     for i = 1:solver.opts.iterations
-        println("MPC Solver iteration = ", i)
-        δt, new_x0, new_xf = step!(solver)
+		# TO.Logging.@info "MPC Solver iteration = ", i
+		# println("MPC Solver iteration = ", i)
+        dt_step = @elapsed δt, new_x0, new_xf = step!(solver)
 		if wait
 			sleep(0.2)
 		end
 		# Update the solver.
-		new_obj = [TO.LQRObjective(Diagonal(solver.Q[i]),
+		dt_new_obj = @elapsed new_obj = [TO.LQRObjective(Diagonal(solver.Q[i]),
 								Diagonal(solver.R[i][pu[i]]),
 								Diagonal(solver.Qf[i]),
 								new_xf,
 								N,checks=false) for i=1:p]
-		solver = MPCGamesSolver(solver, solver.solver.obj, new_x0, new_xf)
-		update_traj!(solver, δt, new_x0)
-        evaluate_convergence(solver) ? break : nothing
+		dt_new_solver = @elapsed solver = MPCGamesSolver(solver, solver.solver.obj, new_x0, new_xf)
+		dt_update_traj = @elapsed update_traj!(solver, δt, new_x0)
+        dt_eval_cv = @elapsed evaluate_convergence(solver) ? break : nothing
+		# @show dt_step dt_new_obj dt_new_solver dt_update_traj dt_eval_cv
     end
     return solver
 end
@@ -91,11 +93,11 @@ function step!(solver::MPCGamesSolver{T}) where {T}
 	δt = @elapsed resolve = need_resolve(solver.solver)
 	if resolve
 	    δt += @elapsed solve!(solver.solver) ####################
-		@show δt
+		TO.Logging.@info δt
 		δt = max(δt, solver.opts.min_δt)
 		record_iteration!(solver, δt; resolve=true)
 	else
-		@show δt
+		TO.Logging.@info δt
 		δt = max(δt, solver.opts.min_δt)
 		record_iteration!(solver, δt; resolve=false)
 	end
@@ -103,10 +105,10 @@ function step!(solver::MPCGamesSolver{T}) where {T}
 	# Add noise and propagate dynamics forward
 	new_x0 = generate_new_x0(solver, δt)
 
-	remaining_tf = solver.opts.mpc_tf - solver.stats.time - δt
+	time_remaining = solver.opts.mpc_tf - solver.stats.time - δt
 	new_xf = solver.solver.xf + solver.dxf*δt
 
-	@show remaining_tf
+	TO.Logging.@info time_remaining
 	if solver.opts.live_plotting != :off
 		visualize_trajectory_car(solver.solver;save_figure=false)
 	end
@@ -240,74 +242,16 @@ function evaluate_convergence(solver::MPCGamesSolver)
 	t = solver.stats.time
 	# Check total iterations
     if t >= solver.opts.mpc_tf
-		# @show "outer converged iterations"
+		TO.Logging.@info "MPC solver reached final time."
         return true
     end
     # Check total iterations
     if i >= solver.opts.iterations
-		# @show "outer converged iterations"
+		TO.Logging.@info "MPC solver max # iterations."
         return true
     end
     return false
 end
-
-
-# function resample!(solver::MPCGamesSolver{T}) where T
-# 	N_mpc = solver.opts.N_mpc
-# 	dt_mpc = solver.opts.mpc_tf /(N_mpc-1)
-# 	M = solver.stats.iterations
-# 	ct = 1
-# 	x0 = solver.stats.x0[1]
-# 	solver.Z[1] = TO.KnotPoint(TO.state(x0),TO.control(x0),dt_mpc,0.)
-# 	rest = 0.
-# 	for j = 1:M
-# 		@show j
-# 		x0 = solver.stats.x0[j]
-# 		u = TO.control(x0)
-# 		Δt = copy(x0.dt) + rest
-# 		@show rest
-# 		@show "start" Δt
-# 		@show ct
-# 		while Δt > dt_mpc
-# 			# dt = min(dt_mpc, Δt)
-# 			xlast = TO.state(solver.Z[ct])
-# 			ulast = TO.control(solver.Z[ct])
-# 			if rest != 0.
-# 				xlast = TO.state(x0)
-# 				ulast = TO.control(x0)
-# 			end
-# 			# xlast = TO.state(Z[ct])
-# 			# ulast = TO.control(Z[ct])
-# 			xnext = TO.state(solver.Z[j+1])
-# 			unext = TO.control(solver.Z[j+1])
-# 			# Linear interpolation between last applied control and the next one
-# 			x = xlast + (xnext - xlast)*(dt_mpc-rest)/Δt
-# 			u = ulast + (unext - ulast)*(dt_mpc-rest)/Δt
-# 			# x = discrete_dynamics(
-# 			# 	TO.DEFAULT_Q,
-# 			# 	solver.solver.model,
-# 			# 	x,
-# 			# 	u,
-# 			# 	0.0,
-# 			# 	dt_mpc-rest)
-# 			@show Δt-dt_mpc
-# 			Δt -= dt_mpc
-# 			rest = 0.
-# 			ct += 1
-# 			if ct > N_mpc
-# 				break
-# 			end
-# 			solver.Z[ct] = TO.KnotPoint(x,u,dt_mpc,0.)
-# 		end
-# 		rest = Δt
-# 	end
-# 	@show "reached MMMM"
-# 	return nothing
-# end
-
-# rollout!(mpc_solver)
-# update traj
-
 
 function resample!(solver::MPCGamesSolver{T}) where T
 	N_mpc = solver.opts.N_mpc

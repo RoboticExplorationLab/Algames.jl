@@ -160,11 +160,11 @@ function MPCGamesSolver(solver::DirectGamesSolver{T,I}, dxf::SVector{N1,T}, opts
     return mpc_solver
 end
 
-function reset!(solver::MPCGamesSolver{T}, reset_stats=true) where T
+function reset!(solver::MPCGamesSolver{T}; reset_stats=true, reset_type=:nominal) where T
     if reset_stats
         reset!(solver.stats, solver.opts.iterations)
     end
-    reset!(solver.solver)
+    reset!(solver.solver, reset_type=reset_type)
 	# reset the x0 of the solver.solver to x0 of the mpcsolver @@@@@@
     return nothing
 end
@@ -208,27 +208,6 @@ function MPCGamesSolver(solver_::MPCGamesSolver{T,I,n,m,L},
 		solver_.logger)
     return solver
 end
-
-# function MPCGamesSolver(solver_::MPCGamesSolver{T,I,n,m,L},
-# 	obj::Vector{O},
-# 	x0::SVector{n,T},
-# 	xf::SVector{n,T},
-# 	) where {T,I,n,m,L,O}
-#     solver = MPCGamesSolver{T,I,n,m,L}(
-# 		DirectGamesSolver(solver_.solver, obj, x0, xf),
-# 		solver_.opts,
-# 		solver_.stats,
-# 		solver_.x0,
-# 		solver_.xf,
-# 		solver_.dxf,
-# 		solver_.tf,
-# 		solver_.Q,
-# 		solver_.R,
-# 		solver_.Qf,
-# 		solver_.Z,
-# 		solver_.logger)
-#     return solver
-# end
 
 function MPCGamesSolver(solver_::MPCGamesSolver{T,I,n,m,L},
 	obj::Vector{O},
