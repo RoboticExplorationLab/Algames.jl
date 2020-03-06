@@ -1,5 +1,12 @@
 # ALGAMES
 
+CODECOV_TOKEN="ccaf4089-5347-4384-a6f9-c5dd3f7c999b"
+
+<!-- ![Build Status](https://travis-ci.org/RoboticExplorationLab/TrajectoryOptimization.jl.svg?branch=master) -->
+[![codecov](https://codecov.io/gh/RoboticExplorationLab/ALGAMES.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/RoboticExplorationLab/ALGAMES.jl)
+<!-- [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://RoboticExplorationLab.github.io/TrajectoryOptimization.jl/dev) -->
+
+
 A package for solving constrained dynamic games written in Julia. Currently, the following methods are implemented with a common interface:
 
 [ALGAMES (Augmented Lagrangian Games Theoretic Solver)](https://rexlab.stanford.edu/papers/ALGAMES.pdf): A fast solver for constrained dynamic games that features:
