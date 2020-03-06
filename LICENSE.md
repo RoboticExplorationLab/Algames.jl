@@ -1,6 +1,6 @@
 The ALGAMES.jl package is licensed under the MIT "Expat" License:
 
-> Copyright (c) 2020: Zac Manchester.
+> Copyright (c) 2020: Simon Le Cleac'h, Zachary Manchester.
 >
 > Permission is hereby granted, free of charge, to any person obtaining a copy
 > of this software and associated documentation files (the "Software"), to deal
