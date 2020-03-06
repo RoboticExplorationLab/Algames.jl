@@ -1,6 +1,5 @@
 # ALGAMES
 
-CODECOV_TOKEN="ccaf4089-5347-4384-a6f9-c5dd3f7c999b"
 
 <!-- ![Build Status](https://travis-ci.org/RoboticExplorationLab/TrajectoryOptimization.jl.svg?branch=master) -->
 [![codecov](https://codecov.io/gh/RoboticExplorationLab/ALGAMES.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/RoboticExplorationLab/ALGAMES.jl)
