@@ -1,6 +1,7 @@
 # ALGAMES
 
 
+
 <!-- ![Build Status](https://travis-ci.org/RoboticExplorationLab/TrajectoryOptimization.jl.svg?branch=master) -->
 [![codecov](https://codecov.io/gh/RoboticExplorationLab/ALGAMES.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/RoboticExplorationLab/ALGAMES.jl)
 <!-- [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://RoboticExplorationLab.github.io/TrajectoryOptimization.jl/dev) -->
@@ -48,19 +49,18 @@ model = DoubleIntegratorGame(p=2)
 n,m,pu,p = size(model)
 T = Float64
 
-# Define initial and final states (be sure to use Static Vectors!)
-x0 = @SVector [-0.50,  0.10, # position player 1
-               -0.50, -0.10, # position player 2
-                0.50,  0.00, # velocity player 1
-                0.40,  0.00] # velocity player 2
-xf = @SVector [ 0.50, -0.10, # position player 1
-                0.50,  0.10, # position player 2
-                0.40,  0.00, # velocity player 1
-                0.30,  0.10] # velocity player 2
+x0 = @SVector [-0.50, -0.50, # x
+                0.10, -0.10, # y
+                0.50,  0.40, # xdot
+                0.00,  0.00] # ydot
+xf = @SVector [ 0.50,  0.50, # x
+               -0.10,  0.10, # y
+                0.40,  0.30, # xdot
+                0.00,  0.10] # ydot
 
 # Define a quadratic cost for each player
-diag_Q = [SVector{n}([1., 1., 0., 0., 1., 1., 0., 0.]), 	# Player 1 cost
-          SVector{n}([0., 0., 1., 1., 0., 0., 1., 1.])] 	# Player 2 cost
+diag_Q = [SVector{n}([1., 0., 1., 0., 1., 0., 1., 0.]), 	# Player 1 cost
+          SVector{n}([0., 1., 0., 1., 0., 1., 0., 1.])] 	# Player 2 cost
 Q  = [0.1*Diagonal(diag_Q[i]) for i=1:p] # Players stage state costs
 Qf = [1.0*Diagonal(diag_Q[i]) for i=1:p] # Players final state costs
 # Players controls costs
