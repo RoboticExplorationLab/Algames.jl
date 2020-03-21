@@ -50,17 +50,17 @@ T = Float64
 
 # Define initial and final states (be sure to use Static Vectors!)
 x0 = @SVector [-0.50,  0.10, # position player 1
-			   -0.50, -0.10, # position player 2
+               -0.50, -0.10, # position player 2
                 0.50,  0.00, # velocity player 1
-				0.40,  0.00] # velocity player 2
+                0.40,  0.00] # velocity player 2
 xf = @SVector [ 0.50, -0.10, # position player 1
-				0.50,  0.10, # position player 2
+                0.50,  0.10, # position player 2
                 0.40,  0.00, # velocity player 1
-				0.30,  0.10] # velocity player 2
+                0.30,  0.10] # velocity player 2
 
 # Define a quadratic cost for each player
 diag_Q = [SVector{n}([1., 1., 0., 0., 1., 1., 0., 0.]), 	# Player 1 cost
-	      SVector{n}([0., 0., 1., 1., 0., 0., 1., 1.])] 	# Player 2 cost
+          SVector{n}([0., 0., 1., 1., 0., 0., 1., 1.])] 	# Player 2 cost
 Q  = [0.1*Diagonal(diag_Q[i]) for i=1:p] # Players stage state costs
 Qf = [1.0*Diagonal(diag_Q[i]) for i=1:p] # Players final state costs
 # Players controls costs
