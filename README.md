@@ -79,10 +79,6 @@ con_inds = 2:N # Indices where the constraints will be applied
 
 # Add collision avoidance constraints
 add_collision_avoidance(conSet, actors_radii, model.px, p, con_inds)
-u_min = - SVector{m}(ones(m))
-u_max = + SVector{m}(ones(m))
-con = BoundConstraint(n,m,u_min=u_min,u_max=u_max)
-add_constraint!(conSet, con, con_inds)
 
 # Define the problem
 prob = GameProblem(model, obj, xf, tf, constraints=conSet, x0=x0, N=N)
