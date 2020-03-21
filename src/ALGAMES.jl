@@ -32,6 +32,11 @@ const TO = TrajectoryOptimization
 using TrajectoryOptimization.Dynamics
 using TrajectoryOptimization.Problems
 
+# Dynamics
+export
+	DoubleIntegratorGame,
+	dynamics
+
 # Sampler
 export
 	MonteCarloSampler,
@@ -139,31 +144,6 @@ export
 	get_objective,
 	get_model,
 	get_initial_state
-
-# ALGAMES
-# export
-# 	solve!,
-# 	step!,
-# 	record_iteration!,
-# 	set_tolerances!,
-# 	evaluate_convergence,
-# 	dual_update!,
-# 	penalty_update!
-
-# export
-#     ALGamesStats,
-#     ALGamesSolverOptions,
-#     ALGamesSolver,
-#     reset!,
-#     set_verbosity!,
-#     cost,
-#     get_trajectory,
-#     get_objective,
-#     get_model,
-#     get_initial_state,
-#     get_constraints,
-#     cost!,
-#     cost_expansion!
 
 # iLQGames Solver
 export
@@ -314,6 +294,8 @@ include("solvers/riccati/ilqgames/ilqgames_solver.jl")
 include("solvers/riccati/ilqgames/ilqgames_methods.jl")
 include("solvers/riccati/penalty_ilqgames/penalty_ilqgames_solver.jl")
 include("solvers/riccati/penalty_ilqgames/penalty_ilqgames_methods.jl")
+
+include("dynamics/double_integrator.jl")
 
 include("sampler/monte_carlo_sampler.jl")
 include("sampler/monte_carlo_methods.jl")

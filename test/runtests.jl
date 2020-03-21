@@ -6,9 +6,7 @@ using LinearAlgebra
 using Random
 using StaticArrays
 using SparseArrays
-# using Ipopt
 using Logging
-# using ForwardDiff
 const TO = TrajectoryOptimization
 const AG = ALGAMES
 

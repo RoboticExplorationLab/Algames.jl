@@ -200,3 +200,8 @@ function GameProblem{Q}(p::Problem) where Q
 end
 
 @inline rollout!(prob::GameProblem) = rollout!(prob.model, prob.Z, prob.x0)
+
+function GameProblem(p::GameProblem; model=p.model, obj=p.obj, constraints=p.constraints,
+    x0=p.x0, xf=p.xf, t0=p.t0, tf=p.tf)
+    Problem(model, obj, constraints, x0, xf, p.Z, p.N, t0, tf)
+end
