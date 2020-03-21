@@ -2,7 +2,7 @@
 
 
 
-<!-- ![Build Status](https://travis-ci.org/RoboticExplorationLab/TrajectoryOptimization.jl.svg?branch=master) -->
+![Build Status](https://travis-ci.org/RoboticExplorationLab/ALGAMES.jl.svg?branch=master)
 [![codecov](https://codecov.io/gh/RoboticExplorationLab/ALGAMES.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/RoboticExplorationLab/ALGAMES.jl)
 <!-- [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://RoboticExplorationLab.github.io/TrajectoryOptimization.jl/dev) -->
 
