@@ -10,6 +10,8 @@ using Logging
 const TO = TrajectoryOptimization
 const AG = ALGAMES
 
+include("../src/game_problems.jl")
+
 @testset "algames" begin
     include("test_algames.jl")
 end

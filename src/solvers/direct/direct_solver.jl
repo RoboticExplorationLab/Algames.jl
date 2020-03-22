@@ -438,6 +438,14 @@ function reset!(solver::DirectGamesSolver{T}, reset_stats=true; reset_type::Symb
     return nothing
 end
 
+function converged(solver::DirectGamesSolver{T,I}) where {T,I}
+    iter = solver.stats.iterations
+    inner_iter = solver.stats.iterations_inner[iter]
+    out = (solver.stats.cmax[iter] <= solver.opts.constraint_tolerance) &&
+        (solver.stats.optimality_merit[iter][inner_iter] <= solver.opts.optimality_constraint_tolerance)
+    return out
+end
+
 Base.size(solver::DirectGamesSolver{T,I,L,O,n,m,L1,D,E1,nmi,nm,mi,l2n2mi,l2n2m,l2nmi,l2nm}) where {T,I,L,O,n,m,L1,D,E1,nmi,nm,mi,l2n2mi,l2n2m,l2nmi,l2nm} = n,m,solver.N
 @inline TO.get_trajectory(solver::DirectGamesSolver) = solver.Z
 @inline TO.get_objective(solver::DirectGamesSolver) = solver.obj

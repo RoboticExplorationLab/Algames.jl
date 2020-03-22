@@ -4,8 +4,9 @@
 
 ![Build Status](https://travis-ci.org/RoboticExplorationLab/ALGAMES.jl.svg?branch=master)
 [![codecov](https://codecov.io/gh/RoboticExplorationLab/ALGAMES.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/RoboticExplorationLab/ALGAMES.jl)
-<!-- [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://RoboticExplorationLab.github.io/TrajectoryOptimization.jl/dev) -->
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+<!-- [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://RoboticExplorationLab.github.io/TrajectoryOptimization.jl/dev) -->
+
 
 A package for solving constrained dynamic games written in Julia. Currently, the following methods are implemented with a common interface:
 

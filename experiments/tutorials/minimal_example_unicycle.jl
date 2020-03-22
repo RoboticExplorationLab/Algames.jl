@@ -12,7 +12,7 @@ dt = tf / (N-1) # time step duration
 
 # Instantiate dynamics model
 # model = DoubleIntegratorGame(p=2)
-model = UnicycleGame10(p=2)
+model = UnicycleGame(p=2)
 n,m,pu,p = size(model)
 T = Float64
 

@@ -12,8 +12,8 @@ DoubleIntegratorGame(;p::Int=2, d::Int=2) = DoubleIntegratorGame{2*d*p,d*p,p}(
 	2*d*p,
 	d*p,
 	p,
-	[[(j-1)*d+i for j=1:d] for i=1:p],
-	[[(j-1)*d+i for j=1:d] for i=1:p])
+	[[(j-1)*p+i for j=1:d] for i=1:p],
+	[[(j-1)*p+i for j=1:d] for i=1:p])
 Base.size(::DoubleIntegratorGame{N,M,P}) where {N,M,P} = N,M,
 	[[(j-1)*Int(M/P)+i for j=1:Int(M/P)] for i=1:P],P # n,m,pu,p
 

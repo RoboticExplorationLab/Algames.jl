@@ -32,9 +32,14 @@ const TO = TrajectoryOptimization
 using TrajectoryOptimization.Dynamics
 using TrajectoryOptimization.Problems
 
+
+export
+	GameProblems
+
 # Dynamics
 export
 	DoubleIntegratorGame,
+	UnicycleGame,
 	dynamics
 
 # Sampler
@@ -110,6 +115,7 @@ export
     DirectGamesSolverOptions,
     DirectGamesSolver,
     reset!,
+	converged,
     get_trajectory,
     get_objective,
     get_model,
@@ -296,6 +302,7 @@ include("solvers/riccati/penalty_ilqgames/penalty_ilqgames_solver.jl")
 include("solvers/riccati/penalty_ilqgames/penalty_ilqgames_methods.jl")
 
 include("dynamics/double_integrator.jl")
+include("dynamics/unicycle.jl")
 
 include("sampler/monte_carlo_sampler.jl")
 include("sampler/monte_carlo_methods.jl")
