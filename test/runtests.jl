@@ -15,3 +15,7 @@ include("../src/game_problems.jl")
 @testset "algames" begin
     include("test_algames.jl")
 end
+
+@testset "ilqgames" begin
+    include("test_ilqgames.jl")
+end
