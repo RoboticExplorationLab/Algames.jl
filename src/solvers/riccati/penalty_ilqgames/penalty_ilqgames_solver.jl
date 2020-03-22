@@ -304,24 +304,12 @@ function reset!(solver::PenaltyiLQGamesSolver{T}, reset_stats=true; reset_type::
     return nothing
 end
 
-
-# function full_reset!(solver::PenaltyiLQGamesSolver{T}, reset_stats=true) where T
-#     n,m,pu,p = size(solver.model)
-#     if reset_stats
-#         reset!(solver.stats, solver.opts.iterations, p)
-#     end
-#     n,m,N = size(solver)
-#     for k = 1:N
-#         solver.Z̄[k].z = @SVector zeros(n+m)
-#         solver.Z[k].z = @SVector zeros(n+m)
-#     end
-#
-#     TO.reset!(solver.constraints)
-#     solver.ρ[1] = 0.0
-#     solver.dρ[1] = 0.0
-#     return nothing
-# end
-
+function converged(solver::PenaltyiLQGamesSolver{T,I,L,O,n,m}) where {T,I,L,O,n,m}
+    iter = solver.stats.iterations
+    out = (solver.stats.cmax[iter] <= solver.opts.constraint_tolerance) &&
+        (solver.stats.gradient[iter] <= solver.opts.gradient_norm_tolerance)
+    return out
+end
 
 Base.size(solver::PenaltyiLQGamesSolver{T,I,L,O,n,m}) where {T,I,L,O,n,m} = solver.model.n,solver.model.m,solver.N
 @inline TO.get_trajectory(solver::PenaltyiLQGamesSolver) = solver.Z
