@@ -49,6 +49,7 @@ export
 	MonteCarloSamplerOptions,
 	reset!,
 	record_sample,
+	num_converged,
 	get_trajectory,
 	get_objective,
 	get_model,
@@ -324,5 +325,7 @@ include("utils/monte_carlo_visualization.jl")
 include("utils/plot_visualization.jl")
 include("utils/tests.jl")
 include("utils/timing.jl")
+
+include("game_problems.jl")
 
 end

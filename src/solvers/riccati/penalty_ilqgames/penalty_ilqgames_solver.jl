@@ -3,6 +3,7 @@ export
     PenaltyiLQGamesStats,
     PenaltyiLQGamesSolver,
     reset!,
+    converged,
     get_trajectory,
     get_objective,
     get_constraints,

@@ -3,6 +3,7 @@ export
     DirectGamesSolverOptions,
     DirectGamesSolver,
     reset!,
+    converged,
     get_trajectory,
     get_objective,
     get_model,

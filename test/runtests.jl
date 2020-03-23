@@ -19,3 +19,11 @@ end
 @testset "ilqgames" begin
     include("test_ilqgames.jl")
 end
+
+@testset "mpc" begin
+    include("test_mpc.jl")
+end
+
+@testset "ilqgames" begin
+    include("test_sampler.jl")
+end

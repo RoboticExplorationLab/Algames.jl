@@ -4,6 +4,7 @@ export
 	MonteCarloSamplerOptions,
 	reset!,
 	record_sample,
+	num_converged,
 	get_trajectory,
 	get_objective,
 	get_model,
@@ -171,6 +172,24 @@ function record_sample(sampler::MonteCarloSampler{T},
 		# sampler.stats.optimality_merit[i] = optimality_merit
 	end
     return nothing
+end
+
+function num_converged(sampler::MonteCarloSampler)
+    num_converged(sampler.stats, sampler.solver)
+end
+
+function num_converged(stats::MonteCarloSamplerStats, solver::DirectGamesSolver)
+    con = stats.cmax .<= solver.opts.constraint_tolerance
+    opt = stats.optimality_merit .<= solver.opts.optimality_constraint_tolerance
+    out = sum(con .== opt .== 1)
+    return out
+end
+
+function num_converged(stats::MonteCarloSamplerStats, solver::PenaltyiLQGamesSolver)
+    con = stats.cmax .<= solver.opts.constraint_tolerance
+    opt = stats.optimality_merit .<= solver.opts.gradient_norm_tolerance
+    out = sum(con .== opt .== 1)
+    return out
 end
 
 
