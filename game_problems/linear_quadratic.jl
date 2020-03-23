@@ -62,7 +62,7 @@ algames_opts = DirectGamesSolverOptions{T}(
     iterations=10,
     inner_iterations=20,
     iterations_linesearch=10,
-    log_level=TO.Logging.Warn)
+    log_level=TO.Logging.Debug)
 algames_linear_quadratic_solver = DirectGamesSolver(algames_linear_quadratic_prob, algames_opts)
 
 ilqgames_opts = PenaltyiLQGamesSolverOptions{T}(
@@ -71,7 +71,7 @@ ilqgames_opts = PenaltyiLQGamesSolverOptions{T}(
     cost_tolerance=1e-4,
     line_search_lower_bound=0.0,
     line_search_upper_bound=0.05,
-    log_level=TO.Logging.Warn)
+    log_level=TO.Logging.Debug)
 ilqgames_linear_quadratic_solver = PenaltyiLQGamesSolver(ilqgames_linear_quadratic_prob, ilqgames_opts)
 
 # @time solve!(algames_linear_quadratic_solver)

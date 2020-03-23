@@ -80,7 +80,7 @@ algames_opts = DirectGamesSolverOptions{T}(
     inner_iterations=20,
     iterations_linesearch=10,
     min_steps_per_iteration=0,
-    log_level=TO.Logging.Warn)
+    log_level=TO.Logging.Debug)
 algames_ramp_merging_3_players_solver = DirectGamesSolver(algames_ramp_merging_3_players_prob, algames_opts)
 
 ilqgames_opts = PenaltyiLQGamesSolverOptions{T}(
@@ -89,7 +89,7 @@ ilqgames_opts = PenaltyiLQGamesSolverOptions{T}(
     cost_tolerance=1e-4,
     line_search_lower_bound=0.0,
     line_search_upper_bound=0.05,
-    log_level=TO.Logging.Warn,
+    log_level=TO.Logging.Debug,
     )
 ilqgames_ramp_merging_3_players_solver = PenaltyiLQGamesSolver(ilqgames_ramp_merging_3_players_prob, ilqgames_opts)
 pen = ones(length(ilqgames_ramp_merging_3_players_solver.constraints))*1000.0

@@ -19,7 +19,7 @@ end
 @testset "ilqgames" begin
     include("test_ilqgames.jl")
 end
-
+simon
 @testset "mpc" begin
     include("test_mpc.jl")
 end
