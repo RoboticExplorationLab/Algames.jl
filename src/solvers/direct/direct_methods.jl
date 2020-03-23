@@ -7,7 +7,8 @@ export
 	evaluate_inner_convergence,
 	rollout!,
 	regularization_update!,
-	regularize_primals!
+	regularize_primals!,
+	max_violation
 
 	# Generic solve methods
 "DirectGames solve method (non-allocating)"
@@ -99,9 +100,7 @@ function record_iteration!(solver::DirectGamesSolver, J, dJ)
 	TO.evaluate!(solver.dyn_constraints, solver.Z)
 	TO.max_violation!(solver.constraints)
 	TO.max_violation!(solver.dyn_constraints)
-	cmax = max(maximum(solver.constraints.c_max),
-		maximum(solver.dyn_constraints.c_max))
-	solver.stats.cmax[i] = cmax
+	solver.stats.cmax[i] = TO.max_violation(solver)
 
     @logmsg TO.InnerLoop :iter value=i
     @logmsg TO.InnerLoop :cost value=J
@@ -246,4 +245,15 @@ function regularize_primals!(C::Vector{E}, solver::TO.AbstractSolver) where {T, 
 		C[i].xx[N] += ηx
 	end
 	return nothing
+end
+
+
+function TO.max_violation(solver::DirectGamesSolver)
+	cmax = 0.
+	@show "is empty"
+	# if !isempty(solver.constraints.constraints)
+	# 	cmax = max(maximum(solver.constraints.c_max),
+	# 		maximum(solver.dyn_constraints.c_max))
+	# end
+	return cmax
 end

@@ -4,7 +4,6 @@ export
 
 
 function update_g_old!(solver::DirectGamesSolver; use_copy=false::Bool)
-	# println("************************GGGGGGGGGGGGGGGGGGGGGGGGGGG")
 	n,m,N = size(solver)
 	n,m,pu,p = size(solver.model)
 	if use_copy
@@ -39,7 +38,9 @@ function update_g_old!(solver::DirectGamesSolver; use_copy=false::Bool)
 		g_[solver.xinds_p[i][N]] = C[i].x[N] - ν[i][N-1] #ok
 
 		# Constraints
-		for con in solver.constraints.constraints
+	    for i in eachindex(solver.constraints.constraints)
+			con = solver.constraints.constraints[i]
+		# for con in solver.constraints.constraints
 			if typeof(con).parameters[2] == State
 				for k in intersect(con.inds,2:N)
 					rel_zind_i = rel_zinds(con,solver.sinds_p,k,i,N)
@@ -90,7 +91,9 @@ function update_g_old!(solver::DirectGamesSolver; use_copy=false::Bool)
 end
 
 function update_g_!(solver::DirectGamesSolver; use_copy=false::Bool)
+	@show "here 2"
 	dyn = solver.dyn_constraints.constraints[1].vals
+	@show "rrrr 2"
 	update_g_!(solver,dyn)
 	return nothing
 end
@@ -153,10 +156,13 @@ function update_g_!(solver::DirectGamesSolver, dyn::Vector{SVector{nn,T}}; use_c
 		########################################################################
 		########################################################################
 	end
-
-	for con in solver.constraints.constraints
+	@show "here 1"
+	for i in eachindex(solver.constraints.constraints)
+		con = solver.constraints.constraints[i]
+	# for con in solver.constraints.constraints
 		update_g_con!(solver,con,n,m,p,N)
 	end
+	@show "rrrr 2"
 
 	# Dynamics Constraints
 	col_off = (n*p+m)*(N-1) #ok

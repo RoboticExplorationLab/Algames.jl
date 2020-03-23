@@ -10,7 +10,8 @@ export
 	nash_open_loop_backwardpass!,
 	forwardpass!,
 	rollout!,
-	regularization_update!
+	regularization_update!,
+	max_violation
 
 # Generic solve methods
 "PenaltyiLQGames solve method (non-allocating)"
@@ -34,11 +35,10 @@ function TO.solve!(solver::PenaltyiLQGamesSolver{T}) where T<:AbstractFloat
     rollout!(solver)
 
     for i = 1:p
-        # cost!(solver.obj[i], prob.Z, fill(pu[i],N)) #### works
         cost!(solver.obj[i], solver.Z, fill(pu[i],N))
     end
     for i = 1:p
-        for con in solver.constraints
+        for con in solver.constraints.constraints
             TO.cost!(_J[i], con, solver.Z)
         end
     end
@@ -71,7 +71,7 @@ function TO.solve!(solver::PenaltyiLQGamesSolver{T}) where T<:AbstractFloat
 end
 
 function set_penalty!(conSet::ConstraintSet{T}, pen::Vector{T}) where T
-    for (j,con) in enumerate(conSet)
+    for (j,con) in enumerate(conSet.constraints)
         ϕ = con.params.ϕ
         for i in eachindex(con.inds)
             new_μ = SVector{length(con.μ[i])}(pen[j]*ones(length(con.μ[i])))
@@ -120,7 +120,7 @@ function penalty_expansion!(solver::PenaltyiLQGamesSolver{T}, Z::TO.Traj) where 
     n,m,pu,p = size(solver.model)
     n,m,N = size(solver)
     for i = 1:p
-        for con in conSet
+        for con in conSet.constraints
             if typeof(con).parameters[2] == State
                 for (j,k) in enumerate(intersect(con.inds,1:N))
                     Iμ = TO.penalty_matrix(con,j)
@@ -154,7 +154,7 @@ function record_iteration!(solver::PenaltyiLQGamesSolver, J, dJ, ΔV, α)
 
     TO.evaluate!(solver.constraints, solver.Z)
 	TO.max_violation!(solver.constraints)
-	solver.stats.cmax[i] = maximum(solver.constraints.c_max)
+	solver.stats.cmax[i] = TO.max_violation(solver)
 	solver.stats.ΔV[i] = Array.(ΔV)
 	solver.stats.α[i] = α
 
@@ -437,7 +437,7 @@ function forwardpass!(solver::PenaltyiLQGamesSolver{T}, ΔV, J_prev) where T
             end
             # cost!(obj, Z̄)
             for i = 1:p
-                for con in solver.constraints
+                for con in solver.constraints.constraints
                     TO.cost!(_J[i], con, solver.Z̄)
                 end
             end
@@ -474,7 +474,7 @@ function forwardpass!(solver::PenaltyiLQGamesSolver{T}, ΔV, J_prev) where T
         end
         # cost!(obj, Z̄)
         for i = 1:p
-            for con in solver.constraints
+            for con in solver.constraints.constraints
                 TO.cost!(_J[i], con, solver.Z̄)
             end
         end
@@ -537,7 +537,7 @@ end
 
 
 "Simulate the forward the dynamics open-loop"
-@inline rollout!(solver::PenaltyiLQGamesSolver) = rollout!(solver.model, solver.Z, solver.x0)
+@inline rollout!(solver::PenaltyiLQGamesSolver) = TO.rollout!(solver.model, solver.Z, solver.x0)
 
 # """
 # $(SIGNATURES)
@@ -556,4 +556,13 @@ function regularization_update!(solver::PenaltyiLQGamesSolver,status::Symbol=:in
         solver.dρ[1] = min(solver.dρ[1]/solver.opts.bp_reg_increase_factor, 1.0/solver.opts.bp_reg_increase_factor)
         solver.ρ[1] = solver.ρ[1]*solver.dρ[1]*(solver.ρ[1]*solver.dρ[1]>solver.opts.bp_reg_min)
     end
+end
+
+
+function TO.max_violation(solver::PenaltyiLQGamesSolver)
+	cmax = 0.
+	if !isempty(solver.constraints.constraints)
+		cmax = 	maximum(solver.constraints.c_max)
+	end
+	return cmax
 end

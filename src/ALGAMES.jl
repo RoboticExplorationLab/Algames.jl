@@ -110,7 +110,8 @@ export
 	evaluate_inner_convergence,
 	rollout!,
 	regularization_update!,
-	regularize_primals!
+	regularize_primals!,
+	max_violation
 export
     DirectGamesStats,
     DirectGamesSolverOptions,
@@ -163,7 +164,8 @@ export
     nash_open_loop_backwardpass!,
     forwardpass!,
     rollout!,
-    regularization_update!
+    regularization_update!,
+	max_violation
 
 export
     iLQGamesStats,

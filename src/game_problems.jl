@@ -11,13 +11,19 @@ using TrajectoryOptimization
 const TO = TrajectoryOptimization
 const AG = ALGAMES
 
-# include("../game_problems/ramp_merging.jl")
+include("../game_problems/linear_quadratic.jl")
 include("../game_problems/ramp_merging_2_players.jl")
 include("../game_problems/ramp_merging_3_players.jl")
 include("../game_problems/ramp_merging_4_players.jl")
 include("../game_problems/t_intersection_2_players.jl")
 include("../game_problems/t_intersection_3_players.jl")
 include("../game_problems/t_intersection_4_players.jl")
+
+export
+    algames_linear_quadratic_prob,
+    ilqgames_linear_quadratic_prob,
+    algames_linear_quadratic_solver,
+    ilqgames_linear_quadratic_solver
 
 export
     algames_ramp_merging_2_players_prob,

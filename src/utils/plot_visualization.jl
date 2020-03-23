@@ -44,7 +44,7 @@ function visualize_trajectory_car(solver::TO.AbstractSolver{T}, x0::SVector{n1,T
     colors = [:blue, :red, :yellow, :green, :green]
 
     # Boundary constraints
-    for con in conSet
+    for con in conSet.constraints
         if typeof(con.con) == BoundaryConstraint{T,2}
             i1 = findall(x->x==[con.con.x,con.con.y], px)[1]
             for j = 1:length(con.con)
@@ -61,7 +61,7 @@ function visualize_trajectory_car(solver::TO.AbstractSolver{T}, x0::SVector{n1,T
     end
 
     # Circle constraints
-    for con in conSet
+    for con in conSet.constraints
         if typeof(con.con) in [CircleConstraint{T,length(con.con)}, ExpCircleConstraint{T,length(con.con)}]
             i1 = findall(x->x==[con.con.xi,con.con.yi], px)[1]
             for l in 1:length(con.con.x)
@@ -94,7 +94,7 @@ function visualize_trajectory_car(solver::TO.AbstractSolver{T}, x0::SVector{n1,T
 
     #Collision avoidance
     labels = ["Player $i" for i=1:p]
-    for con in conSet
+    for con in conSet.constraints
         if typeof(con.con) == CollisionConstraint{T,length(con.con)}
             i1 = findall(x->x==[con.con.x1,con.con.y1], px)[1]
             i2 = findall(x->x==[con.con.x2,con.con.y2], px)[1]

@@ -10,7 +10,7 @@ using Logging
 const TO = TrajectoryOptimization
 const AG = ALGAMES
 
-include("../src/game_problems.jl")
+# include("../src/game_problems.jl")
 
 @testset "algames" begin
     include("test_algames.jl")
@@ -24,6 +24,10 @@ end
     include("test_mpc.jl")
 end
 
-@testset "ilqgames" begin
+@testset "sampler" begin
     include("test_sampler.jl")
+end
+
+@testset "lq_game" begin
+    include("test_lq_game.jl")
 end

@@ -11,3 +11,5 @@ solve!(solver_4_players)
 @test converged(solver_2_players)
 @test converged(solver_3_players)
 @test converged(solver_4_players)
+
+# Check the gradient and Hessian
