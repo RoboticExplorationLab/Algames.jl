@@ -251,9 +251,10 @@ end
 function TO.max_violation(solver::DirectGamesSolver)
 	cmax = 0.
 	@show "is empty"
-	# if !isempty(solver.constraints.constraints)
-	# 	cmax = max(maximum(solver.constraints.c_max),
-	# 		maximum(solver.dyn_constraints.c_max))
-	# end
+	if !isempty(solver.constraints.constraints)
+		cmax = max(maximum(solver.constraints.c_max),
+			maximum(solver.dyn_constraints.c_max))
+	end
+	@show "end is empty"
 	return cmax
 end

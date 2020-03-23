@@ -48,11 +48,11 @@ con_inds = 2:N
 # # Add collision avoidance constraints
 # add_collision_avoidance(algames_conSet, actors_radii, model.px, p, con_inds)
 # add_collision_avoidance(ilqgames_conSet, actors_radii, model.px, p, con_inds)
-# u_min = - SVector{m}(ones(m))
-# u_max = + SVector{m}(ones(m))
-# con = BoundConstraint(n,m,u_min=u_min,u_max=u_max)
-# add_constraint!(algames_conSet, con, con_inds)
-# add_constraint!(ilqgames_conSet, con, con_inds)
+# # u_min = - SVector{m}(ones(m))
+# # u_max = + SVector{m}(ones(m))
+# # con = BoundConstraint(n,m,u_min=u_min,u_max=u_max)
+# # add_constraint!(algames_conSet, con, con_inds)
+# # add_constraint!(ilqgames_conSet, con, con_inds)
 
 # Define the problem
 algames_linear_quadratic_prob = GameProblem(model, obj, xf, tf, constraints=algames_conSet, x0=x0, N=N)
