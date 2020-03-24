@@ -5,27 +5,27 @@ Primary module for setting up and solving dynamic games problems.
 module ALGAMES
 
 using BenchmarkTools
-# using Blink #
-# using Colors: RGBA, RGB #
-# using CoordinateTransformations #
-# using Dates #
-# using FileIO #
-# using GeometryTypes #
-# using JLD2 #
+using Blink #
+using Colors: RGBA, RGB #
+using CoordinateTransformations #
+using Dates #
+using FileIO #
+using GeometryTypes #
+using JLD2 #
 using LinearAlgebra
 using Logging
-# using MeshCat #
-# using MeshIO #
+using MeshCat #
+using MeshIO #
 using Parameters
 using PartedArrays
-# using PGFPlotsX #
-# using Plots #
+using PGFPlotsX #
+using Plots #
 using Random
 using SparseArrays
 using StaticArrays
 using Statistics
 using StatsBase
-# using Test #
+using Test #
 using TrajectoryOptimization
 const TO = TrajectoryOptimization
 
