@@ -141,9 +141,9 @@ function evaluate_convergence(solver::DirectGamesSolver)
     # Check for cost convergence
     # note the dJ > 0 criteria exists to prevent loop exit when forward pass makes no improvement
     # if all(0.0 .< solver.stats.dJ[i]) && all(solver.stats.dJ[i] .< solver.opts.cost_tolerance) ####
-    if (mean(abs.(solver.stats.dJ[i])) < solver.opts.cost_tolerance) && (cmax < solver.opts.constraint_tolerance)
+	if (mean(abs.(solver.stats.dJ[i])) < solver.opts.cost_tolerance) && (cmax < solver.opts.constraint_tolerance)
 		TO.Logging.@info "Outer loop converged: cost_tolerance & constraint_tolerance"
-        return true
+		return true
     end
 
 	if (optimality_merit < solver.opts.optimality_constraint_tolerance) && (cmax < solver.opts.constraint_tolerance)
@@ -154,7 +154,7 @@ function evaluate_convergence(solver::DirectGamesSolver)
     # Check total iterations
     if i >= solver.opts.iterations
 		TO.Logging.@info "Outer loop converged: iterations"
-        return true
+		return true
     end
 
     # # Outer loop update if forward pass is repeatedly unsuccessful
@@ -250,11 +250,9 @@ end
 
 function TO.max_violation(solver::DirectGamesSolver)
 	cmax = 0.
-	@show "is empty"
 	if !isempty(solver.constraints.constraints)
 		cmax = max(maximum(solver.constraints.c_max),
 			maximum(solver.dyn_constraints.c_max))
 	end
-	@show "end is empty"
 	return cmax
 end

@@ -1,8 +1,25 @@
 using Test
 
-algames_solver = GameProblems.algames_ramp_merging_3_players_solver
-algames_solver.opts.min_steps_per_iteration = 1
-ilqgames_solver = GameProblems.ilqgames_ramp_merging_3_players_solver
+algames_prob = GameProblems.algames_ramp_merging_3_players_prob
+opts = DirectGamesSolverOptions(
+    iterations=10,
+    inner_iterations=20,
+    iterations_linesearch=10,
+    min_steps_per_iteration=1,
+    log_level=TO.Logging.Warn)
+algames_solver = DirectGamesSolver(algames_prob, opts)
+
+ilqgames_prob = GameProblems.ilqgames_ramp_merging_3_players_prob
+opts = PenaltyiLQGamesSolverOptions(
+    iterations=600,
+    gradient_norm_tolerance=1e-2,
+    cost_tolerance=1e-4,
+    line_search_lower_bound=0.0,
+    line_search_upper_bound=0.02,
+    log_level=TO.Logging.Warn)
+pen = ones(length(ilqgames_prob.constraints))*1000.0
+ilqgames_solver = PenaltyiLQGamesSolver(ilqgames_prob, opts)
+set_penalty!(ilqgames_solver, pen)
 
 num_samples = 10
 state_noise = @SVector [ # Uniform noise around x0
@@ -22,16 +39,3 @@ monte_carlo_sampling(ilqgames_sampler)
 
 @test num_converged(algames_sampler) == num_samples
 @test num_converged(ilqgames_sampler) == num_samples
-# algames_sampler.stats.cmax
-# ilqgames_sampler.stats
-# mean(algames_sampler.stats.solve_time)
-# mean(ilqgames_sampler.stats.solve_time)
-#
-# algames_sampler.stats.cmax
-# algames_sampler.stats.optimality_merit
-#
-# all(algames_sampler.stats.cmax .<= algames_solver.opts.constraint_tolerance)
-# all(algames_sampler.stats.optimality_merit .<= algames_solver.opts.optimality_constraint_tolerance)
-#
-# all(ilqgames_sampler.stats.cmax .<= ilqgames_solver.opts.constraint_tolerance)
-# all(ilqgames_sampler.stats.optimality_merit .<= ilqgames_solver.opts.gradient_norm_tolerance)

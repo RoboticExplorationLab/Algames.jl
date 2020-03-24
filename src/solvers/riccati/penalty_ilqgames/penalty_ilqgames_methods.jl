@@ -561,10 +561,8 @@ end
 
 function TO.max_violation(solver::PenaltyiLQGamesSolver)
 	cmax = 0.
-	@show "is empty ilq"
 	if !isempty(solver.constraints.constraints)
 		cmax = 	maximum(solver.constraints.c_max)
 	end
-	@show "end is empty ilq"
 	return cmax
 end

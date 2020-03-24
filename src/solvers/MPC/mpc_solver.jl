@@ -35,6 +35,9 @@ end
     "Live plotting."
     live_plotting::Symbol=:off # :state, :control
 
+	"Displacement of the goal state xf with time. xf(t) = xf(0) + t*dxf"
+    dxf::SVector{n,T}=SVector{n}(zeros(n))
+
 	"Amplitude of the uniformly distributed noise added to the dynamics."
     noise::SVector{n,T}=SVector{n}(zeros(n))
 
@@ -118,7 +121,7 @@ struct MPCGamesSolver{T,I<:QuadratureRule,n,m,L} <: ConstrainedSolver{T}
     end
 end
 
-function MPCGamesSolver(solver::DirectGamesSolver{T,I}, dxf::SVector{N1,T}, opts=MPCGamesSolverOptions{T}()) where {T,I,N1}
+function MPCGamesSolver(solver::DirectGamesSolver{T,I}, opts=MPCGamesSolverOptions{T}()) where {T,I}
 	n,m,N = size(solver)
 	n,m,pu,p = size(solver.model)
 
@@ -138,6 +141,7 @@ function MPCGamesSolver(solver::DirectGamesSolver{T,I}, dxf::SVector{N1,T}, opts
     stats = MPCGamesStats{T,n,m,n+m}()
     x0 = copy(solver.x0)
     xf = copy(solver.xf)
+	dxf = copy(opts.dxf)
     tf = solver.tf
     L = n+m
     dt = tf/(N-1)

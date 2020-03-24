@@ -76,57 +76,42 @@ con_inds_prog = [j:j for j=1:pr]
 con_inds_prog[end] = pr:N
 # Create constraint sets
 algames_conSet = ConstraintSet(n,m,N)
-# ilqgames_conSet = ConstraintSet(n,m,N)
 # Add collision avoidance constraints
 for j = 1:pr
 	add_collision_avoidance(algames_conSet, actors_radii_prog[j], px, p, con_inds_prog[j])
-	# add_collision_avoidance(ilqgames_conSet, actors_radii_prog[j], px, p, con_inds_prog[j])
 end
 # Add scenario specific constraints (road boundaries)
 con_inds = 2:N # Indices where the constraints will be applied
 add_scenario_constraints(algames_conSet, scenario, px, con_inds; constraint_type=:constraint)
-# add_scenario_constraints(ilqgames_conSet, scenario, px, con_inds; constraint_type=:constraint)
 
 # Create problems
-algames_prob = GameProblem(model, obj, xf, tf, constraints=algames_conSet, x0=x0, N=N)
-# ilqgames_prob = GameProblem(model, obj, xf, tf, constraints=ilqgames_conSet, x0=x0, N=N)
+algames_ramp_merging_3_players_mpc_prob = GameProblem(model, obj, xf, tf, constraints=algames_conSet, x0=x0, N=N)
 
 # Create solvers
-algames_opts = DirectGamesSolverOptions{T}(
+algames_ramp_merging_3_players_mpc_opts = DirectGamesSolverOptions{T}(
     iterations=10,
     inner_iterations=20,
     iterations_linesearch=10,
     min_steps_per_iteration=0,
-    log_level=TO.Logging.Debug)
-algames_solver = DirectGamesSolver(algames_prob, algames_opts)
-
-# ilqgames_opts = PenaltyiLQGamesSolverOptions{T}(
-#     iterations=200,
-#     gradient_norm_tolerance=1e-2,
-#     cost_tolerance=1e-4,
-#     line_search_lower_bound=0.0,
-#     line_search_upper_bound=0.05,
-#     log_level=TO.Logging.Debug,
-#     )
-# ilqgames_solver = PenaltyiLQGamesSolver(ilqgames_prob, ilqgames_opts)
-# pen = ones(length(ilqgames_solver.constraints))*1000.0
-# set_penalty!(ilqgames_solver, pen);
+    log_level=TO.Logging.Warn)
+algames_solver = DirectGamesSolver(algames_ramp_merging_3_players_mpc_prob, algames_ramp_merging_3_players_mpc_opts)
 
 # Create MPC solvers
 state_noise = 5. * @SVector ([
 	0.008, 0.008, 2*pi/72, 0.03, #+-50cm, +-50cm, +-25deg, +-12.5% per second
 	0.008, 0.008, 2*pi/72, 0.03,
 	0.008, 0.008, 2*pi/72, 0.03])
-opts_mpc = MPCGamesSolverOptions{n,T}(
+ramp_merging_3_players_mpc_opts = MPCGamesSolverOptions{n,T}(
 	# live_plotting=:on,
 	iterations=10,
 	N_mpc=50,
 	mpc_tf=100.0,
 	min_δt=0.005,
+	dxf=dxf,
 	noise=state_noise)
-algames_ramp_merging_3_players_mpc_solver = MPCGamesSolver(algames_solver, dxf, opts_mpc)
+algames_ramp_merging_3_players_mpc_solver = MPCGamesSolver(algames_solver, ramp_merging_3_players_mpc_opts)
 # ilqgames_ramp_merging_3_players_mpc_solver = MPCGamesSolver(ilqgames_solver, dxf, opts_mpc)
-reset!(algames_ramp_merging_3_players_mpc_solver, reset_type=:full)
+# reset!(algames_ramp_merging_3_players_mpc_solver, reset_type=:full)
 # reset!(ilqgames_ramp_merging_3_players_mpc_solver, reset_type=:full)
 # solve!(algames_ramp_merging_3_players_mpc_solver; wait=false)
 # resample!(algames_ramp_merging_3_players_mpc_solver)
@@ -157,7 +142,7 @@ reset!(algames_ramp_merging_3_players_mpc_solver, reset_type=:full)
 # samples = 100
 # times = zeros(0)
 # cmax = zeros(samples)
-# mpc_solver.opts.log_level = AG.Logging.Debug
+# mpc_solver.opts.log_level = AG.Logging.Warn
 # for k = 1:samples
 # 	@show k
 # 	algames_solver = DirectGamesSolver(algames_prob, algames_opts)

@@ -23,12 +23,12 @@ include("../game_problems/t_intersection_4_players.jl")
 export
     algames_linear_quadratic_prob,
     ilqgames_linear_quadratic_prob,
-    algames_linear_quadratic_solver,
-    ilqgames_linear_quadratic_solver
 
 export
-    algames_ramp_merging_3_players_mpc_solver
-    # ilqgames_ramp_merging_3_players_mpc_solver
+    algames_ramp_merging_3_players_mpc_prob,
+    algames_ramp_merging_3_players_mpc_opts,
+    ramp_merging_3_players_mpc_opts
+    # algames_ramp_merging_3_players_mpc_solver
 
 export
     algames_ramp_merging_2_players_prob,
@@ -39,27 +39,11 @@ export
     ilqgames_ramp_merging_4_players_prob
 
 export
-    algames_ramp_merging_2_players_solver,
-    algames_ramp_merging_3_players_solver,
-    algames_ramp_merging_4_players_solver,
-    ilqgames_ramp_merging_2_players_solver,
-    ilqgames_ramp_merging_3_players_solver,
-    ilqgames_ramp_merging_4_players_solver
-
-export
     algames_t_intersection_2_players_prob,
     algames_t_intersection_3_players_prob,
     algames_t_intersection_4_players_prob,
     ilqgames_t_intersection_2_players_prob,
     ilqgames_t_intersection_3_players_prob,
     ilqgames_t_intersection_4_players_prob
-
-export
-    algames_t_intersection_2_players_solver,
-    algames_t_intersection_3_players_solver,
-    algames_t_intersection_4_players_solver,
-    ilqgames_t_intersection_2_players_solver,
-    ilqgames_t_intersection_3_players_solver,
-    ilqgames_t_intersection_4_players_solver
 
 end

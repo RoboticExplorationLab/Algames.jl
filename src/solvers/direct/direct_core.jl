@@ -10,25 +10,19 @@ export
 function dual_ascent!(solver::DirectGamesSolver)
 	# @show "dual ascent"
     conSet = solver.constraints
-	@show "here 5"
     for i in eachindex(conSet.constraints)
         TO.dual_update!(conSet.constraints[i])
     end
-	@show "rrrr 5"
 end
 
 function penalty_update!(solver::DirectGamesSolver)
 	# @show "penalty update"
-	@show "here 6"
     for i in eachindex(solver.constraints.constraints)
         TO.penalty_update!(solver.constraints.constraints[i])
     end
-	@show "rrrr 6"
-	@show "here 7"
 	for i in eachindex(solver.dyn_constraints.constraints)
 		TO.penalty_update!(solver.dyn_constraints.constraints[i])
 	end
-	@show "rrrr 7"
 end
 
 function inner_step!(solver::DirectGamesSolver)

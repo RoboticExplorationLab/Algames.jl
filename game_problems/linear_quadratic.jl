@@ -48,11 +48,11 @@ con_inds = 2:N
 # # Add collision avoidance constraints
 # add_collision_avoidance(algames_conSet, actors_radii, model.px, p, con_inds)
 # add_collision_avoidance(ilqgames_conSet, actors_radii, model.px, p, con_inds)
-# # u_min = - SVector{m}(ones(m))
-# # u_max = + SVector{m}(ones(m))
-# # con = BoundConstraint(n,m,u_min=u_min,u_max=u_max)
-# # add_constraint!(algames_conSet, con, con_inds)
-# # add_constraint!(ilqgames_conSet, con, con_inds)
+# # # u_min = - SVector{m}(ones(m))
+# # # u_max = + SVector{m}(ones(m))
+# # # con = BoundConstraint(n,m,u_min=u_min,u_max=u_max)
+# # # add_constraint!(algames_conSet, con, con_inds)
+# # # add_constraint!(ilqgames_conSet, con, con_inds)
 
 # Define the problem
 algames_linear_quadratic_prob = GameProblem(model, obj, xf, tf, constraints=algames_conSet, x0=x0, N=N)
@@ -62,7 +62,7 @@ algames_opts = DirectGamesSolverOptions{T}(
     iterations=10,
     inner_iterations=20,
     iterations_linesearch=10,
-    log_level=TO.Logging.Debug)
+    log_level=TO.Logging.Warn)
 algames_linear_quadratic_solver = DirectGamesSolver(algames_linear_quadratic_prob, algames_opts)
 
 ilqgames_opts = PenaltyiLQGamesSolverOptions{T}(
@@ -71,12 +71,14 @@ ilqgames_opts = PenaltyiLQGamesSolverOptions{T}(
     cost_tolerance=1e-4,
     line_search_lower_bound=0.0,
     line_search_upper_bound=0.05,
-    log_level=TO.Logging.Debug)
+    log_level=TO.Logging.Warn)
 ilqgames_linear_quadratic_solver = PenaltyiLQGamesSolver(ilqgames_linear_quadratic_prob, ilqgames_opts)
 
+# solve!(algames_linear_quadratic_solver)
 # @time solve!(algames_linear_quadratic_solver)
+# solve!(ilqgames_linear_quadratic_solver)
 # @time solve!(ilqgames_linear_quadratic_solver)
-#
+
 # algames_linear_quadratic_solver.stats
 # ilqgames_linear_quadratic_solver.stats
 

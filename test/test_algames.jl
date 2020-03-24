@@ -1,15 +1,43 @@
 using Test
 
-solver_2_players = GameProblems.algames_ramp_merging_2_players_solver
-solver_3_players = GameProblems.algames_ramp_merging_3_players_solver
-solver_4_players = GameProblems.algames_ramp_merging_4_players_solver
+ramp_merging_2_players_prob = GameProblems.algames_ramp_merging_2_players_prob
+ramp_merging_3_players_prob = GameProblems.algames_ramp_merging_3_players_prob
+ramp_merging_4_players_prob = GameProblems.algames_ramp_merging_4_players_prob
+t_intersection_2_players_prob = GameProblems.algames_t_intersection_2_players_prob
+t_intersection_3_players_prob = GameProblems.algames_t_intersection_3_players_prob
+t_intersection_4_players_prob = GameProblems.algames_t_intersection_4_players_prob
+
+opts = DirectGamesSolverOptions(
+    iterations=10,
+    inner_iterations=20,
+    iterations_linesearch=10,
+    min_steps_per_iteration=1,
+    log_level=TO.Logging.Warn)
+
+ramp_merging_2_players_solver = DirectGamesSolver(ramp_merging_2_players_prob, opts)
+ramp_merging_3_players_solver = DirectGamesSolver(ramp_merging_3_players_prob, opts)
+ramp_merging_4_players_solver = DirectGamesSolver(ramp_merging_4_players_prob, opts)
+t_intersection_2_players_solver = DirectGamesSolver(t_intersection_2_players_prob, opts)
+t_intersection_3_players_solver = DirectGamesSolver(t_intersection_3_players_prob, opts)
+t_intersection_4_players_solver = DirectGamesSolver(t_intersection_4_players_prob, opts)
 
 # Solve with ALGAMES
-solve!(solver_2_players)
-solve!(solver_3_players)
-solve!(solver_4_players)
-@test converged(solver_2_players)
-@test converged(solver_3_players)
-@test converged(solver_4_players)
+solve!(ramp_merging_2_players_solver)
+solve!(ramp_merging_3_players_solver)
+solve!(ramp_merging_4_players_solver)
+solve!(t_intersection_2_players_solver)
+solve!(t_intersection_3_players_solver)
+solve!(t_intersection_4_players_solver)
 
-# Check the gradient and Hessian
+@test converged(ramp_merging_2_players_solver)
+@test converged(ramp_merging_3_players_solver)
+@test converged(ramp_merging_4_players_solver)
+@test converged(t_intersection_2_players_solver)
+@test converged(t_intersection_3_players_solver)
+@test converged(t_intersection_4_players_solver)
+
+# # Check the gradient and Hessian
+# solver_2_players.stats.α
+# solver_3_players.stats.α
+#
+# visualize_trajectory_car(solver_2_players)

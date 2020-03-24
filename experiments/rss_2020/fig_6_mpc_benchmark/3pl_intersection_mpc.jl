@@ -158,8 +158,9 @@ opts_mpc = MPCGamesSolverOptions{n,T}(
 	N_mpc=50,
 	mpc_tf=4.0,
 	min_δt=0.005,
+    dxf=dxf,
 	noise=state_noise)
-mpc_solver = MPCGamesSolver(algames_solver, dxf, opts_mpc)
+mpc_solver = MPCGamesSolver(algames_solver, opts_mpc)
 reset!(mpc_solver, reset_type=:full)
 solve!(mpc_solver; wait=false)
 resample!(mpc_solver)

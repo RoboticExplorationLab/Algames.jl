@@ -5,8 +5,6 @@ export
 
 
 function update_H_old!(solver::DirectGamesSolver)
-	# println("************************HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH")
-
 	n,m,N = size(solver)
 	n,m,pu,p = size(solver.model)
 
@@ -27,7 +25,6 @@ function update_H_old!(solver::DirectGamesSolver)
 		end
 		H_[solver.xinds_p[i][N], solver.xinds[N]] .= C[i].xx[N] #ok
 
-		@show "here 3"
 		for i in eachindex(solver.constraints.constraints)
 			con = solver.constraints.constraints[i]
 		# for con in solver.constraints.constraints
@@ -55,7 +52,6 @@ function update_H_old!(solver::DirectGamesSolver)
 				end
 			end
         end
-		@show "rrrr 3"
 	end
 
 
@@ -204,13 +200,11 @@ function update_H_!(solver::DirectGamesSolver, In::SMatrix{ln,ln,T,lnn}) where{l
 	        # end ######## need to check all indices
 		#
 		# end
-	@show "here 4"
 	for i in eachindex(solver.constraints.constraints)
 		con = solver.constraints.constraints[i]
 	# for con in solver.constraints.constraints
 		update_H_con!(solver,con,n,m,p,N)
 	end
-	@show "rrrr 4"
 
 	# Upper-right block
 	for i = 1:p

@@ -76,16 +76,16 @@ add_collision_avoidance(ilqgames_conSet, actors_radii, px, p, con_inds)
 add_scenario_constraints(algames_conSet, scenario, lanes, px, con_inds; constraint_type=:constraint)
 add_scenario_constraints(ilqgames_conSet, scenario, lanes, px, con_inds; constraint_type=:constraint)
 
-algames_ramp_merging_3_players_prob = GameProblem(model, obj, xf, tf, constraints=algames_conSet, x0=x0, N=N)
-ilqgames_ramp_merging_3_players_prob = GameProblem(model, obj, xf, tf, constraints=ilqgames_conSet, x0=x0, N=N)
+algames_t_intersection_3_players_prob = GameProblem(model, obj, xf, tf, constraints=algames_conSet, x0=x0, N=N)
+ilqgames_t_intersection_3_players_prob = GameProblem(model, obj, xf, tf, constraints=ilqgames_conSet, x0=x0, N=N)
 
 algames_opts = DirectGamesSolverOptions{T}(
     iterations=10,
     inner_iterations=20,
     iterations_linesearch=10,
     min_steps_per_iteration=0,
-    log_level=TO.Logging.Debug)
-algames_ramp_merging_3_players_solver = DirectGamesSolver(algames_ramp_merging_3_players_prob, algames_opts)
+    log_level=TO.Logging.Warn)
+algames_t_intersection_3_players_solver = DirectGamesSolver(algames_t_intersection_3_players_prob, algames_opts)
 
 ilqgames_opts = PenaltyiLQGamesSolverOptions{T}(
     iterations=200,
@@ -93,14 +93,14 @@ ilqgames_opts = PenaltyiLQGamesSolverOptions{T}(
     cost_tolerance=1e-4,
     line_search_lower_bound=0.0,
     line_search_upper_bound=0.02,
-    log_level=TO.Logging.Debug,
+    log_level=TO.Logging.Warn,
     )
-ilqgames_ramp_merging_3_players_solver = PenaltyiLQGamesSolver(ilqgames_ramp_merging_3_players_prob, ilqgames_opts)
-pen = ones(length(ilqgames_ramp_merging_3_players_solver.constraints))*100.0
-set_penalty!(ilqgames_ramp_merging_3_players_solver, pen);
+ilqgames_t_intersection_3_players_solver = PenaltyiLQGamesSolver(ilqgames_t_intersection_3_players_prob, ilqgames_opts)
+pen = ones(length(ilqgames_t_intersection_3_players_solver.constraints))*100.0
+set_penalty!(ilqgames_t_intersection_3_players_solver, pen);
 
-# @time timing_solve(algames_ramp_merging_3_players_solver)
-# @time timing_solve(ilqgames_ramp_merging_3_players_solver)
+# @time timing_solve(algames_t_intersection_3_players_solver)
+# @time timing_solve(ilqgames_t_intersection_3_players_solver)
 #
-# visualize_trajectory_car(algames_ramp_merging_3_players_solver)
-# visualize_trajectory_car(ilqgames_ramp_merging_3_players_solver)
+# visualize_trajectory_car(algames_t_intersection_3_players_solver)
+# visualize_trajectory_car(ilqgames_t_intersection_3_players_solver)
