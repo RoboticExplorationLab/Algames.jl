@@ -8,7 +8,7 @@ julia:
   # - nightly
 
 codecov: true
-coveralls: true
+# coveralls: true
 
 notifications:
   email: false

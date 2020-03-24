@@ -16,10 +16,10 @@ const AG = ALGAMES
     include("test_algames.jl")
 end
 
-# @testset "ilqgames" begin
-#     include("test_ilqgames.jl")
-# end
-#
+@testset "ilqgames" begin
+    include("test_ilqgames.jl")
+end
+
 # @testset "mpc" begin
 #     include("test_mpc.jl")
 # end
