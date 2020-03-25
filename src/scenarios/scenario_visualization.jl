@@ -224,152 +224,152 @@ end
 ################################
 ################################
 ################################
-
-
-function animation(solver_leader::TO.ALTROSolver{T},
-	solver_follower::TO.ALTROSolver{T},
-	scenario::Scenario{T}, plx;
-	no_background=false) where T
-
-	n,m,N = size(solver_leader)
-    # Open visualizer
-    vis = Visualizer()
-	vis.core.scope
-    open(vis)
-	build_actors(vis, scenario)
-	build_scenario(vis, scenario)
-	# Animate the scene
-	vis, anim = scene_animation(solver_leader, solver_follower,
-		vis, plx)
-    MeshCat.setanimation!(vis, anim)
-end
-
-function animation(solver::TO.ALTROSolver{T}, scenario::Scenario{T}, plx;
-	no_background=false) where T
-
-	n,m,N = size(solver)
-    # Open visualizer
-    vis = Visualizer()
-	vis.core.scope
-    open(vis)
-	build_actors(vis, scenario)
-	build_scenario(vis, scenario)
-	# Animate the scene
-	vis, anim = scene_animation(solver, vis, plx; no_background=no_background)
-    MeshCat.setanimation!(vis, anim)
-end
-
-function scene_animation(solver::TO.ALTROSolver{T}, vis, plx; no_background=false) where T
-	n,m,N = size(solver)
-	X = TO.states(solver)
-	U = TO.controls(solver)
-
-	# Animate the scene
-	birdseye_trans = Translation(0.0, 0.0, -2.2)
-    birdseye_rot = compose(
-		LinearMap(AngleAxis(-pi/2, 0, 0, 1)),
-		LinearMap(AngleAxis(-0.397*pi, 0, 1, 0)))
-
-	# Plot Trajectory
-    anim = MeshCat.Animation()
-	default_framerate = 3
-	anim = MeshCat.Animation(anim.clips, default_framerate)
-	delete!(vis["/Grid"])
-	delete!(vis["/Axes"])
-	if no_background
-		delete!(vis["Background"])
-	end
-
-    # Compute actor transformations
-    actor_translations, actor_rotations = actor_transformations(solver, N)
-	# We get rid of the last frame if the final state constraints are relaxed
-
-	for k=1:N-1
-        # Set the poses of the two actors.
-        MeshCat.atframe(anim, vis, k) do frame
-            for i=1:p
-                settransform!(frame[scope*"/actor_bundle_$i"], compose(actor_translations[k][i],actor_rotations[k][i]))
-            end
-			# zoom = 1.0
-			# setprop!(frame["/Cameras/default/rotated/<object>"], "zoom", zoom)
-			setprop!(frame["/Lights/DirectionalLight/<object>"], "intensity", 1.2)
-            camera_transformation = compose(
-                birdseye_trans,
-                birdseye_rot)
-            settransform!(frame["/Cameras/default"], camera_transformation)
-        end
-	end
-	# setprop!(framevis["/Cameras/default/rotated/<object>"], "zoom", 0.5)
-	# setprop!(vis, "/Lights/DirectionalLight/<object>", "intensity", 1.2)
-	return vis, anim
-end
-
-function scene_animation(solver_leader::TO.ALTROSolver{T},
-	solver_follower::TO.ALTROSolver{T},
-	vis, plx; no_background=false) where T
-	n,m,N = size(solver_leader)
-	# Animate the scene
-	birdseye_trans = Translation(0.00, 0.00, -2.45)
-    birdseye_rot = compose(
-		LinearMap(AngleAxis(-pi/2, 0, 0, 1)),
-		LinearMap(AngleAxis(-0.397*pi, 0, 1, 0)))
-
-	# Plot Trajectory
-    anim = MeshCat.Animation()
-	default_framerate = 3
-	anim = MeshCat.Animation(anim.clips, default_framerate)
-	delete!(vis["/Grid"])
-	delete!(vis["/Axes"])
-	if no_background
-		delete!(vis["Background"])
-	end
-	delete!(vis["/Background"]) ####################################
-
-    # Compute actor transformations
-	actor_translations_leader, actor_rotations_leader = actor_transformations(solver_leader, N)
-	actor_translations_follower, actor_rotations_follower = actor_transformations(solver_follower, N)
-	# We get rid of the last frame if the final state constraints are relaxed
-
-
-	alpha = 3e-1
-	for k=1:N-1
-        # Set the poses of the two actors.
-        MeshCat.atframe(anim, vis, k) do frame
-            settransform!(frame[scope*"/actor_bundle_1"],
-				compose(actor_translations_leader[k][1],actor_rotations_leader[k][1]))
-			settransform!(frame[scope*"/actor_bundle_2"],
-				compose(actor_translations_follower[k][1],actor_rotations_follower[k][1]))
-			# zoom = 1.0
-			# setprop!(frame["/Cameras/default/rotated/<object>"], "zoom", zoom)
-			setprop!(frame["/Lights/DirectionalLight/<object>"], "intensity", 1.2)
-            camera_transformation = compose(
-                birdseye_trans,
-                birdseye_rot)
-            settransform!(frame["/Cameras/default"], camera_transformation)
-        end
-	end
-	# setprop!(framevis["/Cameras/default/rotated/<object>"], "zoom", 0.5)
-	# setprop!(vis, "/Lights/DirectionalLight/<object>", "intensity", 1.2)
-	return vis, anim
-end
-
-function actor_transformations(solver::TO.ALTROSolver{T}, plx, iter) where T
-    n,m,N = size(solver)
-	X = TO.states(solver)
-    actor_translations = []
-    actor_rotations = []
-    for k=1:iter
-        actor_translation = [Translation(X[k][plx[i]]..., 0) for i=1:p]
-        if k==N
-            # Deals with the last step, we assume constant heading
-            actor_rotation = actor_rotations[end]
-        else
-            angles = [atan(X[k+1][plx[i][2]]-X[k][plx[i][2]],
-				X[k+1][plx[i][1]]-X[k][plx[i][1]]) for i=1:p]
-            actor_rotation = [LinearMap(AngleAxis(angles[i], 0, 0, 1.)) for i=1:p]
-        end
-        push!(actor_translations, actor_translation)
-        push!(actor_rotations, actor_rotation)
-    end
-    return actor_translations, actor_rotations
-end
+#
+#
+# function animation(solver_leader::TO.ALTROSolver{T},
+# 	solver_follower::TO.ALTROSolver{T},
+# 	scenario::Scenario{T}, plx;
+# 	no_background=false) where T
+#
+# 	n,m,N = size(solver_leader)
+#     # Open visualizer
+#     vis = Visualizer()
+# 	vis.core.scope
+#     open(vis)
+# 	build_actors(vis, scenario)
+# 	build_scenario(vis, scenario)
+# 	# Animate the scene
+# 	vis, anim = scene_animation(solver_leader, solver_follower,
+# 		vis, plx)
+#     MeshCat.setanimation!(vis, anim)
+# end
+#
+# function animation(solver::TO.ALTROSolver{T}, scenario::Scenario{T}, plx;
+# 	no_background=false) where T
+#
+# 	n,m,N = size(solver)
+#     # Open visualizer
+#     vis = Visualizer()
+# 	vis.core.scope
+#     open(vis)
+# 	build_actors(vis, scenario)
+# 	build_scenario(vis, scenario)
+# 	# Animate the scene
+# 	vis, anim = scene_animation(solver, vis, plx; no_background=no_background)
+#     MeshCat.setanimation!(vis, anim)
+# end
+#
+# function scene_animation(solver::TO.ALTROSolver{T}, vis, plx; no_background=false) where T
+# 	n,m,N = size(solver)
+# 	X = TO.states(solver)
+# 	U = TO.controls(solver)
+#
+# 	# Animate the scene
+# 	birdseye_trans = Translation(0.0, 0.0, -2.2)
+#     birdseye_rot = compose(
+# 		LinearMap(AngleAxis(-pi/2, 0, 0, 1)),
+# 		LinearMap(AngleAxis(-0.397*pi, 0, 1, 0)))
+#
+# 	# Plot Trajectory
+#     anim = MeshCat.Animation()
+# 	default_framerate = 3
+# 	anim = MeshCat.Animation(anim.clips, default_framerate)
+# 	delete!(vis["/Grid"])
+# 	delete!(vis["/Axes"])
+# 	if no_background
+# 		delete!(vis["Background"])
+# 	end
+#
+#     # Compute actor transformations
+#     actor_translations, actor_rotations = actor_transformations(solver, N)
+# 	# We get rid of the last frame if the final state constraints are relaxed
+#
+# 	for k=1:N-1
+#         # Set the poses of the two actors.
+#         MeshCat.atframe(anim, vis, k) do frame
+#             for i=1:p
+#                 settransform!(frame[scope*"/actor_bundle_$i"], compose(actor_translations[k][i],actor_rotations[k][i]))
+#             end
+# 			# zoom = 1.0
+# 			# setprop!(frame["/Cameras/default/rotated/<object>"], "zoom", zoom)
+# 			setprop!(frame["/Lights/DirectionalLight/<object>"], "intensity", 1.2)
+#             camera_transformation = compose(
+#                 birdseye_trans,
+#                 birdseye_rot)
+#             settransform!(frame["/Cameras/default"], camera_transformation)
+#         end
+# 	end
+# 	# setprop!(framevis["/Cameras/default/rotated/<object>"], "zoom", 0.5)
+# 	# setprop!(vis, "/Lights/DirectionalLight/<object>", "intensity", 1.2)
+# 	return vis, anim
+# end
+#
+# function scene_animation(solver_leader::TO.ALTROSolver{T},
+# 	solver_follower::TO.ALTROSolver{T},
+# 	vis, plx; no_background=false) where T
+# 	n,m,N = size(solver_leader)
+# 	# Animate the scene
+# 	birdseye_trans = Translation(0.00, 0.00, -2.45)
+#     birdseye_rot = compose(
+# 		LinearMap(AngleAxis(-pi/2, 0, 0, 1)),
+# 		LinearMap(AngleAxis(-0.397*pi, 0, 1, 0)))
+#
+# 	# Plot Trajectory
+#     anim = MeshCat.Animation()
+# 	default_framerate = 3
+# 	anim = MeshCat.Animation(anim.clips, default_framerate)
+# 	delete!(vis["/Grid"])
+# 	delete!(vis["/Axes"])
+# 	if no_background
+# 		delete!(vis["Background"])
+# 	end
+# 	delete!(vis["/Background"]) ####################################
+#
+#     # Compute actor transformations
+# 	actor_translations_leader, actor_rotations_leader = actor_transformations(solver_leader, N)
+# 	actor_translations_follower, actor_rotations_follower = actor_transformations(solver_follower, N)
+# 	# We get rid of the last frame if the final state constraints are relaxed
+#
+#
+# 	alpha = 3e-1
+# 	for k=1:N-1
+#         # Set the poses of the two actors.
+#         MeshCat.atframe(anim, vis, k) do frame
+#             settransform!(frame[scope*"/actor_bundle_1"],
+# 				compose(actor_translations_leader[k][1],actor_rotations_leader[k][1]))
+# 			settransform!(frame[scope*"/actor_bundle_2"],
+# 				compose(actor_translations_follower[k][1],actor_rotations_follower[k][1]))
+# 			# zoom = 1.0
+# 			# setprop!(frame["/Cameras/default/rotated/<object>"], "zoom", zoom)
+# 			setprop!(frame["/Lights/DirectionalLight/<object>"], "intensity", 1.2)
+#             camera_transformation = compose(
+#                 birdseye_trans,
+#                 birdseye_rot)
+#             settransform!(frame["/Cameras/default"], camera_transformation)
+#         end
+# 	end
+# 	# setprop!(framevis["/Cameras/default/rotated/<object>"], "zoom", 0.5)
+# 	# setprop!(vis, "/Lights/DirectionalLight/<object>", "intensity", 1.2)
+# 	return vis, anim
+# end
+#
+# function actor_transformations(solver::TO.ALTROSolver{T}, plx, iter) where T
+#     n,m,N = size(solver)
+# 	X = TO.states(solver)
+#     actor_translations = []
+#     actor_rotations = []
+#     for k=1:iter
+#         actor_translation = [Translation(X[k][plx[i]]..., 0) for i=1:p]
+#         if k==N
+#             # Deals with the last step, we assume constant heading
+#             actor_rotation = actor_rotations[end]
+#         else
+#             angles = [atan(X[k+1][plx[i][2]]-X[k][plx[i][2]],
+# 				X[k+1][plx[i][1]]-X[k][plx[i][1]]) for i=1:p]
+#             actor_rotation = [LinearMap(AngleAxis(angles[i], 0, 0, 1.)) for i=1:p]
+#         end
+#         push!(actor_translations, actor_translation)
+#         push!(actor_rotations, actor_rotation)
+#     end
+#     return actor_translations, actor_rotations
+# end
