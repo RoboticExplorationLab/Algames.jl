@@ -50,8 +50,11 @@ end
     "Duration of simulation of the MPC."
     mpc_tf::T=4.0
 
-    "Min duration between two MPC solves.."
+    "Min duration between two MPC solves."
     min_δt::T=0.01
+
+    "Max duration between two MPC solves, only useful for testing."
+    max_δt::T=Inf
 
 	"Number of MPC updates to rollout the MPC."
     N_mpc::Int=400

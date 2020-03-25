@@ -94,11 +94,11 @@ function step!(solver::MPCGamesSolver{T}) where {T}
 	if resolve
 	    δt += @elapsed solve!(solver.solver) ####################
 		TO.Logging.@info δt
-		δt = max(δt, solver.opts.min_δt)
+		δt = min(max(δt, solver.opts.min_δt), solver.opts.max_δt)
 		record_iteration!(solver, δt; resolve=true)
 	else
 		TO.Logging.@info δt
-		δt = max(δt, solver.opts.min_δt)
+		δt = min(max(δt, solver.opts.min_δt), solver.opts.max_δt)
 		record_iteration!(solver, δt; resolve=false)
 	end
 

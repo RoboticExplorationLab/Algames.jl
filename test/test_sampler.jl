@@ -24,7 +24,6 @@ set_penalty!(ilqgames_solver, pen)
 num_samples = 5
 state_noise = @SVector [ # Uniform noise around x0
     0.06, 0.06, 2*pi/72, 0.05,
-    0.06, 0.06, 2*pi/72, 0.05,
     0.06, 0.06, 2*pi/72, 0.05]
 
 opts_monte_carlo = MonteCarloSamplerOptions(

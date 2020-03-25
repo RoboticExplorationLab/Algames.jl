@@ -12,23 +12,16 @@ algames_solver = DirectGamesSolver(algames_prob, algames_opts)
 solve!(algames_solver)
 reset!(algames_solver, reset_type=:full)
 
-# Create MPC solver an run it once with one step to avoid a substantial part of
-# Julia's precompilation time for the MPC test.
+# Create MPC solver.
 mpc_solver = MPCGamesSolver(algames_solver, mpc_opts)
 mpc_solver.solver.opts.log_level = Logging.Warn
-reset!(mpc_solver, reset_type=:full)
-mpc_solver.opts.iterations = 1
-solve!(mpc_solver; wait=true)
-@test mpc_solver.stats.time <= mpc_solver.opts.mpc_tf
-
-# Rerun it with 10 steps.
+mpc_solver.opts.max_δt = 0.05
 reset!(mpc_solver, reset_type=:full)
 mpc_solver.opts.iterations = 10
 solve!(mpc_solver; wait=true)
 resample!(mpc_solver)
-# We should be able to solve the 10 MPC steps in less than mpc_solver.opts.mpc_tf = 100s.
-@test mpc_solver.stats.time <= mpc_solver.opts.mpc_tf
-
+# We should be able to solve the MPC steps in less than mpc_solver.opts.max_δ, on average.
+@test mpc_solver.stats.time <= mpc_solver.opts.iterations*mpc_solver.opts.max_δt
 
 
 # algames_prob = GameProblems.algames_ramp_merging_3_players_mpc_prob
