@@ -1,6 +1,6 @@
 using Test
 
-algames_prob = GameProblems.algames_ramp_merging_3_players_prob
+algames_prob = GameProblems.algames_ramp_merging_2_players_prob
 opts = DirectGamesSolverOptions(
     iterations=10,
     inner_iterations=20,
@@ -9,7 +9,7 @@ opts = DirectGamesSolverOptions(
     log_level=TO.Logging.Warn)
 algames_solver = DirectGamesSolver(algames_prob, opts)
 
-ilqgames_prob = GameProblems.ilqgames_ramp_merging_3_players_prob
+ilqgames_prob = GameProblems.ilqgames_ramp_merging_2_players_prob
 opts = PenaltyiLQGamesSolverOptions(
     iterations=600,
     gradient_norm_tolerance=1e-2,
@@ -21,7 +21,7 @@ pen = ones(length(ilqgames_prob.constraints))*1000.0
 ilqgames_solver = PenaltyiLQGamesSolver(ilqgames_prob, opts)
 set_penalty!(ilqgames_solver, pen)
 
-num_samples = 10
+num_samples = 5
 state_noise = @SVector [ # Uniform noise around x0
     0.06, 0.06, 2*pi/72, 0.05,
     0.06, 0.06, 2*pi/72, 0.05,
