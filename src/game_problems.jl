@@ -12,6 +12,7 @@ const TO = TrajectoryOptimization
 const AG = ALGAMES
 
 include("../game_problems/linear_quadratic.jl")
+include("../game_problems/mpc_ramp_merging_2_players.jl")
 include("../game_problems/mpc_ramp_merging_3_players.jl")
 include("../game_problems/ramp_merging_2_players.jl")
 include("../game_problems/ramp_merging_3_players.jl")
@@ -26,8 +27,11 @@ export
     ilqgames_linear_quadratic_prob,
 
 export
+    algames_ramp_merging_2_players_mpc_prob,
     algames_ramp_merging_3_players_mpc_prob,
+    algames_ramp_merging_2_players_mpc_opts,
     algames_ramp_merging_3_players_mpc_opts,
+    ramp_merging_2_players_mpc_opts,
     ramp_merging_3_players_mpc_opts
     # algames_ramp_merging_3_players_mpc_solver
 
