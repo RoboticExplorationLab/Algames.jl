@@ -4,133 +4,133 @@ export
 	set_view_H!
 
 
-function update_H_old!(solver::DirectGamesSolver)
-	n,m,N = size(solver)
-	n,m,pu,p = size(solver.model)
-
-	Z = solver.Z
-	H_ = solver.H_
-	∇F = solver.∇F
-	C = solver.C
-
-	# Fill H_
-	# Upper-left block
-	for i = 1:p
-		H_[solver.uinds_p[i][1], solver.uinds_H[i][1]] .= C[i].uu[1] #ok
-		for k = 2:N-1
-			H_[solver.xinds_p[i][k], solver.xinds[k]] .= C[i].xx[k] #ok
-			H_[solver.uinds_p[i][k], solver.xinds[k]] .= C[i].ux[k] #ok
-			H_[solver.xinds_p[i][k], solver.uinds_H[i][k]] .= C[i].ux[k]' #ok
-			H_[solver.uinds_p[i][k], solver.uinds_H[i][k]] .= C[i].uu[k] #ok
-		end
-		H_[solver.xinds_p[i][N], solver.xinds[N]] .= C[i].xx[N] #ok
-
-		for i in eachindex(solver.constraints.constraints)
-			con = solver.constraints.constraints[i]
-		# for con in solver.constraints.constraints
-			if typeof(con).parameters[2] == State
-				for (j,k) in enumerate(intersect(con.inds,2:N))
-					rel_zind_i = rel_zinds(con,solver,k,i,n,m,N)
-					rel_zind = rel_zinds(con,solver.sinds,k,n,m,N)
-					∇ci = con.∇c[j][:,rel_zind_i] #ok
-					∇c = con.∇c[j][:,rel_zind] #ok
-					Iμ = TO.penalty_matrix(con,j)
-					# H_[zind_i,zind] .+= ∇ci'*Iμ*∇c
-					# solver.state_view_H[i][k-1] .+= Sparse(∇ci'*Iμ*∇c) #
-					solver.state_view_H[i][k-1] .+= ∇ci'*Iμ*∇c # Best
-				end
-			else
-				for (j,k) in enumerate(con.inds)
-					rel_zind_i = rel_zinds(con,solver,k,i,n,m,N)
-					rel_zind = rel_zinds(con,solver.sinds,k,n,m,N)
-					zind_i = zinds(solver,con,k,i)
-					zind = zinds(solver,con,k)
-					∇ci = con.∇c[j][:,rel_zind_i] #ok
-					∇c = con.∇c[j][:,rel_zind] #ok
-					Iμ = TO.penalty_matrix(con,j)
-					H_[zind_i,zind] .+= ∇ci'*Iμ*∇c
-				end
-			end
-        end
-	end
-
-
-		# # Dynamics Constraints
-		# for k = 1:N-1
-		# 	ix = Z[k]._x
-		# 	iu = Z[k]._u
-		# 	fdx = ∇F[k][ix,ix] # Ak [n,n]
-		# 	fdu = ∇F[k][ix,iu] # Bk [n,m]
-		# 	fdui = ∇F[k][ix,iu][:,pu[i]] # Bki [n,mi]
-		# 	Iγi = Diagonal(solver.γ[i][k])
-		# 	if k >= 2
-		# 		H_[solver.xinds_p[i][k]  , solver.xinds[k]  ] .+=  fdx' *Iγi*fdx
-		# 		H_[solver.xinds_p[i][k]  , solver.uinds[k]  ] .+=  fdx' *Iγi*fdu
-		# 		H_[solver.xinds_p[i][k]  , solver.xinds[k+1]] .+= -fdx' *Iγi
-		#
-		# 		H_[solver.uinds_p[i][k]  , solver.xinds[k]  ] .+=  fdui'*Iγi*fdx
-		#
-		# 		H_[solver.xinds_p[i][k+1], solver.xinds[k]  ] .+= -      Iγi*fdx
-		# 	end
-		# 	H_[solver.uinds_p[i][k]  , solver.uinds[k]  ] .+=  fdui'*Iγi*fdu
-		# 	H_[solver.uinds_p[i][k]  , solver.xinds[k+1]] .+= -fdui'*Iγi
-		#
-		# 	H_[solver.xinds_p[i][k+1], solver.uinds[k]  ] .+= -      Iγi*fdu
-		# 	H_[solver.xinds_p[i][k+1], solver.xinds[k+1]] .+=        Iγi
-		# end
-
-
-		# for con in solver.dyn_constraints.constraints
-		# 	for k in con.inds
-		# 		rel_zind_i = rel_zinds(con,k,i,n,m,pu,p,N)
-		# 		rel_zind = rel_zinds(con,k,n,m,pu,p,N)
-		# 		zind_i = zinds(solver,con,k,i)
-		# 		zind = zinds(solver,con,k)
-		# 		∇c = con.∇c[k]
-		# 		∇ci = con.∇c[k][:,rel_zind]
-		# 		Iγi = Diagonal(solver.γ[i][k])
-		# 		H_[zind_i,zind] += ∇ci'*Iγi*∇c# need check
-        #     end
-        # end ######## need to check all indices
-	#
-	# end
-
-	# Upper-right block
-	for i = 1:p
-		# pli = @SVector [j for j in pl[i]]
-		for k = 2:N-1
-			ix = Z[k]._x #ok
-			fdx = ∇F[k][ix,ix] #ok
-			H_[solver.xinds_p[i][k], solver.νinds[i][k]] .= fdx' #ok
-			H_[solver.xinds_p[i][k], solver.νinds[i][k-1]] .= -Diagonal(@SVector ones(n)) #ok
-		end
-		H_[solver.xinds_p[i][N], solver.νinds[i][N-1]] .= -Diagonal(@SVector ones(n)) #ok
-
-		for k = 1:N-1
-			ix = Z[k]._x #ok
-			iu = Z[k]._u #ok
-			fdu = ∇F[k][ix,iu][:,pu[i]] #ok
-			H_[solver.uinds_p[i][k], solver.νinds[i][k]] .= fdu' #ok
-		end
-	end
-
-	# Lower-left block
-	for k = 2:N-1
-		ix = Z[k]._x #ok
-		fdx = ∇F[k][ix,ix] #ok
-		H_[solver.νinds_p[k-1], solver.xinds[k]] .= -Diagonal(@SVector ones(n)) #ok
-		H_[solver.νinds_p[k], solver.xinds[k]] .= fdx #ok
-	end
-	H_[solver.νinds_p[N-1], solver.xinds[N]] .= -Diagonal(@SVector ones(n)) #ok
-
-	for k = 1:N-1
-		ix = Z[k]._x #ok
-		iu = Z[k]._u #ok
-		fdu = ∇F[k][ix,iu] #ok
-		H_[solver.νinds_p[k], solver.uinds[k]] .= fdu #okkk
-	end
-	return nothing
-end
+# function update_H_old!(solver::DirectGamesSolver)
+# 	n,m,N = size(solver)
+# 	n,m,pu,p = size(solver.model)
+#
+# 	Z = solver.Z
+# 	H_ = solver.H_
+# 	∇F = solver.∇F
+# 	C = solver.C
+#
+# 	# Fill H_
+# 	# Upper-left block
+# 	for i = 1:p
+# 		H_[solver.uinds_p[i][1], solver.uinds_H[i][1]] .= C[i].uu[1] #ok
+# 		for k = 2:N-1
+# 			H_[solver.xinds_p[i][k], solver.xinds[k]] .= C[i].xx[k] #ok
+# 			H_[solver.uinds_p[i][k], solver.xinds[k]] .= C[i].ux[k] #ok
+# 			H_[solver.xinds_p[i][k], solver.uinds_H[i][k]] .= C[i].ux[k]' #ok
+# 			H_[solver.uinds_p[i][k], solver.uinds_H[i][k]] .= C[i].uu[k] #ok
+# 		end
+# 		H_[solver.xinds_p[i][N], solver.xinds[N]] .= C[i].xx[N] #ok
+#
+# 		for i in eachindex(solver.constraints.constraints)
+# 			con = solver.constraints.constraints[i]
+# 		# for con in solver.constraints.constraints
+# 			if typeof(con).parameters[2] == State
+# 				for (j,k) in enumerate(intersect(con.inds,2:N))
+# 					rel_zind_i = rel_zinds(con,solver,k,i,n,m,N)
+# 					rel_zind = rel_zinds(con,solver.sinds,k,n,m,N)
+# 					∇ci = con.∇c[j][:,rel_zind_i] #ok
+# 					∇c = con.∇c[j][:,rel_zind] #ok
+# 					Iμ = TO.penalty_matrix(con,j)
+# 					# H_[zind_i,zind] .+= ∇ci'*Iμ*∇c
+# 					# solver.state_view_H[i][k-1] .+= Sparse(∇ci'*Iμ*∇c) #
+# 					solver.state_view_H[i][k-1] .+= ∇ci'*Iμ*∇c # Best
+# 				end
+# 			else
+# 				for (j,k) in enumerate(con.inds)
+# 					rel_zind_i = rel_zinds(con,solver,k,i,n,m,N)
+# 					rel_zind = rel_zinds(con,solver.sinds,k,n,m,N)
+# 					zind_i = zinds(solver,con,k,i)
+# 					zind = zinds(solver,con,k)
+# 					∇ci = con.∇c[j][:,rel_zind_i] #ok
+# 					∇c = con.∇c[j][:,rel_zind] #ok
+# 					Iμ = TO.penalty_matrix(con,j)
+# 					H_[zind_i,zind] .+= ∇ci'*Iμ*∇c
+# 				end
+# 			end
+#         end
+# 	end
+#
+#
+# 		# # Dynamics Constraints
+# 		# for k = 1:N-1
+# 		# 	ix = Z[k]._x
+# 		# 	iu = Z[k]._u
+# 		# 	fdx = ∇F[k][ix,ix] # Ak [n,n]
+# 		# 	fdu = ∇F[k][ix,iu] # Bk [n,m]
+# 		# 	fdui = ∇F[k][ix,iu][:,pu[i]] # Bki [n,mi]
+# 		# 	Iγi = Diagonal(solver.γ[i][k])
+# 		# 	if k >= 2
+# 		# 		H_[solver.xinds_p[i][k]  , solver.xinds[k]  ] .+=  fdx' *Iγi*fdx
+# 		# 		H_[solver.xinds_p[i][k]  , solver.uinds[k]  ] .+=  fdx' *Iγi*fdu
+# 		# 		H_[solver.xinds_p[i][k]  , solver.xinds[k+1]] .+= -fdx' *Iγi
+# 		#
+# 		# 		H_[solver.uinds_p[i][k]  , solver.xinds[k]  ] .+=  fdui'*Iγi*fdx
+# 		#
+# 		# 		H_[solver.xinds_p[i][k+1], solver.xinds[k]  ] .+= -      Iγi*fdx
+# 		# 	end
+# 		# 	H_[solver.uinds_p[i][k]  , solver.uinds[k]  ] .+=  fdui'*Iγi*fdu
+# 		# 	H_[solver.uinds_p[i][k]  , solver.xinds[k+1]] .+= -fdui'*Iγi
+# 		#
+# 		# 	H_[solver.xinds_p[i][k+1], solver.uinds[k]  ] .+= -      Iγi*fdu
+# 		# 	H_[solver.xinds_p[i][k+1], solver.xinds[k+1]] .+=        Iγi
+# 		# end
+#
+#
+# 		# for con in solver.dyn_constraints.constraints
+# 		# 	for k in con.inds
+# 		# 		rel_zind_i = rel_zinds(con,k,i,n,m,pu,p,N)
+# 		# 		rel_zind = rel_zinds(con,k,n,m,pu,p,N)
+# 		# 		zind_i = zinds(solver,con,k,i)
+# 		# 		zind = zinds(solver,con,k)
+# 		# 		∇c = con.∇c[k]
+# 		# 		∇ci = con.∇c[k][:,rel_zind]
+# 		# 		Iγi = Diagonal(solver.γ[i][k])
+# 		# 		H_[zind_i,zind] += ∇ci'*Iγi*∇c# need check
+#         #     end
+#         # end ######## need to check all indices
+# 	#
+# 	# end
+#
+# 	# Upper-right block
+# 	for i = 1:p
+# 		# pli = @SVector [j for j in pl[i]]
+# 		for k = 2:N-1
+# 			ix = Z[k]._x #ok
+# 			fdx = ∇F[k][ix,ix] #ok
+# 			H_[solver.xinds_p[i][k], solver.νinds[i][k]] .= fdx' #ok
+# 			H_[solver.xinds_p[i][k], solver.νinds[i][k-1]] .= -Diagonal(@SVector ones(n)) #ok
+# 		end
+# 		H_[solver.xinds_p[i][N], solver.νinds[i][N-1]] .= -Diagonal(@SVector ones(n)) #ok
+#
+# 		for k = 1:N-1
+# 			ix = Z[k]._x #ok
+# 			iu = Z[k]._u #ok
+# 			fdu = ∇F[k][ix,iu][:,pu[i]] #ok
+# 			H_[solver.uinds_p[i][k], solver.νinds[i][k]] .= fdu' #ok
+# 		end
+# 	end
+#
+# 	# Lower-left block
+# 	for k = 2:N-1
+# 		ix = Z[k]._x #ok
+# 		fdx = ∇F[k][ix,ix] #ok
+# 		H_[solver.νinds_p[k-1], solver.xinds[k]] .= -Diagonal(@SVector ones(n)) #ok
+# 		H_[solver.νinds_p[k], solver.xinds[k]] .= fdx #ok
+# 	end
+# 	H_[solver.νinds_p[N-1], solver.xinds[N]] .= -Diagonal(@SVector ones(n)) #ok
+#
+# 	for k = 1:N-1
+# 		ix = Z[k]._x #ok
+# 		iu = Z[k]._u #ok
+# 		fdu = ∇F[k][ix,iu] #ok
+# 		H_[solver.νinds_p[k], solver.uinds[k]] .= fdu #okkk
+# 	end
+# 	return nothing
+# end
 
 function update_H_!(solver::DirectGamesSolver)
 	n,m,N = size(solver)

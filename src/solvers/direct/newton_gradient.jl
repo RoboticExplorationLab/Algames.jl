@@ -3,92 +3,92 @@ export
 	update_g_con!
 
 
-function update_g_old!(solver::DirectGamesSolver; use_copy=false::Bool)
-	n,m,N = size(solver)
-	n,m,pu,p = size(solver.model)
-	if use_copy
-		Z = solver.Z̄
-		ν = solver.ν_
-	else
-		Z = solver.Z
-		ν = solver.ν
-	end
-
-	g_ = solver.g_
-	∇F = solver.∇F
-	C = solver.C
-	dyn = solver.dyn_constraints.constraints[1].vals
-
-	# Fill g_
-	for i = 1:p
-		# Dynamics and cost
-		# uk
-		for k = 1:N-1
-			ix = Z[k]._x
-			iu = Z[k]._u
-			fdu = ∇F[k][ix,iu][:,pu[i]] # Bki [n,mi]
-			g_[solver.uinds_p[i][k]] = C[i].u[k] + fdu'*ν[i][k] #ok
-		end
-		# xk
-		for k = 2:N-1
-			ix = Z[k]._x
-			fdx = ∇F[k][ix,ix] # Ak [n,n]
-			g_[solver.xinds_p[i][k]] = C[i].x[k] + fdx'*ν[i][k] - ν[i][k-1] #ok
-		end
-		g_[solver.xinds_p[i][N]] = C[i].x[N] - ν[i][N-1] #ok
-
-		# Constraints
-	    for i in eachindex(solver.constraints.constraints)
-			con = solver.constraints.constraints[i]
-		# for con in solver.constraints.constraints
-			if typeof(con).parameters[2] == State
-				for k in intersect(con.inds,2:N)
-					rel_zind_i = rel_zinds(con,solver.sinds_p,k,i,N)
-					zind_i = zinds(solver,con,k,i)
-					∇ci = con.∇c[k][:,rel_zind_i]
-					Iμ = TO.penalty_matrix(con,k)
-					@inbounds g_[zind_i] += ∇ci'*con.λ[k] + ∇ci'*Iμ*con.vals[k] # best
-					# # view_g = solver.state_view_g[i][k-1] #bad
-					# # view_g .+= ∇ci'*con.λ[k] + ∇ci'*Iμ*con.vals[k] #bad
-					# # solver.state_view_g[i][k-1] .+= ∇ci'*con.λ[k] + ∇ci'*Iμ*con.vals[k] #Bad
-				end
-			else
-				for k in con.inds
-					rel_zind_i = rel_zinds(con,solver.sinds_p,k,i,N)
-					zind_i = zinds(solver,con,k,i)
-					∇ci = con.∇c[k][:,rel_zind_i]
-					Iμ = TO.penalty_matrix(con,k)
-					@inbounds g_[zind_i] += ∇ci'*con.λ[k] + ∇ci'*Iμ*con.vals[k]
-				end
-			end
-		end
-
-		# Dynamics constraints
-		for k = 1:N-1
-			Iγi = Diagonal(solver.γ[i][k])
-			ix = Z[k]._x
-			iu = Z[k]._u
-			fdui = ∇F[k][ix,iu][:,pu[i]] # Bki [n,mi]
-			g_[solver.uinds_p[i][k]] += fdui'*Iγi*dyn[k]# need check
-		end
-		for k = 2:N-1 ##### MAYBE K = 3:N-1
-			Iγi = Diagonal(solver.γ[i][k])
-			ix = Z[k]._x
-			fdx = ∇F[k][ix,ix] # Ak [n,n]
-			g_[solver.xinds_p[i][k]] += fdx'*Iγi*dyn[k]# need check
-		end
-		for k = 1:N-1
-			Iγi = Diagonal(solver.γ[i][k])
-			g_[solver.xinds_p[i][k+1]] += -Iγi*dyn[k]# need check
-		end
-	end
-	# Dynamics Constraints
-	col_off = (n*p+m)*(N-1) #ok
-	for k = 1:N-1
-		g_[col_off+(k-1)*n .+ (1:n)] = dyn[k] #ok
-	end
-	return nothing
-end
+# function update_g_old!(solver::DirectGamesSolver; use_copy=false::Bool)
+# 	n,m,N = size(solver)
+# 	n,m,pu,p = size(solver.model)
+# 	if use_copy
+# 		Z = solver.Z̄
+# 		ν = solver.ν_
+# 	else
+# 		Z = solver.Z
+# 		ν = solver.ν
+# 	end
+#
+# 	g_ = solver.g_
+# 	∇F = solver.∇F
+# 	C = solver.C
+# 	dyn = solver.dyn_constraints.constraints[1].vals
+#
+# 	# Fill g_
+# 	for i = 1:p
+# 		# Dynamics and cost
+# 		# uk
+# 		for k = 1:N-1
+# 			ix = Z[k]._x
+# 			iu = Z[k]._u
+# 			fdu = ∇F[k][ix,iu][:,pu[i]] # Bki [n,mi]
+# 			g_[solver.uinds_p[i][k]] = C[i].u[k] + fdu'*ν[i][k] #ok
+# 		end
+# 		# xk
+# 		for k = 2:N-1
+# 			ix = Z[k]._x
+# 			fdx = ∇F[k][ix,ix] # Ak [n,n]
+# 			g_[solver.xinds_p[i][k]] = C[i].x[k] + fdx'*ν[i][k] - ν[i][k-1] #ok
+# 		end
+# 		g_[solver.xinds_p[i][N]] = C[i].x[N] - ν[i][N-1] #ok
+#
+# 		# Constraints
+# 	    for i in eachindex(solver.constraints.constraints)
+# 			con = solver.constraints.constraints[i]
+# 		# for con in solver.constraints.constraints
+# 			if typeof(con).parameters[2] == State
+# 				for k in intersect(con.inds,2:N)
+# 					rel_zind_i = rel_zinds(con,solver.sinds_p,k,i,N)
+# 					zind_i = zinds(solver,con,k,i)
+# 					∇ci = con.∇c[k][:,rel_zind_i]
+# 					Iμ = TO.penalty_matrix(con,k)
+# 					@inbounds g_[zind_i] += ∇ci'*con.λ[k] + ∇ci'*Iμ*con.vals[k] # best
+# 					# # view_g = solver.state_view_g[i][k-1] #bad
+# 					# # view_g .+= ∇ci'*con.λ[k] + ∇ci'*Iμ*con.vals[k] #bad
+# 					# # solver.state_view_g[i][k-1] .+= ∇ci'*con.λ[k] + ∇ci'*Iμ*con.vals[k] #Bad
+# 				end
+# 			else
+# 				for k in con.inds
+# 					rel_zind_i = rel_zinds(con,solver.sinds_p,k,i,N)
+# 					zind_i = zinds(solver,con,k,i)
+# 					∇ci = con.∇c[k][:,rel_zind_i]
+# 					Iμ = TO.penalty_matrix(con,k)
+# 					@inbounds g_[zind_i] += ∇ci'*con.λ[k] + ∇ci'*Iμ*con.vals[k]
+# 				end
+# 			end
+# 		end
+#
+# 		# Dynamics constraints
+# 		for k = 1:N-1
+# 			Iγi = Diagonal(solver.γ[i][k])
+# 			ix = Z[k]._x
+# 			iu = Z[k]._u
+# 			fdui = ∇F[k][ix,iu][:,pu[i]] # Bki [n,mi]
+# 			g_[solver.uinds_p[i][k]] += fdui'*Iγi*dyn[k]# need check
+# 		end
+# 		for k = 2:N-1 ##### MAYBE K = 3:N-1
+# 			Iγi = Diagonal(solver.γ[i][k])
+# 			ix = Z[k]._x
+# 			fdx = ∇F[k][ix,ix] # Ak [n,n]
+# 			g_[solver.xinds_p[i][k]] += fdx'*Iγi*dyn[k]# need check
+# 		end
+# 		for k = 1:N-1
+# 			Iγi = Diagonal(solver.γ[i][k])
+# 			g_[solver.xinds_p[i][k+1]] += -Iγi*dyn[k]# need check
+# 		end
+# 	end
+# 	# Dynamics Constraints
+# 	col_off = (n*p+m)*(N-1) #ok
+# 	for k = 1:N-1
+# 		g_[col_off+(k-1)*n .+ (1:n)] = dyn[k] #ok
+# 	end
+# 	return nothing
+# end
 
 function update_g_!(solver::DirectGamesSolver; use_copy=false::Bool)
 	dyn = solver.dyn_constraints.constraints[1].vals
