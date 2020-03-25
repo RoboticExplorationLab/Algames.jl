@@ -46,6 +46,6 @@ vis, anim = animation(t_intersection_solver, t_intersection_scenario;
 	display_actors=true,
 	display_trajectory=true)
 
-@test converged(solver)
-@test converged(solver)
-@test converged(solver)
+@test converged(straight_solver)
+@test converged(ramp_merging_solver)
+@test converged(t_intersection_solver)
