@@ -16,6 +16,7 @@ include("../game_problems/mpc_ramp_merging_3_players.jl")
 include("../game_problems/ramp_merging_2_players.jl")
 include("../game_problems/ramp_merging_3_players.jl")
 include("../game_problems/ramp_merging_4_players.jl")
+include("../game_problems/straight_2_players.jl")
 include("../game_problems/t_intersection_2_players.jl")
 include("../game_problems/t_intersection_3_players.jl")
 include("../game_problems/t_intersection_4_players.jl")
@@ -31,6 +32,14 @@ export
     # algames_ramp_merging_3_players_mpc_solver
 
 export
+    straight_2_players_scenario,
+    algames_straight_2_players_prob,
+    ilqgames_straight_2_players_prob
+
+export
+    ramp_merging_2_players_scenario,
+    ramp_merging_3_players_scenario,
+    ramp_merging_4_players_scenario,
     algames_ramp_merging_2_players_prob,
     algames_ramp_merging_3_players_prob,
     algames_ramp_merging_4_players_prob,
@@ -39,6 +48,9 @@ export
     ilqgames_ramp_merging_4_players_prob
 
 export
+    t_intersection_2_players_scenario,
+    t_intersection_3_players_scenario,
+    t_intersection_4_players_scenario,
     algames_t_intersection_2_players_prob,
     algames_t_intersection_3_players_prob,
     algames_t_intersection_4_players_prob,

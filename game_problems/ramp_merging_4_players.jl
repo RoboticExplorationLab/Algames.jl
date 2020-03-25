@@ -62,7 +62,7 @@ road_length = 6.0
 road_width = 0.40
 ramp_length = 3.2
 ramp_angle = pi/12
-scenario = MergingScenario(road_length, road_width, ramp_length, ramp_angle, actors_radii, actors_types)
+ramp_merging_4_players_scenario = MergingScenario(road_length, road_width, ramp_length, ramp_angle, actors_radii, actors_types)
 
 # Create constraints
 algames_conSet = ConstraintSet(n,m,N)
@@ -73,8 +73,8 @@ con_inds = 2:N # Indices where the constraints will be applied
 add_collision_avoidance(algames_conSet, actors_radii, px, p, con_inds)
 add_collision_avoidance(ilqgames_conSet, actors_radii, px, p, con_inds)
 # Add scenario specific constraints
-add_scenario_constraints(algames_conSet, scenario, px, con_inds; constraint_type=:constraint)
-add_scenario_constraints(ilqgames_conSet, scenario, px, con_inds; constraint_type=:constraint)
+add_scenario_constraints(algames_conSet, ramp_merging_4_players_scenario, px, con_inds; constraint_type=:constraint)
+add_scenario_constraints(ilqgames_conSet, ramp_merging_4_players_scenario, px, con_inds; constraint_type=:constraint)
 
 algames_ramp_merging_4_players_prob = GameProblem(model, obj, xf, tf, constraints=algames_conSet, x0=x0, N=N)
 ilqgames_ramp_merging_4_players_prob = GameProblem(model, obj, xf, tf, constraints=ilqgames_conSet, x0=x0, N=N)

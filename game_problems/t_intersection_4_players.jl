@@ -65,7 +65,7 @@ bottom_road_length = 1.0
 cross_width = 0.25
 bound_radius = 0.05
 lanes = [1, 2, 3, 5]
-scenario = TIntersectionScenario(
+t_intersection_4_players_scenario = TIntersectionScenario(
     top_road_length, road_width, bottom_road_length, cross_width, actors_radii, actors_types, bound_radius)
 
 # Create constraints
@@ -77,8 +77,8 @@ con_inds = 2:N # Indices where the constraints will be applied
 add_collision_avoidance(algames_conSet, actors_radii, px, p, con_inds)
 add_collision_avoidance(ilqgames_conSet, actors_radii, px, p, con_inds)
 # Add scenario specific constraints
-add_scenario_constraints(algames_conSet, scenario, lanes, px, con_inds; constraint_type=:constraint)
-add_scenario_constraints(ilqgames_conSet, scenario, lanes, px, con_inds; constraint_type=:constraint)
+add_scenario_constraints(algames_conSet, t_intersection_4_players_scenario, lanes, px, con_inds; constraint_type=:constraint)
+add_scenario_constraints(ilqgames_conSet, t_intersection_4_players_scenario, lanes, px, con_inds; constraint_type=:constraint)
 
 algames_t_intersection_4_players_prob = GameProblem(model, obj, xf, tf, constraints=algames_conSet, x0=x0, N=N)
 ilqgames_t_intersection_4_players_prob = GameProblem(model, obj, xf, tf, constraints=ilqgames_conSet, x0=x0, N=N)

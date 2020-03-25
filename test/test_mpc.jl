@@ -20,10 +20,9 @@ solve!(mpc_solver; wait=true)
 resample!(mpc_solver)
 # We should be able to solve the 10 MPC steps in less than mpc_solver.opts.mpc_tf = 100s.
 @test mpc_solver.stats.time <= mpc_solver.opts.mpc_tf
-#
-#
-# @test 1 == 1
-#
+
+
+
 # algames_prob = GameProblems.algames_ramp_merging_3_players_mpc_prob
 # algames_opts = GameProblems.algames_ramp_merging_3_players_mpc_opts
 # mpc_opts = GameProblems.ramp_merging_3_players_mpc_opts

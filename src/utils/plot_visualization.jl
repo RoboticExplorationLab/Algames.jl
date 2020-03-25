@@ -144,6 +144,10 @@ function visualize_trajectory_car(solver::TO.AbstractSolver{T}, x0::SVector{n1,T
     return nothing
 end
 
+function visualize_control(solver::TO.AbstractSolver{T}) where {T}
+    visualize_control(TO.controls(solver), solver.model.pu)
+end
+
 function visualize_control(U::AbstractArray, pu::AbstractArray)
     plt = plot()
     p = length(pu)
@@ -167,6 +171,10 @@ function visualize_control(U::AbstractArray, pu::AbstractArray)
     end
     display(plt)
     return nothing
+end
+
+function visualize_state(solver::TO.AbstractSolver{T}) where {T}
+    visualize_state(TO.states(solver))
 end
 
 function visualize_state(X::AbstractArray)

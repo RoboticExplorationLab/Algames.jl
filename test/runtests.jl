@@ -20,14 +20,26 @@ end
     include("test_ilqgames.jl")
 end
 
-# @testset "mpc" begin
-#     include("test_mpc.jl")
-# end
-
 @testset "sampler" begin
     include("test_sampler.jl")
 end
 
 @testset "lq_game" begin
     include("test_lq_game.jl")
+end
+
+@testset "mpc" begin
+    include("test_mpc.jl")
+end
+
+@testset "constraints" begin
+    include("test_constraints.jl")
+end
+
+@testset "animation" begin
+    include("test_animation.jl")
+end
+
+@testset "visualization" begin
+    include("test_visualization.jl")
 end
