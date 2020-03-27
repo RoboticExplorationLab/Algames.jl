@@ -7,8 +7,7 @@ export
 	evaluate_inner_convergence,
 	rollout!,
 	regularization_update!,
-	regularize_primals!,
-	max_violation
+	regularize_primals!
 
 	# Generic solve methods
 "DirectGames solve method (non-allocating)"
@@ -63,12 +62,10 @@ function step!(solver::DirectGamesSolver, J)
 		# println("inner iteration = ", i)
 		cost_expansion(solver.C, solver.obj, solver.Z, solver.model.pu, solver.model.p)
 		###
-		###
-		TO.evaluate!(solver.penalty_constraints, solver.Z)# solver.Z̄)
-		TO.jacobian!(solver.penalty_constraints, solver.Z)# solver.Z̄)
-		TO.update_active_set!(solver.penalty_constraints, solver.Z)# solver.Z̄)
-		penalty_expansion!(solver, solver.Z)# solver.Z̄)
-		###
+		TO.evaluate!(solver.penalty_constraints, solver.Z)### not Zbar
+		TO.jacobian!(solver.penalty_constraints, solver.Z)### not Zbar
+		TO.update_active_set!(solver.penalty_constraints,solver.Z)### not Zbar
+		penalty_expansion!(solver, solver.Z)### not Zbar
 		###
 		regularize_primals!(solver.C, solver)
 
@@ -108,7 +105,9 @@ function record_iteration!(solver::DirectGamesSolver, J, dJ)
 	TO.evaluate!(solver.dyn_constraints, solver.Z)
 	TO.max_violation!(solver.constraints)
 	TO.max_violation!(solver.dyn_constraints)
-	solver.stats.cmax[i] = TO.max_violation(solver)
+	cmax = max(maximum(solver.constraints.c_max),
+		maximum(solver.dyn_constraints.c_max))
+	solver.stats.cmax[i] = cmax
 
     @logmsg TO.InnerLoop :iter value=i
     @logmsg TO.InnerLoop :cost value=J
@@ -149,9 +148,9 @@ function evaluate_convergence(solver::DirectGamesSolver)
     # Check for cost convergence
     # note the dJ > 0 criteria exists to prevent loop exit when forward pass makes no improvement
     # if all(0.0 .< solver.stats.dJ[i]) && all(solver.stats.dJ[i] .< solver.opts.cost_tolerance) ####
-	if (mean(abs.(solver.stats.dJ[i])) < solver.opts.cost_tolerance) && (cmax < solver.opts.constraint_tolerance)
+    if (mean(abs.(solver.stats.dJ[i])) < solver.opts.cost_tolerance) && (cmax < solver.opts.constraint_tolerance)
 		TO.Logging.@info "Outer loop converged: cost_tolerance & constraint_tolerance"
-		return true
+        return true
     end
 
 	if (optimality_merit < solver.opts.optimality_constraint_tolerance) && (cmax < solver.opts.constraint_tolerance)
@@ -162,7 +161,7 @@ function evaluate_convergence(solver::DirectGamesSolver)
     # Check total iterations
     if i >= solver.opts.iterations
 		TO.Logging.@info "Outer loop converged: iterations"
-		return true
+        return true
     end
 
     # # Outer loop update if forward pass is repeatedly unsuccessful
@@ -253,14 +252,4 @@ function regularize_primals!(C::Vector{E}, solver::TO.AbstractSolver) where {T, 
 		C[i].xx[N] += ηx
 	end
 	return nothing
-end
-
-
-function TO.max_violation(solver::DirectGamesSolver)
-	cmax = 0.
-	if !isempty(solver.constraints.constraints)
-		cmax = max(maximum(solver.constraints.c_max),
-			maximum(solver.dyn_constraints.c_max))
-	end
-	return cmax
 end

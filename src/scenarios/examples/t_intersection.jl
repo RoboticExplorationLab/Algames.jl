@@ -83,7 +83,7 @@ function add_scenario_constraints(conSet::ConstraintSet,
 	scenario::TIntersectionScenario{T}, lanes, px, con_inds; constraint_type=:constraint) where T
     for i = 1:length(px)
         add_t_intersection_constraints(conSet::ConstraintSet, scenario::TIntersectionScenario,
-            lanes[i], i, px, con_inds)
+            lanes[i], i, px, con_inds; constraint_type=constraint_type)
     end
     return nothing
 end

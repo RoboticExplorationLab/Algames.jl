@@ -66,7 +66,7 @@ function add_scenario_constraints(conSet::ConstraintSet,
 	scenario::MergingScenario, px, con_inds; constraint_type=:constraint)
     for i = 1:length(px)
         add_merging_constraints(conSet::ConstraintSet, scenario::MergingScenario,
-            i, px, con_inds)
+            i, px, con_inds; constraint_type=constraint_type)
     end
     return nothing
 end

@@ -12,3 +12,4 @@ temp/
 fort.10
 logs/
 Manifest.toml
+src/pf/*

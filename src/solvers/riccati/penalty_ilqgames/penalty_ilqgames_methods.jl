@@ -73,9 +73,10 @@ end
 function set_penalty!(conSet::ConstraintSet{T}, pen::Vector{T}) where T
     for (j,con) in enumerate(conSet.constraints)
         ϕ = con.params.ϕ
-        for i in eachindex(con.inds)
-            new_μ = SVector{length(con.μ[i])}(pen[j]*ones(length(con.μ[i])))
-            con.μ[i] = clamp.(ϕ * new_μ, 0.0, con.params.μ_max)
+        for k in eachindex(con.inds)
+            new_μ = SVector{length(con.μ[k])}(pen[j]*ones(length(con.μ[k])))
+			# con.μ[k] = clamp.(ϕ * new_μ, 0.0, con.params.μ_max) # used for RSS2020
+			con.μ[k] = clamp.(new_μ, 0.0, con.params.μ_max) # used for PFpaper
         end
     end
     return nothing

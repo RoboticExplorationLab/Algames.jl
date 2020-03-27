@@ -25,8 +25,8 @@ export
 # 		end
 # 		H_[solver.xinds_p[i][N], solver.xinds[N]] .= C[i].xx[N] #ok
 #
-# 		for i in eachindex(solver.constraints.constraints)
-# 			con = solver.constraints.constraints[i]
+# 		for c in eachindex(solver.constraints.constraints)
+# 			con = solver.constraints.constraints[c]
 # 		# for con in solver.constraints.constraints
 # 			if typeof(con).parameters[2] == State
 # 				for (j,k) in enumerate(intersect(con.inds,2:N))
@@ -200,8 +200,8 @@ function update_H_!(solver::DirectGamesSolver, In::SMatrix{ln,ln,T,lnn}) where{l
 	        # end ######## need to check all indices
 		#
 		# end
-	for i in eachindex(solver.constraints.constraints)
-		con = solver.constraints.constraints[i]
+	for c in eachindex(solver.constraints.constraints)
+		con = solver.constraints.constraints[c]
 	# for con in solver.constraints.constraints
 		update_H_con!(solver,con,n,m,p,N)
 	end

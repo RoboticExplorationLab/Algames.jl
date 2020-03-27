@@ -38,8 +38,8 @@ export
 # 		g_[solver.xinds_p[i][N]] = C[i].x[N] - ν[i][N-1] #ok
 #
 # 		# Constraints
-# 	    for i in eachindex(solver.constraints.constraints)
-# 			con = solver.constraints.constraints[i]
+# 	    for c in eachindex(solver.constraints.constraints)
+# 			con = solver.constraints.constraints[c]
 # 		# for con in solver.constraints.constraints
 # 			if typeof(con).parameters[2] == State
 # 				for k in intersect(con.inds,2:N)
@@ -154,8 +154,8 @@ function update_g_!(solver::DirectGamesSolver, dyn::Vector{SVector{nn,T}}; use_c
 		########################################################################
 		########################################################################
 	end
-	for i in eachindex(solver.constraints.constraints)
-		con = solver.constraints.constraints[i]
+	for c in eachindex(solver.constraints.constraints)
+		con = solver.constraints.constraints[c]
 	# for con in solver.constraints.constraints
 		update_g_con!(solver,con,n,m,p,N)
 	end

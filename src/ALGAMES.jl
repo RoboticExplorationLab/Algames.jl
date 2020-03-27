@@ -95,6 +95,7 @@ export
 	penalty_update!,
 	inner_step!,
 	line_search!,
+	penalty_expansion!,
 	primal_dual_copy_update!,
 	primal_dual_update!,
 	indiv_cost

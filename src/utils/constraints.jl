@@ -29,6 +29,28 @@ function TO.evaluate(con::CollisionConstraint{T,P}, x::SVector) where {T,P}
 	-(x[x1] .- x[x2]).^2 - (x[y1] .- x[y2]).^2 .+ r.^2
 end
 
+# struct PenaltyCollisionConstraint{T,P} <: TO.AbstractConstraint{Inequality,State,P}
+# 	n::Int
+# 	radius1::SVector{P,T} # radius of object 1
+# 	radius2::SVector{P,T} # radius of object 2
+# 	x1::Int  # index of x-state of object 1
+# 	y1::Int  # index of y-state of object 1
+# 	x2::Int  # index of x-state of object 2
+# 	y2::Int  # index of y-state of object 2
+# 	PenaltyCollisionConstraint(n::Int, radius1::SVector{P,T}, radius2::SVector{P,T},
+# 			x1::Int, y1::Int, x2::Int, y2::Int) where {T,P} =
+# 		 new{T,P}(n,radius1,radius2,x1,y1,x2,y2)
+# end
+# TO.state_dim(con::PenaltyCollisionConstraint) = con.n
+#
+# function TO.evaluate(con::PenaltyCollisionConstraint{T,P}, x::SVector) where {T,P}
+# 	x1 = con.x1; x2 = con.x2
+# 	y1 = con.y1; y2 = con.y2
+# 	r = con.radius1 + con.radius2
+# 	c = - sqrt.((x[x1] .- x[x2]).^2 + (x[y1] .- x[y2]).^2) .+ r
+# 	return c .^ 2 .* sign.(c)
+# end
+
 
 struct BoundaryConstraint{T,P} <: TO.AbstractConstraint{Inequality,State,1}
 	n::Int
@@ -84,14 +106,22 @@ end
 
 
 function add_collision_avoidance(conSet::ConstraintSet,
-    actors_radii::Vector{T}, px::Vector{Vector{Int}}, p::Int, con_inds::UnitRange) where T
+    actors_radii::Vector{T}, px::Vector{Vector{Int}}, p::Int, con_inds::UnitRange; constraint_type=:constraint) where T
 	for i = 1:p
         for j = 1:i-1
             radiusi = @SVector fill(actors_radii[i], 1)
             radiusj = @SVector fill(actors_radii[j], 1)
-            col_con = CollisionConstraint(conSet.n, radiusi, radiusj,
-                px[i][1], px[i][2], px[j][1], px[j][2])
-            add_constraint!(conSet, col_con, con_inds)
+			if constraint_type == :constraint
+	            col_con = CollisionConstraint(conSet.n, radiusi, radiusj,
+	                px[i][1], px[i][2], px[j][1], px[j][2])
+				add_constraint!(conSet, col_con, con_inds)
+			elseif constraint_type == :penalty
+				col_con = PenaltyCollisionConstraint(conSet.n, radiusi, radiusj,
+					px[i][1], px[i][2], px[j][1], px[j][2])
+				add_constraint!(conSet, col_con, con_inds)
+			else
+				@warn "Unknown constraint type."
+			end
         end
     end
     return nothing

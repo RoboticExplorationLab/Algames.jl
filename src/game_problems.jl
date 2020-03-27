@@ -14,6 +14,7 @@ const AG = ALGAMES
 include("../game_problems/linear_quadratic.jl")
 include("../game_problems/mpc_ramp_merging_2_players.jl")
 include("../game_problems/mpc_ramp_merging_3_players.jl")
+include("../game_problems/ramp_merging_3_players_penalty.jl")
 include("../game_problems/ramp_merging_2_players.jl")
 include("../game_problems/ramp_merging_3_players.jl")
 include("../game_problems/ramp_merging_4_players.jl")
@@ -34,6 +35,11 @@ export
     ramp_merging_2_players_mpc_opts,
     ramp_merging_3_players_mpc_opts
     # algames_ramp_merging_3_players_mpc_solver
+
+export
+    algames_ramp_merging_3_players_penalty_prob,
+    algames_ramp_merging_3_players_penalty_opts,
+    algames_ramp_merging_3_players_penalty_contraints
 
 export
     straight_2_players_scenario,
