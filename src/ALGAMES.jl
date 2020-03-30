@@ -95,7 +95,6 @@ export
 	penalty_update!,
 	inner_step!,
 	line_search!,
-	penalty_expansion!,
 	primal_dual_copy_update!,
 	primal_dual_update!,
 	indiv_cost
@@ -181,7 +180,6 @@ export
 # iLQGamesPenalty Solver
 export
 	solve!,
-	set_penalty!,
 	step!,
 	penalty_expansion!,
 	record_iteration!,
@@ -234,6 +232,10 @@ export
 export
 	rel_zinds,
 	zinds
+
+export
+	set_penalty!
+
 
 # Utils
 export
@@ -297,13 +299,14 @@ include("solvers/direct/newton_gradient.jl")
 include("solvers/direct/newton_hessian.jl")
 include("solvers/inds_helpers.jl")
 
-
 include("solvers/riccati/algames/algames_solver.jl")
 include("solvers/riccati/algames/algames_methods.jl")
 include("solvers/riccati/ilqgames/ilqgames_solver.jl")
 include("solvers/riccati/ilqgames/ilqgames_methods.jl")
 include("solvers/riccati/penalty_ilqgames/penalty_ilqgames_solver.jl")
 include("solvers/riccati/penalty_ilqgames/penalty_ilqgames_methods.jl")
+
+include("solvers/penalty_helpers.jl")
 
 include("dynamics/double_integrator.jl")
 include("dynamics/unicycle.jl")

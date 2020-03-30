@@ -34,7 +34,6 @@ export
     algames_ramp_merging_3_players_mpc_opts,
     ramp_merging_2_players_mpc_opts,
     ramp_merging_3_players_mpc_opts
-    # algames_ramp_merging_3_players_mpc_solver
 
 export
     algames_ramp_merging_3_players_penalty_prob,
