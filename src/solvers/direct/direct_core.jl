@@ -134,7 +134,6 @@ function penalty_expansion!(solver::DirectGamesSolver{T}, Z::TO.Traj) where T
     for i = 1:p
 		for c in eachindex(conSet.constraints)
 			con = conSet.constraints[c]
-        # for con in conSet.constraints
             if typeof(con).parameters[2] == State
                 for (j,k) in enumerate(intersect(con.inds,1:N))
                     Iμ = TO.penalty_matrix(con,j)

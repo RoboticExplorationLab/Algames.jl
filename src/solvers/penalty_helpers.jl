@@ -28,17 +28,19 @@ function set_penalty!(solver::PenaltyiLQGamesSolver{T}, pen::Vector{T}) where T
 end
 
 function set_penalty!(solver::PenaltyiLQGamesSolver{T}, μ::T) where T
+	solver.opts.μ_penalty = μ
     set_penalty!(solver.constraints, μ)
     return nothing
 end
 
 function set_penalty!(solver::DirectGamesSolver{T}, pen::Vector{T}) where T
-    solver.pen .= pen
+	solver.opts.μ_penalty = μ
     set_penalty!(solver.penalty_constraints, pen)
     return nothing
 end
 
 function set_penalty!(solver::DirectGamesSolver{T}, μ::T) where T
+	solver.opts.μ_penalty = μ
     set_penalty!(solver.penalty_constraints, μ)
     return nothing
 end

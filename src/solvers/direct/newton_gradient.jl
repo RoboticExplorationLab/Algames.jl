@@ -156,7 +156,6 @@ function update_g_!(solver::DirectGamesSolver, dyn::Vector{SVector{nn,T}}; use_c
 	end
 	for c in eachindex(solver.constraints.constraints)
 		con = solver.constraints.constraints[c]
-	# for con in solver.constraints.constraints
 		update_g_con!(solver,con,n,m,p,N)
 	end
 
