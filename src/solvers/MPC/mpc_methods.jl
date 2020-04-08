@@ -33,7 +33,8 @@ function TO.solve!(solver::MPCGamesSolver{T}; wait::Bool=false) where {T<:Abstra
 								Diagonal(solver.Qf[i]),
 								new_xf,
 								N,checks=false) for i=1:p]
-		dt_new_solver = @elapsed solver = MPCGamesSolver(solver, solver.solver.obj, new_x0, new_xf)
+		dt_new_solver = @elapsed solver = MPCGamesSolver(solver, solver.solver.obj, new_x0, new_xf) #######################
+		# dt_new_solver = @elapsed solver = MPCGamesSolver(solver, new_obj, new_x0, new_xf) ###############################
 		dt_update_traj = @elapsed update_traj!(solver, δt, new_x0)
         dt_eval_cv = @elapsed evaluate_convergence(solver) ? break : nothing
 		# @show dt_step dt_new_obj dt_new_solver dt_update_traj dt_eval_cv

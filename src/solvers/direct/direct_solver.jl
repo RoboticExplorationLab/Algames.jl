@@ -426,10 +426,11 @@ function reset!(solver::DirectGamesSolver{T}, reset_stats=true; reset_type::Symb
     TO.reset!(solver.constraints)
     TO.reset!(solver.penalty_constraints)
     nc = length(solver.penalty_constraints.constraints)
-    if nc >= 1
-        pen = solver.opts.μ_penalty[1] * ones(nc)
-        set_penalty!(solver.penalty_constraints, pen)
-    end
+    set_penalty!(solver.penalty_constraints, solver.opts.μ_penalty[1])
+    # if nc >= 1
+    #     pen = solver.opts.μ_penalty[1] * ones(nc)
+    #     set_penalty!(solver.penalty_constraints, pen)
+    # end
     TO.reset!(solver.dyn_constraints)
     solver.ρ[1] = 0.0
     solver.dρ[1] = 0.0
@@ -518,4 +519,10 @@ function DirectGamesSolver(solver_::DirectGamesSolver{T,I}, obj::Vector{O},
         solver_.γ,
         solver_.logger)
     return solver
+end
+
+function Base.copy(s::DirectGamesSolverOptions{T}) where T
+    fnames = fieldnames(typeof(s))
+    args = [getfield(s,fname) for fname in fnames]
+    DirectGamesSolverOptions{T}(args...)
 end

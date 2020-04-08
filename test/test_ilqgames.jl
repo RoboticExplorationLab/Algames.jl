@@ -17,11 +17,11 @@ opts = PenaltyiLQGamesSolverOptions(
     log_level=TO.Logging.Warn,
     )
 
-ramp_merging_pen_2 = ones(length(ramp_merging_2_players_prob.constraints))*1000.0
+ramp_merging_pen_2 = ones(length(ramp_merging_2_players_prob.constraints))*10000.0
 # ramp_merging_pen_3 = ones(length(ramp_merging_3_players_prob.constraints))*1000.0
 # ramp_merging_pen_4 = ones(length(ramp_merging_4_players_prob.constraints))*1000.0
-straight_pen_2 = ones(length(straight_2_players_prob.constraints))*1000.0
-t_intersecion_pen_2 = ones(length(t_intersection_2_players_prob.constraints))*1000.0
+straight_pen_2 = ones(length(straight_2_players_prob.constraints))*10000.0
+t_intersecion_pen_2 = ones(length(t_intersection_2_players_prob.constraints))*10000.0
 # t_intersecion_pen_3 = ones(length(t_intersection_3_players_prob.constraints))*1000.0
 # t_intersecion_pen_4 = ones(length(t_intersection_4_players_prob.constraints))*1000.0
 

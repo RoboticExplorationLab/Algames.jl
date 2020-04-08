@@ -18,15 +18,15 @@ dt = tf / (N-1) # time step duration
 
 # Define initial and final states (be sure to use Static Vectors!)
 x0 = @SVector [# p1   # p2   # p3
-              -0.80, -1.00, -0.90, # x
-              -0.05, -0.05, -0.31, # y
-			   0.60,  0.60,  0.65, # θ
+              -1.00, -0.80, -0.60, # x
+              -0.00,  0.10, -0.10, # y
+			   0.60,  0.60,  0.45, # θ
 			   0.00,  0.00,  0.00, # v
                ]
 xf = @SVector [# p1   # p2   # p3
-               1.10,  0.70,  0.90, # x
-              -0.05, -0.05, -0.05, # y
-			   0.60,  0.60,  0.60, # θ
+               1.10,  1.30,  0.60, # x
+              -0.05, -0.08, -0.10, # y
+			   0.70,  0.70,  0.40, # θ
 			   0.00,  0.00,  0.00, # v
               ]
 
@@ -59,7 +59,7 @@ road_length = 2.20
 road_width = 0.42
 ramp_length = 1.2
 ramp_angle = pi/12
-ramp_merging_3_players_penalty_scenario = MergingScenario(road_length,
+overtaking_3_players_penalty_scenario = MergingScenario(road_length,
 	road_width, ramp_length, ramp_angle, actors_radii, actors_types)
 
 # Create constraints
@@ -70,13 +70,13 @@ con_inds = 1:N # Indices where the constraints will be applied
 add_collision_avoidance(algames_conSet, actors_radii, px,
 	p, con_inds; constraint_type=:constraint)
 # Add scenario specific constraints
-add_scenario_constraints(algames_conSet, ramp_merging_3_players_penalty_scenario,
+add_scenario_constraints(algames_conSet, overtaking_3_players_penalty_scenario,
 	px, con_inds; constraint_type=:constraint)
 
-algames_ramp_merging_3_players_penalty_prob = GameProblem(model, obj, xf, tf,
+algames_overtaking_3_players_penalty_prob = GameProblem(model, obj, xf, tf,
 	constraints=algames_conSet, x0=x0, N=N)
 
-algames_ramp_merging_3_players_penalty_opts = DirectGamesSolverOptions{T}(
+algames_overtaking_3_players_penalty_opts = DirectGamesSolverOptions{T}(
     iterations=10,
     inner_iterations=20,
     iterations_linesearch=10,
@@ -84,20 +84,20 @@ algames_ramp_merging_3_players_penalty_opts = DirectGamesSolverOptions{T}(
 	optimality_constraint_tolerance=1e-2,
 	μ_penalty=0.05,
     log_level=TO.Logging.Debug)
-algames_ramp_merging_3_players_penalty_solver =
+algames_overtaking_3_players_penalty_solver =
 	DirectGamesSolver(
-	algames_ramp_merging_3_players_penalty_prob,
-	algames_ramp_merging_3_players_penalty_opts)
+	algames_overtaking_3_players_penalty_prob,
+	algames_overtaking_3_players_penalty_opts)
 
 # add penalty constraints
-add_collision_avoidance(algames_ramp_merging_3_players_penalty_solver.penalty_constraints,
+add_collision_avoidance(algames_overtaking_3_players_penalty_solver.penalty_constraints,
     inflated_actors_radii, px, p, con_inds; constraint_type=:constraint)
 
-reset!(algames_ramp_merging_3_players_penalty_solver, reset_type=:full)
-algames_ramp_merging_3_players_penalty_contraints = copy(algames_ramp_merging_3_players_penalty_solver.penalty_constraints)
+reset!(algames_overtaking_3_players_penalty_solver, reset_type=:full)
+algames_overtaking_3_players_penalty_contraints = copy(algames_overtaking_3_players_penalty_solver.penalty_constraints)
 
-# @time timing_solve(algames_ramp_merging_3_players_penalty_solver)
-# visualize_trajectory_car(algames_ramp_merging_3_players_penalty_solver)
+# @time timing_solve(algames_overtaking_3_players_penalty_solver)
+# visualize_trajectory_car(algames_overtaking_3_players_penalty_solver)
 #
 #
 # using MeshCat
@@ -106,8 +106,8 @@ algames_ramp_merging_3_players_penalty_contraints = copy(algames_ramp_merging_3_
 # open(vis)
 # sleep(1.0)
 # # Execute this line after the MeshCat tab is open
-# vis, anim = animation(algames_ramp_merging_3_players_penalty_solver,
-# 	ramp_merging_3_players_penalty_scenario;
+# vis, anim = animation(algames_overtaking_3_players_penalty_solver,
+# 	overtaking_3_players_penalty_scenario;
 # 	vis=vis, anim=anim,
 # 	open_vis=false,
 # 	display_actors=true,

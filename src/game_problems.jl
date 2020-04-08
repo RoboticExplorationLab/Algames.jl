@@ -14,7 +14,10 @@ const AG = ALGAMES
 include("../game_problems/linear_quadratic.jl")
 include("../game_problems/mpc_ramp_merging_2_players.jl")
 include("../game_problems/mpc_ramp_merging_3_players.jl")
+include("../game_problems/lane_changing_3_players_penalty.jl")
+include("../game_problems/overtaking_3_players_penalty.jl")
 include("../game_problems/ramp_merging_3_players_penalty.jl")
+include("../game_problems/t_intersection_3_players_penalty.jl")
 include("../game_problems/ramp_merging_2_players.jl")
 include("../game_problems/ramp_merging_3_players.jl")
 include("../game_problems/ramp_merging_4_players.jl")
@@ -36,9 +39,24 @@ export
     ramp_merging_3_players_mpc_opts
 
 export
+    algames_lane_changing_3_players_penalty_prob,
+    algames_lane_changing_3_players_penalty_opts,
+    algames_lane_changing_3_players_penalty_contraints
+
+export
+    algames_overtaking_3_players_penalty_prob,
+    algames_overtaking_3_players_penalty_opts,
+    algames_overtaking_3_players_penalty_contraints
+
+export
     algames_ramp_merging_3_players_penalty_prob,
     algames_ramp_merging_3_players_penalty_opts,
     algames_ramp_merging_3_players_penalty_contraints
+
+export
+    algames_t_intersection_3_players_penalty_prob,
+    algames_t_intersection_3_players_penalty_opts,
+    algames_t_intersection_3_players_penalty_contraints
 
 export
     straight_2_players_scenario,
