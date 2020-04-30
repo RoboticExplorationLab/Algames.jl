@@ -55,9 +55,9 @@ actor_radius = 0.08
 actors_radii = [actor_radius for i=1:p]
 inflated_actors_radii = [3.0*actor_radius for i=1:p]
 actors_types = [:car for i=1:p]
-road_length = 2.20
+road_length = 10.20
 road_width = 0.42
-ramp_length = 1.2
+ramp_length = 5.2
 ramp_angle = pi/12
 ramp_merging_3_players_penalty_scenario = MergingScenario(road_length,
 	road_width, ramp_length, ramp_angle, actors_radii, actors_types)

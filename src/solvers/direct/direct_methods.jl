@@ -80,7 +80,8 @@ function step!(solver::DirectGamesSolver, J)
 		TO.discrete_jacobian!(solver.∇F, solver.model, solver.Z)
 
 		update_g_!(solver)
-		if evaluate_inner_convergence(solver)
+		if evaluate_inner_convergence(solver) && solver.opts.break_inner_loop
+			# @show "break early"
 			record_inner_iteration!(solver, mean(abs.(solver.g_)), NaN)
 			break
 		end
@@ -149,12 +150,14 @@ function evaluate_convergence(solver::DirectGamesSolver)
     # Check for cost convergence
     # note the dJ > 0 criteria exists to prevent loop exit when forward pass makes no improvement
     # if all(0.0 .< solver.stats.dJ[i]) && all(solver.stats.dJ[i] .< solver.opts.cost_tolerance) ####
-	if (mean(abs.(solver.stats.dJ[i])) < solver.opts.cost_tolerance) && (cmax < solver.opts.constraint_tolerance)
+	if (mean(abs.(solver.stats.dJ[i])) < solver.opts.cost_tolerance) && (cmax < solver.opts.constraint_tolerance) &&
+		(i>=solver.opts.min_iterations)
 		TO.Logging.@info "Outer loop converged: cost_tolerance & constraint_tolerance"
 		return true
     end
 
-	if (optimality_merit < solver.opts.optimality_constraint_tolerance) && (cmax < solver.opts.constraint_tolerance)
+	if (optimality_merit < solver.opts.optimality_constraint_tolerance) && (cmax < solver.opts.constraint_tolerance) &&
+		(i>=solver.opts.min_iterations)
 		TO.Logging.@info "Outer loop converged: optimality_merit & constraint_tolerance"
 		return true
 	end
