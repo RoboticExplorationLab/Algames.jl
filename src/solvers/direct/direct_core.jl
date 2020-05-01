@@ -126,30 +126,69 @@ function indiv_cost(solver::DirectGamesSolver)
 	return J
 end
 
+# function penalty_expansion!(solver::DirectGamesSolver{T}, Z::TO.Traj) where T
+#     C = solver.C
+#     conSet = solver.penalty_constraints
+#     n,m,pu,p = size(solver.model)
+#     n,m,N = size(solver)
+#     for i = 1:p
+# 		for c in eachindex(conSet.constraints)
+# 			con = conSet.constraints[c]
+#             if typeof(con).parameters[2] == State
+#                 for (j,k) in enumerate(intersect(con.inds,1:N))
+#                     Iμ = TO.penalty_matrix(con,j)
+#                     C[i].xx[k] += con.∇c[j]'*Iμ*con.∇c[j]
+#                     C[i].x[k] += con.∇c[j]'*Iμ*con.vals[j]
+#                 end
+#             elseif typeof(con).parameters[2] == Control
+#                 for (j,k) in enumerate(intersect(con.inds,1:N-1))
+#                     Iμ = TO.penalty_matrix(con,j)
+#                     C[i].uu[k] += con.∇c[j]'*Iμ*con.∇c[j]
+#                     C[i].u[k] += con.∇c[j]'*Iμ*con.vals[j]
+#                 end
+# 			else
+# 				@warn(typeof(con), " this type of constraint is not supported.")
+#             end
+#         end
+#     end
+#     return nothing
+# end
+
+
 function penalty_expansion!(solver::DirectGamesSolver{T}, Z::TO.Traj) where T
     C = solver.C
     conSet = solver.penalty_constraints
     n,m,pu,p = size(solver.model)
     n,m,N = size(solver)
-    for i = 1:p
-		for c in eachindex(conSet.constraints)
-			con = conSet.constraints[c]
-            if typeof(con).parameters[2] == State
-                for (j,k) in enumerate(intersect(con.inds,1:N))
-                    Iμ = TO.penalty_matrix(con,j)
-                    C[i].xx[k] += con.∇c[j]'*Iμ*con.∇c[j]
-                    C[i].x[k] += con.∇c[j]'*Iμ*con.vals[j]
-                end
-            elseif typeof(con).parameters[2] == Control
-                for (j,k) in enumerate(intersect(con.inds,1:N-1))
-                    Iμ = TO.penalty_matrix(con,j)
-                    C[i].uu[k] += con.∇c[j]'*Iμ*con.∇c[j]
-                    C[i].u[k] += con.∇c[j]'*Iμ*con.vals[j]
-                end
-			else
-				@warn(typeof(con), " this type of constraint is not supported.")
-            end
-        end
+	for c in eachindex(conSet.constraints)
+		con = conSet.constraints[c]
+		update_penalty_expansion!(solver,con,n,m,p,N)
     end
     return nothing
+end
+
+function update_penalty_expansion!(solver::DirectGamesSolver{T}, con::ConstraintVals{T,State},
+	n::Int, m::Int, p::Int, N::Int) where {T}
+	C = solver.C
+	for i=1:p
+	    for (j,k) in enumerate(intersect(con.inds,1:N))
+			Iμ = TO.penalty_matrix(con,j)
+			C[i].xx[k] += con.∇c[j]'*Iμ*con.∇c[j]
+			C[i].x[k] += con.∇c[j]'*Iμ*con.vals[j]
+		end
+	end
+	return nothing
+end
+
+function update_penalty_expansion!(solver::DirectGamesSolver{T}, con::ConstraintVals{T,Control},
+	n::Int, m::Int, p::Int, N::Int) where {T}
+	C = solver.C
+	for i=1:p
+	    for (j,k) in enumerate(intersect(con.inds,1:N-1))
+	        Iμ = TO.penalty_matrix(con,j)
+	        C[i].uu[k] += con.∇c[j]'*Iμ*con.∇c[j]
+	        C[i].u[k] += con.∇c[j]'*Iμ*con.vals[j]
+	    end
+	end
+	return nothing
 end

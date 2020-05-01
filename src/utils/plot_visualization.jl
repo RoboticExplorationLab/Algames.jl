@@ -14,24 +14,24 @@ export
     rectangle_shape
 
 
-function visualize_trajectory_car(solver::TO.ALTROSolver{T}; save_figure::Bool=false) where T
+function visualize_trajectory_car(solver::TO.ALTROSolver{T}; title::String="", save_figure::Bool=false) where T
     conSet = solver.solver_al.solver_uncon.obj.constraints
     x0 = solver.solver_al.solver_uncon.x0
     xf = solver.solver_al.solver_uncon.xf
-    visualize_trajectory_car(solver, x0, xf, conSet; save_figure=save_figure)
+    visualize_trajectory_car(solver, x0, xf, conSet; title=title, save_figure=save_figure)
     return nothing
 end
 
-function visualize_trajectory_car(solver::TO.AbstractSolver{T}; save_figure::Bool=false) where T
+function visualize_trajectory_car(solver::TO.AbstractSolver{T}; title::String="", save_figure::Bool=false) where T
     conSet = solver.constraints
     x0 = solver.x0
     xf = solver.xf
-    visualize_trajectory_car(solver, x0, xf, conSet; save_figure=save_figure)
+    visualize_trajectory_car(solver, x0, xf, conSet; title=title, save_figure=save_figure)
     return nothing
 end
 
 function visualize_trajectory_car(solver::TO.AbstractSolver{T}, x0::SVector{n1,T}, xf::SVector{n1,T},
-    conSet::TO.ConstraintSet{T}; save_figure::Bool=false) where {n1, T}
+    conSet::TO.ConstraintSet{T}; title::String="", save_figure::Bool=false) where {n1, T}
     n,m,N = size(solver)
     n,m,pu,p = size(solver.model)
     px = solver.model.px
@@ -118,14 +118,26 @@ function visualize_trajectory_car(solver::TO.AbstractSolver{T}, x0::SVector{n1,T
             end
         end
     end
-
+    xlim = [Inf, -Inf]
+    ylim = [Inf, -Inf]
+    for i = 1:p
+        xlim[1] = min(xlim[1], minimum(X_traj[i][1]))
+        ylim[1] = min(ylim[1], minimum(X_traj[i][2]))
+        xlim[2] = max(xlim[2], maximum(X_traj[i][1]))
+        ylim[2] = max(ylim[2], maximum(X_traj[i][2]))
+    end
+    xlim += [-1.5, 1.5]
+    ylim += [-0.5, 0.5]
     # Plot trajectory
     for i = 1:p
         plot!(X_traj[i][1], X_traj[i][2],
+            title=title,
             color=:black,
             marker=:circle,
             linewidth=2.0,
             linestyle=:dot,
+            xlim=xlim,
+            ylim=ylim,
             label="")
         # Plot start and end
         plot!([x0[px[i][1]], xf[px[i][1]]],
@@ -138,7 +150,7 @@ function visualize_trajectory_car(solver::TO.AbstractSolver{T}, x0::SVector{n1,T
             label="")
     end
     if save_figure == true
-        savefig("plots/car_trajectory_" * Dates.format(now(), "HH:MM:SS:sss") * ".jpg")
+        savefig("plots/car_trajectory_" * title * "_" * Dates.format(now(), "HH:MM:SS:sss") * ".jpg")
     end
     display(plt)
     return nothing
