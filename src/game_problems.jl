@@ -17,6 +17,7 @@ include("../game_problems/mpc_ramp_merging_3_players.jl")
 include("../game_problems/lane_changing_3_players_penalty.jl")
 include("../game_problems/overtaking_3_players_penalty.jl")
 include("../game_problems/ramp_merging_3_players_penalty.jl")
+include("../game_problems/ramp_merging_4_players_penalty.jl")
 include("../game_problems/t_intersection_3_players_penalty.jl")
 include("../game_problems/ramp_merging_2_players.jl")
 include("../game_problems/ramp_merging_3_players.jl")
@@ -50,8 +51,11 @@ export
 
 export
     algames_ramp_merging_3_players_penalty_prob,
+    algames_ramp_merging_4_players_penalty_prob,
     algames_ramp_merging_3_players_penalty_opts,
+    algames_ramp_merging_4_players_penalty_opts,
     algames_ramp_merging_3_players_penalty_contraints
+    algames_ramp_merging_4_players_penalty_contraints
 
 export
     algames_t_intersection_3_players_penalty_prob,
