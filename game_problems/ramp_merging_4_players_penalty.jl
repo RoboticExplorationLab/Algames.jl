@@ -26,8 +26,8 @@ x0 = @SVector [# p1   # p2   # p3   # p4
 xf = @SVector [# p1   # p2   # p3   # p4
                1.10,  0.70,  0.90,  1.30,# x
               -0.10, -0.10, -0.10, -0.10,# y
-			   0.00,  0.00,  0.00,  0.00,# θ
-			   0.60,  0.60,  0.60,  0.65,# v
+			   0.70,  0.80,  0.60,  0.65,# x_dot
+			   0.00,  0.00,  0.00,  0.00,# y_dot
               ]
 
 diag_Q = [SVector{n}([1.,  0.,  0.,  0.,
@@ -102,8 +102,8 @@ algames_ramp_merging_4_players_penalty_contraints = copy(algames_ramp_merging_4_
 
 # @time timing_solve(algames_ramp_merging_4_players_penalty_solver)
 # visualize_trajectory_car(algames_ramp_merging_4_players_penalty_solver)
-#
-#
+
+
 # using MeshCat
 # vis = MeshCat.Visualizer()
 # anim = MeshCat.Animation()
