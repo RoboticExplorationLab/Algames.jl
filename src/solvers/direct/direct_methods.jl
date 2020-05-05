@@ -21,7 +21,7 @@ function TO.solve!(solver::DirectGamesSolver{T}) where T<:AbstractFloat
 	solver.dρ[1] = 0.0
 	solver.η[1] = 0.0 #####
 
-    n,m,pl,p = size(solver.model)
+    n,m,pu,p = size(solver.model)
     n,m,N = size(solver)
     J = Inf
     _J = TO.get_J.(solver.obj)
@@ -32,7 +32,7 @@ function TO.solve!(solver::DirectGamesSolver{T}) where T<:AbstractFloat
 	    solver.Z̄[k].z = solver.Z[k].z
 	end
     for i = 1:p
-        cost!(solver.obj[i], solver.Z, fill(Array(pl[i]),N))
+        cost!(solver.obj[i], solver.Z, fill(Array(pu[i]),N))
     end
     J_prev = sum.(_J)
 
@@ -244,11 +244,11 @@ end
 
 function regularize_primals!(C::Vector{E}, solver::TO.AbstractSolver) where {T, E<:TO.CostExpansion}
 	n,m,N = size(solver)
-	n,m,pl,p = size(solver.model)
+	n,m,pu,p = size(solver.model)
 	η = solver.η
 	ηx = η[1]*Diagonal(@SVector ones(n))
 	for i = 1:p
-		ηu = η[1]*Diagonal(@SVector ones(length(pl[i])))
+		ηu = η[1]*Diagonal(@SVector ones(length(pu[i])))
 		for k = 1:N-1
 			C[i].xx[k] += ηx
 			C[i].uu[k] += ηu
