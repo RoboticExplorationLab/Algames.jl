@@ -37,18 +37,19 @@ function TO.solve!(solver::DirectGamesSolver{T}) where T<:AbstractFloat
     J_prev = sum.(_J)
 
     for i = 1:solver.opts.iterations
-		TO.Logging.@info "Solver iteration = ", i
-        J = step!(solver, J_prev)
-        # check for cost blow up
-        if any(J .> solver.opts.max_cost_value)
-            @warn "Cost exceeded maximum cost"
-            return solver
-        end
+		dt = @elapsed begin
+			TO.Logging.@info "Solver iteration = ", i
+	        J = step!(solver, J_prev)
+	        # check for cost blow up
+	        if any(J .> solver.opts.max_cost_value)
+	            @warn "Cost exceeded maximum cost"
+	            return solver
+	        end
 
-        dJ = abs.(J .- J_prev)
-        J_prev = copy(J)
-
-		record_iteration!(solver, J, dJ)
+	        dJ = abs.(J .- J_prev)
+	        J_prev = copy(J)
+		end
+		record_iteration!(solver, J, dJ, dt)
         evaluate_convergence(solver) ? break : nothing #######
 		penalty_update!(solver)
     end
@@ -96,7 +97,7 @@ end
 """
 Stash iteration statistics
 """
-function record_iteration!(solver::DirectGamesSolver, J, dJ)
+function record_iteration!(solver::DirectGamesSolver, J, dJ, dt)
     solver.stats.iterations += 1
     i = solver.stats.iterations::Int
 	inner_iter = solver.stats.iterations_inner[i]
@@ -110,6 +111,7 @@ function record_iteration!(solver::DirectGamesSolver, J, dJ)
 	TO.max_violation!(solver.constraints)
 	TO.max_violation!(solver.dyn_constraints)
 	solver.stats.cmax[i] = TO.max_violation(solver)
+	solver.stats.runtime += dt
 
     @logmsg TO.InnerLoop :iter value=i
     @logmsg TO.InnerLoop :cost value=J
@@ -168,11 +170,9 @@ function evaluate_convergence(solver::DirectGamesSolver)
 		return true
     end
 
-    # # Outer loop update if forward pass is repeatedly unsuccessful
-    # if solver.stats.dJ_zero_counter > solver.opts.dJ_counter_limit ####
-	# 	# @show "outer converged dJ_zero_counter"
-    #     return true
-    # end
+	if solver.stats.runtime > solver.opts.timeout
+		TO.Logging.@info "Outer loop converged: timeout"
+	end
 
     return false
 end

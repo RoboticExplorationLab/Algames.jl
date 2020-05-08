@@ -22,6 +22,7 @@ export
     H_cond::Vector{Vector{T}} = [zeros(T,0)]
     α::Vector{Vector{T}} = [zeros(T,0)]
     dJ_zero_counter::Int = 0
+    runtime::T = 0.
 end
 
 function reset!(stats::DirectGamesStats, L=0, l=0, p=0)
@@ -35,6 +36,7 @@ function reset!(stats::DirectGamesStats, L=0, l=0, p=0)
     stats.H_cond = [zeros(l) for j = 1:L]
     stats.α = [zeros(l) for j = 1:L]
     stats.dJ_zero_counter = 0
+    stats.runtime = 0.
 end
 
 # """$(TYPEDEF)
@@ -138,6 +140,9 @@ end
 
     "Penalty scaling term"
     μ_penalty::T = 1.0
+
+    "Time after which the solver kicks out and returns its current solution."
+    timeout::T = Inf
 
     log_level::Base.CoreLogging.LogLevel = TO.InnerLoop
 end
