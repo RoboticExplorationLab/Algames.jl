@@ -135,6 +135,7 @@ export
 function update_H_!(solver::DirectGamesSolver)
 	n,m,N = size(solver)
 	In = SMatrix{n,n}(Diagonal(SVector{n}(ones(n))))
+	solver.H_ .*= 0.0#########################################################################################
 	update_H_!(solver, In)
 	return nothing
 end

@@ -172,6 +172,7 @@ function evaluate_convergence(solver::DirectGamesSolver)
 
 	if solver.stats.runtime > solver.opts.timeout
 		TO.Logging.@info "Outer loop converged: timeout"
+		return true
 	end
 
     return false

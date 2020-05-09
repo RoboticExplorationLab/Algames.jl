@@ -92,6 +92,7 @@ export
 
 function update_g_!(solver::DirectGamesSolver; use_copy=false::Bool)
 	dyn = solver.dyn_constraints.constraints[1].vals
+	solver.g_ .*= 0.0 #####################################################################################
 	update_g_!(solver,dyn)
 	return nothing
 end
