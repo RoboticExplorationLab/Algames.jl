@@ -5,18 +5,18 @@ export
 	t_intersection_landmarks,
 	add_rounded_boundary_constraints
 
-function build_scenario(vis::Visualizer, scenario::TIntersectionScenario{T}) where T
+function build_scenario(vis::Visualizer, scenario::TIntersectionScenario{T}; scale::T=10.) where T
 	pkg_path = joinpath(dirname(@__FILE__), "../../../")
     # Plot Road in Meshcat
     road_image = PngImage(joinpath(pkg_path, "resources/textures/road.png"))
     road_texture = Texture(image=road_image)
     road_material = MeshLambertMaterial(map=road_texture)
-	thickness = 0.002
+	thickness = 0.002*scale
 
-	road_width = scenario.road_width
-	top_length = scenario.top_road_length
-	bot_length = scenario.bottom_road_length
-	cross_width = scenario.cross_width
+	road_width = scenario.road_width*scale
+	top_length = scenario.top_road_length*scale
+	bot_length = scenario.bottom_road_length*scale
+	cross_width = scenario.cross_width*scale
 
 	top_road = HyperRectangle(Vec(-top_length/2, -road_width/2, -thickness),
 		Vec(top_length, road_width, thickness))
@@ -27,7 +27,7 @@ function build_scenario(vis::Visualizer, scenario::TIntersectionScenario{T}) whe
 
     # Plot lines in Meshcat
     line_material = MeshPhongMaterial(color=RGBA(1, 1, 0, 1.0))
-	line_width = 0.005
+	line_width = 0.005*scale
 	top_left_line = HyperRectangle(Vec(-top_length/2, -line_width/2, 0.),
 		Vec((top_length-road_width)/2, line_width, thickness))
 	top_right_line = HyperRectangle(Vec(road_width/2, -line_width/2, 0.),
@@ -39,8 +39,8 @@ function build_scenario(vis::Visualizer, scenario::TIntersectionScenario{T}) whe
 	setobject!(vis["roadway/bottom_line"], bottom_line, line_material)
 
 	# PLot boundaries in MeshCat
-	bound_width = 0.015
-	bound_height = 0.03
+	bound_width = 0.015*scale
+	bound_height = 0.03*scale
 	bound_image = PngImage(joinpath(pkg_path, "resources/textures/black_boundary.png"))
 	bound_texture = Texture(image=bound_image)
 	bound_material = MeshLambertMaterial(map=bound_texture)
@@ -63,7 +63,7 @@ function build_scenario(vis::Visualizer, scenario::TIntersectionScenario{T}) whe
 	setobject!(vis["roadway/bot_right_bound"], bot_right_bound, bound_material)
 
 	# Plot crosswalks in MeshCat
-	cross_height = 0.003
+	cross_height = 0.003*scale
 	cross_image = PngImage(joinpath(pkg_path, "resources/textures/crosswalk.png"))
 	cross_texture = Texture(image=cross_image)
 	cross_material = MeshLambertMaterial(map=cross_texture)

@@ -114,14 +114,14 @@ opts = DirectGamesSolverOptions(
 solver = DirectGamesSolver(prob, opts)
 solve!(solver)
 
-vis = MeshCat.Visualizer()
-anim = MeshCat.Animation()
-# open(vis)
-# Execute this line after the MeshCat tab is open
-vis, anim = animation(solver, scenario;
-	vis=vis, anim=anim,
-	open_vis=false,
-	display_actors=true,
-	display_trajectory=true)
-
-@test converged(solver)
+# vis = MeshCat.Visualizer()
+# anim = MeshCat.Animation()
+# # open(vis)
+# # Execute this line after the MeshCat tab is open
+# vis, anim = animation(solver, straight_2_players_scenario;
+# 	vis=vis, anim=anim,
+# 	open_vis=false,
+# 	display_actors=true,
+# 	display_trajectory=true)
+#
+# @test converged(solver)

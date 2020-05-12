@@ -64,7 +64,7 @@ road_length = 6.0
 road_width = 0.34
 ramp_length = 3.2
 ramp_angle = pi/12
-scenario = MergingScenario(road_length, road_width, ramp_length, ramp_angle, actors_radii, actors_types)
+ramp_merging_3_players_mpc_scenario = MergingScenario(road_length, road_width, ramp_length, ramp_angle, actors_radii, actors_types)
 
 # Progressive collision avodance radius
 pr = 3 # 3 steps
@@ -82,7 +82,7 @@ for j = 1:pr
 end
 # Add scenario specific constraints (road boundaries)
 con_inds = 2:N # Indices where the constraints will be applied
-add_scenario_constraints(algames_conSet, scenario, px, con_inds; constraint_type=:constraint)
+add_scenario_constraints(algames_conSet, ramp_merging_3_players_mpc_scenario, px, con_inds; constraint_type=:constraint)
 
 # Create problems
 algames_ramp_merging_3_players_mpc_prob = GameProblem(model, obj, xf, tf, constraints=algames_conSet, x0=x0, N=N)
@@ -125,7 +125,7 @@ algames_ramp_merging_3_players_mpc_solver = MPCGamesSolver(algames_solver, ramp_
 # anim=AG.MeshCat.Animation()
 # open(vis)
 # # Execute this line after the MeshCat tab is open
-# vis, anim = animation(mpc_solver, scenario;
+# vis, anim = animation(mpc_solver, ramp_merging_3_players_mpc_scenario;
 # 	vis=vis, anim=anim,
 # 	open_vis=false,
 # 	display_actors=true,

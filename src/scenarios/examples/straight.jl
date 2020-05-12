@@ -4,19 +4,19 @@ export
 	add_straight_constraints
 
 
-function build_scenario(vis::Visualizer, scenario::StraightScenario{T}) where T
+function build_scenario(vis::Visualizer, scenario::StraightScenario{T}; scale::T=10.) where T
 	pkg_path = joinpath(dirname(@__FILE__), "../../../")
     # Plot Road in Meshcat
     road_image = PngImage(joinpath(pkg_path, "resources/textures/road.png"))
     road_texture = Texture(image=road_image)
     road_material = MeshLambertMaterial(map=road_texture)
-	thickness = 0.002
+	thickness = 0.002*scale
 
-	road_width = scenario.road_width
-	road_length = scenario.road_length
-	actors_radii = scenario.actors_radii
-	obs_radius = scenario.obs_radius
-	obs = scenario.obs
+	road_width = scenario.road_width*scale
+	road_length = scenario.road_length*scale
+	actors_radii = scenario.actors_radii*scale
+	obs_radius = scenario.obs_radius*scale
+	obs = scenario.obs*scale
 
 	actor_radius = actors_radii[1]
 	# Check all radii are the same
@@ -32,14 +32,14 @@ function build_scenario(vis::Visualizer, scenario::StraightScenario{T}) where T
 
     # Plot lines in Meshcat
     line_material = MeshPhongMaterial(color=RGBA(1, 1, 0, 1.0))
-	line_width = 0.005
+	line_width = 0.005*scale
 	line = HyperRectangle(Vec(-road_length/2, -line_width/2, 0.),
 		Vec(road_length, line_width, thickness))
 	setobject!(vis["roadway/line"], line, line_material)
 
 	# Plot boundaries in MeshCat
-	bound_width = 0.015
-	bound_height = 0.03
+	bound_width = 0.015*scale
+	bound_height = 0.03*scale
 	bound_image = PngImage(joinpath(pkg_path, "resources/textures/black_boundary.png"))
 	bound_texture = Texture(image=bound_image)
 	bound_material = MeshLambertMaterial(map=bound_texture)
@@ -52,7 +52,7 @@ function build_scenario(vis::Visualizer, scenario::StraightScenario{T}) where T
 	setobject!(vis["roadway/bot_bound"], bot_bound, bound_material)
 
 	# Plot cylindrical obstacle
-	obs_height = 0.03
+	obs_height = 0.03*scale
 	obstacle = Cylinder(Point(0., 0., 0.),
 		Point(0., 0., obs_height), obs_radius)
 	setobject!(vis["roadway/obs"], obstacle, bound_material)

@@ -54,14 +54,28 @@ struct GameProblem{Q<:QuadratureRule,T<:AbstractFloat,O<:TO.AbstractObjective}
     Z::Traj
     N::Int
     tf::T
-    function GameProblem{Q}(model::AbstractGameModel, obj::Vector{O},
+    function GameProblem{Q}(
+            model::AbstractGameModel,
+            obj::Vector{O},
             constraints::ConstraintSet,
-            x0::SVector, xf::SVector,
-            Z::Traj, N::Int, tf::T) where {Q,T,O}
-        n,m,pl,p = size(model)
-        @assert length(x0) == length(xf) == n
-        @assert length(Z) == N
-        new{Q,T,O}(model, obj, constraints, x0, xf, Z, N, tf)
+            x0::SVector,
+            xf::SVector,
+            Z::Traj,
+            N::Int,
+            tf::T) where {Q,T,O}
+
+            n,m,pl,p = size(model)
+            @assert length(x0) == length(xf) == n
+            @assert length(Z) == N
+        new{Q,T,O}(
+            model,
+            obj,
+            constraints,
+            x0,
+            xf,
+            Z,
+            N,
+            tf)
     end
 end
 

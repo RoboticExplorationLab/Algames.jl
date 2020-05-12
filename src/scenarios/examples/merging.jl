@@ -3,17 +3,17 @@ export
 	add_scenario_constraints,
 	add_merging_constraints
 
-function build_scenario(vis::Visualizer, scenario::MergingScenario{T}) where T
+function build_scenario(vis::Visualizer, scenario::MergingScenario{T}; scale::T=10.) where T
 	pkg_path = joinpath(dirname(@__FILE__), "../../../")
     # Plot Road in Meshcat
     road_image = PngImage(joinpath(pkg_path, "resources/textures/road.png"))
     road_texture = Texture(image=road_image)
     road_material = MeshLambertMaterial(map=road_texture)
-	thickness = 0.002
+	thickness = 0.002*scale
 
-	road_width = scenario.road_width
-	road_length = scenario.road_length
-	ramp_length = scenario.ramp_length
+	road_width = scenario.road_width*scale
+	road_length = scenario.road_length*scale
+	ramp_length = scenario.ramp_length*scale
 	ramp_angle = scenario.ramp_angle
 	ext_ramp_length = ramp_length / cos(ramp_angle)
 	ramp_delta = ext_ramp_length * sin(ramp_angle)
@@ -32,7 +32,7 @@ function build_scenario(vis::Visualizer, scenario::MergingScenario{T}) where T
 
     # Plot lines in Meshcat
     line_material = MeshPhongMaterial(color=RGBA(1, 1, 0, 1.0))
-	line_width = 0.005
+	line_width = 0.005*scale
 	top_line = HyperRectangle(Vec(-road_length/2, -line_width/2, 0.),
 		Vec(road_length, line_width, thickness))
 	bot_line = HyperRectangle(Vec(-road_length/2, -line_width/2-road_width/2, 0.),
@@ -41,8 +41,8 @@ function build_scenario(vis::Visualizer, scenario::MergingScenario{T}) where T
 		setobject!(vis["roadway/bot_line"], bot_line, line_material)
 
 	# Plot boundaries in MeshCat
-	bound_width = 0.015
-	bound_height = 0.03
+	bound_width = 0.015*scale
+	bound_height = 0.03*scale
 	bound_image = PngImage(joinpath(pkg_path, "resources/textures/black_boundary.png"))
 	bound_texture = Texture(image=bound_image)
 	bound_material = MeshLambertMaterial(map=bound_texture)

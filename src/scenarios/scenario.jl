@@ -44,3 +44,10 @@ end
     actors_radii::Vector{T} # radii of the actors (cars)
     actors_types::Vector{Symbol} # type of the actors
 end
+
+
+function Base.copy(s::S) where {S<:Scenario}
+    fnames = fieldnames(typeof(s))
+    args = [getfield(s,fname) for fname in fnames]
+    S(args...)
+end

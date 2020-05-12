@@ -79,15 +79,15 @@ add_scenario_constraints(ilqgames_conSet, ramp_merging_4_players_scenario, px, c
 algames_ramp_merging_4_players_prob = GameProblem(model, obj, xf, tf, constraints=algames_conSet, x0=x0, N=N)
 ilqgames_ramp_merging_4_players_prob = GameProblem(model, obj, xf, tf, constraints=ilqgames_conSet, x0=x0, N=N)
 
-algames_opts = DirectGamesSolverOptions{T}(
+algames_ramp_merging_4_players_opts = DirectGamesSolverOptions{T}(
     iterations=10,
     inner_iterations=20,
     iterations_linesearch=10,
     min_steps_per_iteration=0,
     log_level=TO.Logging.Warn)
-algames_ramp_merging_4_players_solver = DirectGamesSolver(algames_ramp_merging_4_players_prob, algames_opts)
+algames_ramp_merging_4_players_solver = DirectGamesSolver(algames_ramp_merging_4_players_prob, algames_ramp_merging_4_players_opts)
 
-ilqgames_opts = PenaltyiLQGamesSolverOptions{T}(
+ilqgames_ramp_merging_4_players_opts = PenaltyiLQGamesSolverOptions{T}(
     iterations=200,
     gradient_norm_tolerance=1e-2,
     cost_tolerance=1e-4,
@@ -95,7 +95,7 @@ ilqgames_opts = PenaltyiLQGamesSolverOptions{T}(
     line_search_upper_bound=0.05,
     log_level=TO.Logging.Warn,
     )
-ilqgames_ramp_merging_4_players_solver = PenaltyiLQGamesSolver(ilqgames_ramp_merging_4_players_prob, ilqgames_opts)
+ilqgames_ramp_merging_4_players_solver = PenaltyiLQGamesSolver(ilqgames_ramp_merging_4_players_prob, ilqgames_ramp_merging_4_players_opts)
 pen = ones(length(ilqgames_ramp_merging_4_players_solver.constraints))*100.0
 set_penalty!(ilqgames_ramp_merging_4_players_solver, pen);
 
