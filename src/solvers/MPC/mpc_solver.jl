@@ -13,8 +13,13 @@ export
     solver_iterations::Vector{Int} = zeros(Int,0)
     time::T = 0.
     solve_time::Vector{T} = zeros(T,0)
-    cmax::Vector{T} = zeros(T,0)
+	cmax::Vector{T} = zeros(T,0)
+	cmax_dynamics::Vector{T} = zeros(T,0)
+	cmax_collision::Vector{T} = zeros(T,0)
+	cmax_boundary::Vector{T} = zeros(T,0)
+	cmax_bound::Vector{T} = zeros(T,0)
 	x0::Vector{KnotPoint{T,n,m,L}} = Vector{KnotPoint{T,n,m,L}}()
+	failure_status::Int = false
 end
 
 function reset!(stats::MPCGamesStats{T,n,m,L}, H=0) where {T,n,m,L}
@@ -22,8 +27,13 @@ function reset!(stats::MPCGamesStats{T,n,m,L}, H=0) where {T,n,m,L}
     stats.solver_iterations = zeros(Int,H)
     stats.time = 0.
     stats.solve_time = zeros(Int,H)
-    stats.cmax = zeros(Int,H)
+	stats.cmax = zeros(Int,H)
+	stats.cmax_dynamics = zeros(Int,H)
+	stats.cmax_collision = zeros(Int,H)
+	stats.cmax_boundary = zeros(Int,H)
+	stats.cmax_bound = zeros(Int,H)
 	stats.x0 = Vector{KnotPoint{T,n,m,L}}()
+	stats.failure_status = false
 end
 
 @with_kw mutable struct MPCGamesSolverOptions{n,T} <: TO.AbstractSolverOptions{T}
@@ -174,46 +184,6 @@ function reset!(solver::MPCGamesSolver{T}; reset_stats=true, reset_type=:nominal
     reset!(solver.solver, reset_type=reset_type)
 	# reset the x0 of the solver.solver to x0 of the mpcsolver @@@@@@
     return nothing
-end
-
-function MPCGamesSolver(solver_::MPCGamesSolver{T,I,n,m,L},
-	x0::SVector{n,T}
-	) where {T,I,n,m,L}
-    solver = MPCGamesSolver{T,I,n,m,L}(
-		DirectGamesSolver(solver_.solver, x0),
-		solver_.opts,
-		solver_.stats,
-		solver_.x0,
-		solver_.xf,
-		solver_.dxf,
-		solver_.tf,
-		solver_.Q,
-		solver_.R,
-		solver_.Qf,
-		solver_.Z,
-		solver_.logger)
-    return solver
-end
-
-function MPCGamesSolver(solver_::MPCGamesSolver{T,I,n,m,L},
-	x0::SVector{n,T},
-	xf::SVector{n,T},
-	tf::T=solver_.solver.tf
-	) where {T,I,n,m,L,O}
-    solver = MPCGamesSolver{T,I,n,m,L}(
-		DirectGamesSolver(solver_.solver, x0, xf, tf),
-		solver_.opts,
-		solver_.stats,
-		solver_.x0,
-		solver_.xf,
-		solver_.dxf,
-		solver_.tf,
-		solver_.Q,
-		solver_.R,
-		solver_.Qf,
-		solver_.Z,
-		solver_.logger)
-    return solver
 end
 
 function MPCGamesSolver(solver_::MPCGamesSolver{T,I,n,m,L},

@@ -255,7 +255,7 @@ function update_H_con!(solver::DirectGamesSolver{T}, con::ConstraintVals{T,Stage
 	for i=1:p
 		for (j,k) in enumerate(con.inds)
 			if k == 1
-				rel_zind_i = [n .+ spu[i]]
+				rel_zind_i = n .+ spu[i]
 				rel_zind = n .+ sinds.sm
 				zind_i = uinds_p[i][k]
 				zind = uinds[k]
@@ -277,15 +277,15 @@ function update_H_con!(solver::DirectGamesSolver{T}, con::ConstraintVals{T,Stage
 			else
 				rel_zind_i = [sinds.sn; n.+ spu[i]]
 				rel_zind = sinds.snm
-				# zind_i = [xinds_p[i][k]; uinds_p[i][k]]
-				# zind = [xinds[k]; uinds[k]]
+				zind_i = [xinds_p[i][k]; uinds_p[i][k]]
+				zind = [xinds[k]; uinds[k]]
 				∇ci = con.∇c[j][:,rel_zind_i]
 				∇c = con.∇c[j][:,rel_zind]
 
 				Iμ = TO.penalty_matrix(con,j)
-				# solver.H_[zind_i,zind] .+= ∇ci'*Iμ*∇c
+				solver.H_[zind_i,zind] .+= ∇ci'*Iμ*∇c
 				# set_mat_H!(solver.H_[zind_i,zind],∇ci',Iμ,∇c)
-				set_view_H!(solver.stage_view_H[i][k-1],∇ci',Iμ,∇c)
+				# set_view_H!(solver.stage_view_H[i][k-1], ∇ci', Iμ, ∇c)
 			end
 		end
 	end

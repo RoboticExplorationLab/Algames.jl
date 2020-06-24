@@ -99,20 +99,20 @@ set_penalty!(ilqgames_straight_2_players_solver, pen);
 # visualize_trajectory_car(algames_straight_2_players_solver)
 # visualize_trajectory_car(ilqgames_straight_2_players_solver)
 
-
-using Test
-using MeshCat
-
-prob = GameProblems.algames_straight_2_players_prob
-
-opts = DirectGamesSolverOptions(
-    iterations=10,
-    inner_iterations=20,
-    iterations_linesearch=10,
-    min_steps_per_iteration=1,
-    log_level=TO.Logging.Warn)
-solver = DirectGamesSolver(prob, opts)
-solve!(solver)
+#
+# using Test
+# using MeshCat
+#
+# prob = GameProblems.algames_straight_2_players_prob
+#
+# opts = DirectGamesSolverOptions(
+#     iterations=10,
+#     inner_iterations=20,
+#     iterations_linesearch=10,
+#     min_steps_per_iteration=1,
+#     log_level=TO.Logging.Warn)
+# solver = DirectGamesSolver(prob, opts)
+# solve!(solver)
 
 # vis = MeshCat.Visualizer()
 # anim = MeshCat.Animation()

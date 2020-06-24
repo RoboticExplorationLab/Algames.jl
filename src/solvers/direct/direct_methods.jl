@@ -23,8 +23,8 @@ function TO.solve!(solver::DirectGamesSolver{T}) where T<:AbstractFloat
 
     n,m,pu,p = size(solver.model)
     n,m,N = size(solver)
-    J = Inf
-    _J = TO.get_J.(solver.obj)
+    # J = Inf
+    # _J = TO.get_J.(solver.obj)
 
     # Initial rollout
     TO.rollout!(solver)
@@ -34,8 +34,8 @@ function TO.solve!(solver::DirectGamesSolver{T}) where T<:AbstractFloat
     for i = 1:p
         cost!(solver.obj[i], solver.Z, fill(Array(pu[i]),N))
     end
-    J_prev = sum.(_J)
-
+    # J_prev = sum.(_J)
+	J_prev = indiv_cost(solver)
     for i = 1:solver.opts.iterations
 		dt = @elapsed begin
 			TO.Logging.@info "Solver iteration = ", i
@@ -59,7 +59,7 @@ end
 """
 Take one step of DirectGames algorithm (non-allocating)
 """
-function step!(solver::DirectGamesSolver, J)
+function step!(solver::DirectGamesSolver, J_prev)
 	for i = 1:solver.opts.inner_iterations
 		# println("inner iteration = ", i)
 		cost_expansion(solver.C, solver.obj, solver.Z, solver.model.pu, solver.model.p)

@@ -23,6 +23,10 @@ include("../game_problems/ramp_merging_2_players_penalty.jl")
 include("../game_problems/ramp_merging_3_players_penalty.jl")
 include("../game_problems/ramp_merging_4_players_penalty.jl")
 
+include("../game_problems/ramp_merging_2_players_unicycle_penalty.jl")
+include("../game_problems/ramp_merging_3_players_unicycle_penalty.jl")
+include("../game_problems/ramp_merging_4_players_unicycle_penalty.jl")
+
 include("../game_problems/t_intersection_3_players_penalty.jl")
 
 include("../game_problems/ramp_merging_2_players.jl")
@@ -74,6 +78,21 @@ export
     algames_ramp_merging_2_players_penalty_contraints,
     algames_ramp_merging_3_players_penalty_contraints,
     algames_ramp_merging_4_players_penalty_contraints
+
+
+export
+    ramp_merging_2_players_unicycle_penalty_scenario,
+    ramp_merging_3_players_unicycle_penalty_scenario,
+    ramp_merging_4_players_unicycle_penalty_scenario,
+    algames_ramp_merging_2_players_unicycle_penalty_prob,
+    algames_ramp_merging_3_players_unicycle_penalty_prob,
+    algames_ramp_merging_4_players_unicycle_penalty_prob,
+    algames_ramp_merging_2_players_unicycle_penalty_opts,
+    algames_ramp_merging_3_players_unicycle_penalty_opts,
+    algames_ramp_merging_4_players_unicycle_penalty_opts,
+    algames_ramp_merging_2_players_unicycle_penalty_contraints,
+    algames_ramp_merging_3_players_unicycle_penalty_contraints,
+    algames_ramp_merging_4_players_unicycle_penalty_contraints
 
 export
     t_intersection_3_players_penalty_scenario,

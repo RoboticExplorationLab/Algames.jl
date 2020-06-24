@@ -43,7 +43,7 @@ function build_scenario(vis::Visualizer, scenario::MergingScenario{T}; scale::T=
 	# Plot boundaries in MeshCat
 	bound_width = 0.015*scale
 	bound_height = 0.03*scale
-	bound_image = PngImage(joinpath(pkg_path, "resources/textures/black_boundary.png"))
+	bound_image = PngImage(joinpath(pkg_path, "resources/textures/light_boundary.png"))
 	bound_texture = Texture(image=bound_image)
 	bound_material = MeshLambertMaterial(map=bound_texture)
 	# Upper Boundary
@@ -65,7 +65,7 @@ end
 function add_scenario_constraints(conSet::ConstraintSet,
 	scenario::MergingScenario, px, con_inds; constraint_type=:constraint)
     for i = 1:length(px)
-        add_merging_constraints(conSet::ConstraintSet, scenario::MergingScenario,
+        add_scenario_constraints(conSet::ConstraintSet, scenario::MergingScenario,
             i, px, con_inds; constraint_type=constraint_type)
     end
     return nothing
@@ -73,7 +73,7 @@ end
 
 
 # Add the intersection constraints to the car with id player_id driving on lane ∈ [1,4].
-function add_merging_constraints(conSet::ConstraintSet, scenario::MergingScenario,
+function add_scenario_constraints(conSet::ConstraintSet, scenario::MergingScenario,
     player_id, px, con_inds; constraint_type=:constraint)
 	road_length = scenario.road_length
 	road_width = scenario.road_width

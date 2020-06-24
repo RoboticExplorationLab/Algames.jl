@@ -177,7 +177,8 @@ function update_g_con!(solver::DirectGamesSolver{T}, con::ConstraintVals{T,Stage
 	for i=1:p
 		for (j,k) in enumerate(con.inds)
 			if k == 1
-				rel_zind_i = [n .+ spu[i]]
+				# rel_zind_i = [n .+ spu[i]]
+				rel_zind_i = n .+ spu[i]
 				∇ci = con.∇c[j][:,rel_zind_i]
 				zind_i = uinds_p[i][k]
 				Iμ = TO.penalty_matrix(con,j)

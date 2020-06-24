@@ -30,11 +30,12 @@ function visualize_trajectory_car(solver::TO.AbstractSolver{T}; title::String=""
     return nothing
 end
 
-function visualize_trajectory_car(solver::TO.AbstractSolver{T}, x0::SVector{n1,T}, xf::SVector{n1,T},
+function visualize_trajectory_car(solver::TO.AbstractSolver{T}, x0::AbstractArray, xf::SVector{n1,T},
     conSet::TO.ConstraintSet{T}; title::String="", save_figure::Bool=false) where {n1, T}
     n,m,N = size(solver)
-    n,m,pu,p = size(solver.model)
-    px = solver.model.px
+    p  = get_model(solver).p
+    pu = get_model(solver).pu
+    px = get_model(solver).px
 
     X = TO.states(solver)
     U = TO.controls(solver)./2000.
@@ -157,7 +158,7 @@ function visualize_trajectory_car(solver::TO.AbstractSolver{T}, x0::SVector{n1,T
 end
 
 function visualize_control(solver::TO.AbstractSolver{T}) where {T}
-    visualize_control(TO.controls(solver), solver.model.pu)
+    visualize_control(TO.controls(solver), get_model(solver).pu)
 end
 
 function visualize_control(U::AbstractArray, pu::AbstractArray)

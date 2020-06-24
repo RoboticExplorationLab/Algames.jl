@@ -40,7 +40,7 @@ function build_scenario(vis::Visualizer, scenario::StraightScenario{T}; scale::T
 	# Plot boundaries in MeshCat
 	bound_width = 0.015*scale
 	bound_height = 0.03*scale
-	bound_image = PngImage(joinpath(pkg_path, "resources/textures/black_boundary.png"))
+	bound_image = PngImage(joinpath(pkg_path, "resources/textures/dark_boundary.png"))
 	bound_texture = Texture(image=bound_image)
 	bound_material = MeshLambertMaterial(map=bound_texture)
 
@@ -67,35 +67,22 @@ end
 function add_scenario_constraints(conSet::ConstraintSet, scenario::StraightScenario, px,
     con_inds; constraint_type=:constraint)
     for i = 1:length(px)
-        add_straight_constraints(conSet::ConstraintSet,
+		@show i
+        add_scenario_constraints(conSet::ConstraintSet,
             scenario.road_length,
             scenario.road_width,
             scenario.actors_radii[i],
+			scenario.obs,
+			scenario.obs_radius,
             i, px, con_inds)
-        if constraint_type == :constraint
-            con = CircleConstraint(conSet.n,
-                SVector{1}([scenario.obs[1]]),
-                SVector{1}([scenario.obs[2]]),
-                SVector{1}([scenario.obs_radius+scenario.actors_radii[i]]),
-                px[i]...)
-        elseif constraint_type == :penalty
-            con = ExpCircleConstraint(conSet.n,
-                SVector{1}([scenario.obs[1]]),
-                SVector{1}([scenario.obs[2]]),
-                SVector{1}([scenario.obs_radius+scenario.actors_radii[i]]),
-                px[i]...)
-        else
-            @warn "Wrong type of constraint."
-        end
-    	add_constraint!(conSet, con, con_inds)
     end
     return nothing
 end
 
 
 # Add the intersection constraints to the car with id player_id driving on lane ∈ [1,4].
-function add_straight_constraints(conSet::ConstraintSet, road_length, road_width, car_radius,
-    player_id, px, con_inds; constraint_type=:constraint)
+function add_scenario_constraints(conSet::ConstraintSet, road_length, road_width, car_radius,
+	obs, obs_radius, player_id, px, con_inds; constraint_type=:constraint)
     l0 = road_width/2 - car_radius
     l2 = road_length/2
     b1 = @SVector [-l2,  l0]
@@ -108,5 +95,23 @@ function add_straight_constraints(conSet::ConstraintSet, road_length, road_width
     add_constraint!(conSet, con, con_inds)
     con = BoundaryConstraint(conSet.n, b3, b4, v2, px[player_id]...)
     add_constraint!(conSet, con, con_inds)
+
+	if constraint_type == :constraint
+		con = CircleConstraint(conSet.n,
+			SVector{1}([obs[1]]),
+			SVector{1}([obs[2]]),
+			SVector{1}([obs_radius+car_radius]),
+			px[player_id]...)
+		add_constraint!(conSet, con, con_inds)
+	elseif constraint_type == :penalty
+		con = ExpCircleConstraint(conSet.n,
+			SVector{1}([obs[1]]),
+			SVector{1}([obs[2]]),
+			SVector{1}([obs_radius+car_radius]),
+			px[player_id]...)
+		add_constraint!(conSet, con, con_inds)
+	else
+		@warn "Wrong type of constraint."
+	end
     return nothing
 end

@@ -12,8 +12,8 @@ export
 
 # Generic solve methods
 "MPCGames solve method (non-allocating)"
-function TO.solve!(solver::MPCGamesSolver{T}; wait::Bool=false) where {T<:AbstractFloat}
-	Random.seed!(100)
+function TO.solve!(solver::MPCGamesSolver{T}; wait::Bool=false, fix_seed::Bool=true) where {T<:AbstractFloat}
+	fix_seed ? Random.seed!(100) : nothing
     TO.set_verbosity!(solver.opts)
     TO.clear_cache!(solver.opts)
     solver.stats.iterations = 0
@@ -28,13 +28,16 @@ function TO.solve!(solver::MPCGamesSolver{T}; wait::Bool=false) where {T<:Abstra
 			sleep(0.2)
 		end
 		# Update the solver.
-		dt_new_obj = @elapsed new_obj = [TO.LQRObjective(Diagonal(solver.Q[i]),
-								Diagonal(solver.R[i][pu[i]]),
+		dt_new_obj = @elapsed new_obj = [TO.LQRObjective(
+								Diagonal(solver.Q[i]),
+								Diagonal(SVector{length(pu[i])}(solver.R[i][pu[i]])),
 								Diagonal(solver.Qf[i]),
 								new_xf,
-								N,checks=false) for i=1:p]
-		dt_new_solver = @elapsed solver = MPCGamesSolver(solver, solver.solver.obj, new_x0, new_xf) #######################
-		# dt_new_solver = @elapsed solver = MPCGamesSolver(solver, new_obj, new_x0, new_xf) ###############################
+								N,
+								checks=false) for i=1:p]
+
+		# dt_new_solver = @elapsed solver = MPCGamesSolver(solver, solver.solver.obj, new_x0, new_xf) #######################
+		dt_new_solver = @elapsed solver = MPCGamesSolver(solver, new_obj, new_x0, new_xf) ###############################
 		dt_update_traj = @elapsed update_traj!(solver, δt, new_x0)
         dt_eval_cv = @elapsed evaluate_convergence(solver) ? break : nothing
 		# @show dt_step dt_new_obj dt_new_solver dt_update_traj dt_eval_cv
@@ -90,16 +93,15 @@ end
 Take one step of MPCGames algorithm (non-allocating)
 """
 function step!(solver::MPCGamesSolver{T}) where {T}
-	# n,m,pu,p = size(solver.solver.model)
 	δt = @elapsed resolve = need_resolve(solver.solver)
 	if resolve
 	    δt += @elapsed solve!(solver.solver) ####################
 		TO.Logging.@info δt
-		δt = min(max(δt, solver.opts.min_δt), solver.opts.max_δt)
+		δt = clamp(δt, solver.opts.min_δt, solver.opts.max_δt)
 		record_iteration!(solver, δt; resolve=true)
 	else
 		TO.Logging.@info δt
-		δt = min(max(δt, solver.opts.min_δt), solver.opts.max_δt)
+		δt = clamp(δt, solver.opts.min_δt, solver.opts.max_δt)
 		record_iteration!(solver, δt; resolve=false)
 	end
 
@@ -110,7 +112,7 @@ function step!(solver::MPCGamesSolver{T}) where {T}
 	new_xf = solver.solver.xf + solver.dxf*δt
 
 	TO.Logging.@info time_remaining
-	if solver.opts.live_plotting != :off
+	if solver.opts.live_plotting == :on
 		visualize_trajectory_car(solver.solver;save_figure=false)
 	end
 
@@ -121,6 +123,12 @@ end
 function need_resolve(solver::DirectGamesSolver)
 	# Update g
 	cost_expansion(solver.C, solver.obj, solver.Z, solver.model.pu, solver.model.p)
+
+	TO.evaluate!(solver.penalty_constraints, solver.Z)
+	TO.jacobian!(solver.penalty_constraints, solver.Z)
+	TO.update_active_set!(solver.penalty_constraints, solver.Z)
+	penalty_expansion!(solver, solver.Z)
+
 	regularize_primals!(solver.C, solver)
 
 	TO.evaluate!(solver.constraints, solver.Z)
@@ -144,7 +152,6 @@ function need_resolve(solver::DirectGamesSolver)
 	end
 	return true
 end
-
 
 function generate_new_x0(solver::MPCGamesSolver, δt::T) where T
 	# Add noise and propagate dynamics forward
@@ -221,6 +228,11 @@ function record_iteration!(solver::MPCGamesSolver, δt; resolve::Bool=true)
 		solver.stats.cmax[i] = cmax
 	end
 
+	cmax_collision, cmax_boundary, cmax_bound =	evaluate_constraint_violation(solver.solver, solver.solver.Z)
+	solver.stats.cmax_collision[i] = cmax_collision
+	solver.stats.cmax_boundary[i] = cmax_boundary
+	solver.stats.cmax_bound[i] = cmax_bound
+
 	@logmsg TO.InnerLoop :iter value=i
 	@logmsg TO.InnerLoop :inner_iter value=solver.stats.solver_iterations[i]
 	@logmsg TO.InnerLoop :time value=solver.stats.time
@@ -233,6 +245,7 @@ function record_iteration!(solver::MPCGamesSolver, δt; resolve::Bool=true)
 end
 
 
+
 # """
 # $(SIGNATURES)
 # Check convergence conditions for MPCR
@@ -241,6 +254,22 @@ function evaluate_convergence(solver::MPCGamesSolver)
     # Get current iterations
 	i = solver.stats.iterations
 	t = solver.stats.time
+	# Check constraint violation
+	if solver.stats.cmax_collision[i] >= 2e-3
+		solver.stats.failure_status = true
+		TO.Logging.@info "Collision constraint is violated cmax_collision >= 2e-3."
+		return true
+	end
+	# if solver.stats.cmax_boundary[i] >= 2e-3
+	# 	solver.stats.failure_status = true
+	# 	TO.Logging.@info "Boundary constraint is violated cmax_boundary >= 2e-3."
+	# 	return true
+	# end
+	if solver.stats.cmax_bound[i] >= 1e-2
+		solver.stats.failure_status = true
+		TO.Logging.@info "Bound constraint is violated cmax_bound >= 1e-2."
+		return true
+	end
 	# Check total iterations
     if t >= solver.opts.mpc_tf
 		TO.Logging.@info "MPC solver reached final time."
@@ -284,4 +313,28 @@ function resample!(solver::MPCGamesSolver{T}) where T
 		rest = Δt
 	end
 	return nothing
+end
+
+
+function evaluate_constraint_violation(solver::DirectGamesSolver, Z::TO.Traj)
+	# # Dynamics
+	# TO.evaluate!(solver.dyn_constraints, Z)
+	# cmax_dynamics = maximum(solver.dyn_constraints.constraints[1].vals[1])
+	# Collision, Boundary, Bound
+	cmax_collision = 0.
+	cmax_boundary = 0.
+	cmax_bound = 0.
+
+	for con in solver.constraints
+		evaluate!(con.vals, con.con, Z[1:1], [1])
+		if typeof(con.con) <: CollisionConstraint
+			cmax_collision = max(cmax_collision, maximum(con.vals[1]))
+		elseif typeof(con.con) <: BoundaryConstraint
+			cmax_boundary = max(cmax_boundary, maximum(con.vals[1]))
+		elseif typeof(con.con) <: BoundConstraint
+			cmax_bound = max(cmax_bound, maximum(con.vals[1]))
+		end
+	end
+	# return cmax_dynamics, cmax_collision, cmax_boundary, cmax_bound
+	return cmax_collision, cmax_boundary, cmax_bound
 end

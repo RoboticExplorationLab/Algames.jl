@@ -1,0 +1,20 @@
+\begin{tikzpicture}
+\begin{axis}[ybar, enlargelimits={0.15}, legend style={at={(0.5,-0.15)
+}, anchor={north}, legend columns={-1}}, symbolic x coords={2nd Place,3rd Place,4th Place}, xtick={data}, nodes near coords, nodes near coords align={vertical}]
+    \addplot[draw=black, fill=blue!25]
+        coordinates {
+            (2nd Place,9)
+            (3rd Place,4)
+            (4th Place,4)
+        }
+        ;
+    \addplot[draw=black, fill=orange!50]
+        coordinates {
+            (2nd Place,1)
+            (3rd Place,1)
+            (4th Place,4)
+        }
+        ;
+    \legend{{ALGAMES},{Baseline}}
+\end{axis}
+\end{tikzpicture}

@@ -104,26 +104,35 @@ function TO.evaluate(con::ExpCircleConstraint{T,P}, x::SVector) where {T,P}
 	# sign(c[1])*sqrt.(abs.(c))
 end
 
-
 function add_collision_avoidance(conSet::ConstraintSet,
-    actors_radii::Vector{T}, px::Vector{Vector{Int}}, p::Int, con_inds::UnitRange; constraint_type=:constraint) where T
+    actors_radii::Vector{T}, px::Vector{Vector{Int}}, p::Int,
+	con_inds::UnitRange; constraint_type=:constraint) where T
 	for i = 1:p
         for j = 1:i-1
-            radiusi = @SVector fill(actors_radii[i], 1)
-            radiusj = @SVector fill(actors_radii[j], 1)
-			if constraint_type == :constraint
-	            col_con = CollisionConstraint(conSet.n, radiusi, radiusj,
-	                px[i][1], px[i][2], px[j][1], px[j][2])
-				add_constraint!(conSet, col_con, con_inds)
-			elseif constraint_type == :penalty
-				col_con = PenaltyCollisionConstraint(conSet.n, radiusi, radiusj,
-					px[i][1], px[i][2], px[j][1], px[j][2])
-				add_constraint!(conSet, col_con, con_inds)
-			else
-				@warn "Unknown constraint type."
-			end
+			add_collision_avoidance(conSet, actors_radii, i, j, px, p, con_inds;
+				constraint_type=constraint_type)
         end
     end
+    return nothing
+end
+
+function add_collision_avoidance(conSet::ConstraintSet,
+    actors_radii::Vector{T}, i::Int, j::Int, px::Vector{Vector{Int}}, p::Int,
+	con_inds::UnitRange; constraint_type=:constraint) where T
+	@assert i != j
+    radiusi = @SVector fill(actors_radii[i], 1)
+    radiusj = @SVector fill(actors_radii[j], 1)
+	if constraint_type == :constraint
+        col_con = CollisionConstraint(conSet.n, radiusi, radiusj,
+            px[i][1], px[i][2], px[j][1], px[j][2])
+		add_constraint!(conSet, col_con, con_inds)
+	elseif constraint_type == :penalty
+		col_con = PenaltyCollisionConstraint(conSet.n, radiusi, radiusj,
+			px[i][1], px[i][2], px[j][1], px[j][2])
+		add_constraint!(conSet, col_con, con_inds)
+	else
+		@warn "Unknown constraint type."
+	end
     return nothing
 end
 
@@ -152,3 +161,83 @@ function add_circle_boundary!(conSet::ConstraintSet, inds::Array{Int,1},
 	add_constraint!(conSet, con, 1:N)
 	return nothing
 end
+
+
+
+#
+# ############################################################################################
+# # 						CONTROL BOUND CONSTRAINTS 										   #
+# ############################################################################################
+# # """$(TYPEDEF) Linear bound constraint on states and controls
+# # # Constructors
+# # ```julia
+# # BoundConstraint(n, m; x_min, x_max, u_min, u_max)
+# # ```
+# # Any of the bounds can be ±∞. The bound can also be specifed as a single scalar, which applies the bound to all state/controls.
+# # """
+# struct ControlBoundConstraint{T,P,M,PM} <: TO.AbstractConstraint{Inequality,Stage,P}
+# 	n::Int
+# 	m::Int
+# 	u_max::SVector{M,T}
+# 	u_min::SVector{M,T}
+# 	b::SVector{P,T}
+# 	B::SMatrix{P,M,T,PM}
+# 	inds::SVector{P,Int}
+# end
+#
+# function ControlBoundConstraint(n, m; u_max=Inf*(@SVector ones(m)), u_min=-Inf*(@SVector ones(m)))
+# 	# Check and convert bounds
+# 	u_max, u_min = TO.checkBounds(Val(m), u_max, u_min)
+#
+# 	# Concatenate bounds
+# 	b = [-u_max; u_min]
+# 	bN = [u_max*Inf; -u_min*Inf]
+#
+# 	active = isfinite.(b)
+# 	p = sum(active)
+# 	inds = SVector{p}(findall(active))
+#
+# 	B = SMatrix{2*m, m}([1.0I(m); -1.0I(m)])
+# 	ControlBoundConstraint(n, m, u_max, u_min, b[inds], B[inds,:], inds)
+# end
+#
+# # function con_label(con::BoundConstraint, ind::Int)
+# # 	i = con.inds[ind]
+# # 	n,m = state_dim(con), control_dim(con)
+# # 	if 1 <= i <= n
+# # 		return "x max $i"
+# # 	elseif n < i <= n + m
+# # 		j = i - n
+# # 		return "u max $j"
+# # 	elseif n + m < i <= 2n+m
+# # 		j = i - (n+m)
+# # 		return "x min $j"
+# # 	elseif 2n+m < i <= 2n+2m
+# # 		j = i - (2n+m)
+# # 		return "u min $j"
+# # 	else
+# # 		throw(BoundsError())
+# # 	end
+# # end
+# #
+# # checkBounds(sze::Val{N}, u::Real, l::Real) where N =
+# # 	checkBounds(sze, (@SVector fill(u,N)), (@SVector fill(l,N)))
+# # checkBounds(sze::Val{N}, u::AbstractVector, l::Real) where N =
+# # 	checkBounds(sze, u, (@SVector fill(l,N)))
+# # checkBounds(sze::Val{N}, u::Real, l::AbstractVector) where N =
+# # 	checkBounds(sze, (@SVector fill(u,N)), l)
+# #
+# state_dim(con::BoundConstraint) = con.n
+# control_dim(con::ControlBoundConstraint) = con.m
+# is_control_bound(::ControlBoundConstraint) = true
+# lower_bound(bnd::ControlBoundConstraint) = bnd.u_min
+# upper_bound(bnd::ControlBoundConstraint) = bnd.u_max
+#
+#
+# function TO.evaluate(bnd::ControlBoundConstraint{T,P,M}, x, u) where {T,P,M}
+# 	bnd.B*SVector{M}(u) + bnd.b
+# end
+#
+# function jacobian(bnd::ControlBoundConstraint, z::KnotPoint)
+# 	bnd.B
+# end
