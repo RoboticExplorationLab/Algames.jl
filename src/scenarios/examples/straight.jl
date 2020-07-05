@@ -67,7 +67,6 @@ end
 function add_scenario_constraints(conSet::ConstraintSet, scenario::StraightScenario, px,
     con_inds; constraint_type=:constraint)
     for i = 1:length(px)
-		@show i
         add_scenario_constraints(conSet::ConstraintSet,
             scenario.road_length,
             scenario.road_width,

@@ -46,10 +46,10 @@ function TO.solve!(solver::DirectGamesSolver{T}) where T<:AbstractFloat
 	            return solver
 	        end
 
-	        dJ = abs.(J .- J_prev)
-	        J_prev = copy(J)
+			dJ = abs.(J .- J_prev)
+			J_prev = copy(J)
 		end
-		record_iteration!(solver, J, dJ, dt)
+ 		record_iteration!(solver, J, dJ, dt)
         evaluate_convergence(solver) ? break : nothing #######
 		penalty_update!(solver)
     end
@@ -83,7 +83,7 @@ function step!(solver::DirectGamesSolver, J_prev)
 		update_g_!(solver)
 		if evaluate_inner_convergence(solver) && solver.opts.break_inner_loop
 			# @show "break early"
-			record_inner_iteration!(solver, mean(abs.(solver.g_)), NaN)
+			record_inner_iteration!(solver, NaN)
 			break
 		end
 		update_H_!(solver)
@@ -123,11 +123,12 @@ function record_iteration!(solver::DirectGamesSolver, J, dJ, dt)
 end
 
 
-function record_inner_iteration!(solver::DirectGamesSolver, optimality_merit, α)
+function record_inner_iteration!(solver::DirectGamesSolver, α)
     i = solver.stats.iterations::Int + 1
 	solver.stats.iterations_inner[i] += 1
 	j = solver.stats.iterations_inner[i]
-	solver.stats.optimality_merit[i][j] = optimality_merit
+	solver.stats.optimality_merit[i][j] = mean(abs.(solver.g_))
+	solver.stats.optimality_merit_inf[i][j] = norm(solver.g_, Inf)
 	solver.stats.α[i][j] = α
 	if solver.opts.record_condition
 		solver.stats.H_cond[i][j] = cond(Array(solver.H_))
@@ -148,6 +149,7 @@ function evaluate_convergence(solver::DirectGamesSolver)
 	j = solver.stats.iterations_inner[i]
 	cmax = solver.stats.cmax[i]
 	optimality_merit = solver.stats.optimality_merit[i][j]
+	optimality_merit_inf = solver.stats.optimality_merit_inf[i][j]
 
     # Check for cost convergence
     # note the dJ > 0 criteria exists to prevent loop exit when forward pass makes no improvement
@@ -158,7 +160,9 @@ function evaluate_convergence(solver::DirectGamesSolver)
 		return true
     end
 
-	if (optimality_merit < solver.opts.optimality_constraint_tolerance) && (cmax < solver.opts.constraint_tolerance) &&
+	if (optimality_merit < solver.opts.optimality_constraint_tolerance) &&
+		(optimality_merit_inf < solver.opts.optimality_constraint_tolerance_inf) &&
+		(cmax < solver.opts.constraint_tolerance) &&
 		(i>=solver.opts.min_iterations)
 		TO.Logging.@info "Outer loop converged: optimality_merit & constraint_tolerance"
 		return true

@@ -30,7 +30,7 @@ function inner_step!(solver::DirectGamesSolver)
 	solver.δY .= -(lu(solver.H_)\solver.g_) # better
 	# solver.δY .= -solver.H_\solver.g_
 	α, optimality_merit = line_search!(solver)
-	record_inner_iteration!(solver, optimality_merit, α)
+	record_inner_iteration!(solver, α)
 	primal_dual_update!(solver,α)
 	dual_ascent!(solver)
 	return nothing
@@ -121,6 +121,12 @@ end
 
 function indiv_cost(solver::DirectGamesSolver)
 	# @show "indiv cost"
+	p = get_model(solver).p
+	pu = get_model(solver).pu
+	N = solver.N
+	for i = 1:p
+        cost!(solver.obj[i], solver.Z, fill(Array(pu[i]),N))
+    end
 	_J = TO.get_J.(solver.obj)
 	J = sum.(_J)
 	return J

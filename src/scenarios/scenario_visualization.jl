@@ -276,8 +276,9 @@ function build_sampled_plan(vis::Visualizer, solver::TO.AbstractSolver{T},
 
 	model = TO.get_model(solver)
 	p = model.p
+	num_samples = 2*length(solver.θ_inds)+1
 	path = String(solver_scope(solver, opts))*"/sampled_plan"
-	for l = 1:solver.r-2
+	for l = 1:num_samples
 		for j = 1:horizon
 			for i = 1:p
 				aug_cyl_height = cyl_height# + i*0.00 + k*0.01/M*scale
@@ -346,7 +347,8 @@ function scene_animation(solver::TO.AbstractSolver, vis::Visualizer,
 					vis[trajectory_path],
 					roadway_translation)
 
-			if scope == :UKFGamesSolver
+			if occursin("UKFGamesSolver", string(scope))
+				num_samples = 2*length(solver.θ_inds)+1
 				for j=1:horizon
 					x_start = TO.state(solver.stats.traj_pred[start_ind[k]][j])
 					x_end = TO.state(solver.stats.traj_pred[end_ind[k]][j])
@@ -356,27 +358,29 @@ function scene_animation(solver::TO.AbstractSolver, vis::Visualizer,
 						settransform!(vis[open_loop_plan_path*"/cyl_$i/stage_$j"], cyl_pos)
 					end
 				end
-				if k == 1
-					for j=1:horizon
-						x_start = TO.state(solver.stats.traj_pred[start_ind[k]][j])
-						x_end = TO.state(solver.stats.traj_pred[end_ind[k]][j])
-						x = x_start + α[k]*(x_end-x_start)
-						for i=1:p
-							cyl_pos = compose(roadway_translation, Translation(scale*x[px[i]]..., 0))
-							for l = 1:solver.r-2
-								settransform!(vis[sampled_plan_path*"/cyl_$i/stage_$j/sample_$l"], cyl_pos)
-							end
-						end
-					end
-				else
-					for l = 1:solver.r-2
+				if opts.display_sampled_plan
+					if k == 1
 						for j=1:horizon
-							x_start = TO.state(solver.stats.traj_sampled[start_ind[k]+1][l][j])
-							x_end = TO.state(solver.stats.traj_sampled[end_ind[k]+1][l][j])
+							x_start = TO.state(solver.stats.traj_pred[start_ind[k]][j])
+							x_end = TO.state(solver.stats.traj_pred[end_ind[k]][j])
 							x = x_start + α[k]*(x_end-x_start)
 							for i=1:p
 								cyl_pos = compose(roadway_translation, Translation(scale*x[px[i]]..., 0))
-								settransform!(vis[sampled_plan_path*"/cyl_$i/stage_$j/sample_$l"], cyl_pos)
+								for l = 1:num_samples
+									settransform!(vis[sampled_plan_path*"/cyl_$i/stage_$j/sample_$l"], cyl_pos)
+								end
+							end
+						end
+					else
+						for l = 1:num_samples
+							for j=1:horizon
+								x_start = TO.state(solver.stats.traj_sampled[start_ind[k]+1][l][j])
+								x_end = TO.state(solver.stats.traj_sampled[end_ind[k]+1][l][j])
+								x = x_start + α[k]*(x_end-x_start)
+								for i=1:p
+									cyl_pos = compose(roadway_translation, Translation(scale*x[px[i]]..., 0))
+									settransform!(vis[sampled_plan_path*"/cyl_$i/stage_$j/sample_$l"], cyl_pos)
+								end
 							end
 						end
 					end

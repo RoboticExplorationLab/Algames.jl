@@ -19,6 +19,7 @@ export
     dJ::Vector{Vector{T}} = [zeros(T,0)]
     cmax::Vector{T} = zeros(T,0)
     optimality_merit::Vector{Vector{T}} = [zeros(T,0)]
+    optimality_merit_inf::Vector{Vector{T}} = [zeros(T,0)]
     H_cond::Vector{Vector{T}} = [zeros(T,0)]
     α::Vector{Vector{T}} = [zeros(T,0)]
     dJ_zero_counter::Int = 0
@@ -33,6 +34,7 @@ function reset!(stats::DirectGamesStats, L=0, l=0, p=0)
     stats.dJ = [zeros(p) for j = 1:L]
     stats.cmax = zeros(L)
     stats.optimality_merit = [zeros(l) for j = 1:L]
+    stats.optimality_merit_inf = [zeros(l) for j = 1:L]
     stats.H_cond = [zeros(l) for j = 1:L]
     stats.α = [zeros(l) for j = 1:L]
     stats.dJ_zero_counter = 0
@@ -78,6 +80,9 @@ end
 
     "|g_|_1 < ϵ, optimality constraint tolerance."
     optimality_constraint_tolerance::T = 1.0e-2
+
+    "|g_|_∞ < ϵ, optimality constraint tolerance infinity norm."
+    optimality_constraint_tolerance_inf::T = 1.0e+1
 
     "cmax < ϵ, constraint tolerance."
     constraint_tolerance::T = 1.0e-3
@@ -468,7 +473,8 @@ function converged(solver::DirectGamesSolver{T,I}) where {T,I}
     iter = solver.stats.iterations
     inner_iter = solver.stats.iterations_inner[iter]
     out = (solver.stats.cmax[iter] <= solver.opts.constraint_tolerance) &&
-        (solver.stats.optimality_merit[iter][inner_iter] <= solver.opts.optimality_constraint_tolerance)
+        (solver.stats.optimality_merit[iter][inner_iter] <= solver.opts.optimality_constraint_tolerance) &&
+        (solver.stats.optimality_merit_inf[iter][inner_iter] <= solver.opts.optimality_constraint_tolerance_inf)
     return out
 end
 
@@ -513,6 +519,50 @@ function DirectGamesSolver(solver_::DirectGamesSolver{T,I}, obj::Vector{O},
         solver_.opts,
         solver_.stats,
         solver_.constraints,
+        solver_.penalty_constraints,
+        solver_.dyn_constraints,
+        solver_.Z,
+        solver_.Z̄,
+        solver_.∇F,
+        solver_.C,
+        solver_.ρ,
+        solver_.dρ,
+        solver_.η,
+        solver_.H_,
+        solver_.g_,
+        solver_.δY,
+        solver_.ν,
+        solver_.ν_,
+        solver_.γ,
+        solver_.logger)
+    return solver
+end
+
+function DirectGamesSolver(solver_::DirectGamesSolver{T,I}, conSet::ConstraintSet{T}=solver_.constraints) where {T,I}
+    solver = DirectGamesSolver{T,I}(
+        solver_.model,
+        solver_.obj,
+        solver_.spu,
+        solver_.xinds,
+        solver_.uinds,
+        solver_.xinds_p,
+        solver_.uinds_p,
+        solver_.uinds_H,
+        solver_.νinds,
+        solver_.νinds_p,
+        solver_.sinds,
+        solver_.stage_view_H,
+        solver_.state_view_H,
+        solver_.control_view_H,
+        solver_.coupled_view_H,
+        solver_.dynamical_view_H,
+        solver_.x0,
+        solver_.xf,
+        solver_.tf,
+        solver_.N,
+        solver_.opts,
+        solver_.stats,
+        conSet,
         solver_.penalty_constraints,
         solver_.dyn_constraints,
         solver_.Z,
