@@ -460,7 +460,8 @@ function time_resampling(dts::Vector{T}; dt::T=5e-1) where {T}
 	α = zeros(T, M)
 	for k = 1:M
 		start_ind[k] = findlast(x -> x <= t, sum_dt)
-		end_ind[k] = start_ind[k]+1
+		@show length(sum_dt)
+		end_ind[k] = min(start_ind[k]+1, length(sum_dt)-1)
 		α[k] = (t - sum_dt[start_ind[k]])/(sum_dt[end_ind[k]] - sum_dt[start_ind[k]])
 		t += dt
 	end
