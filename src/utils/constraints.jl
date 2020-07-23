@@ -5,6 +5,7 @@ export
 	add_collision_avoidance,
 	add_leader_constraints,
 	add_circle_boundary,
+	add_obstacle_avoidance!,
 	state_dim,
 	evaluate
 
@@ -28,6 +29,25 @@ function TO.evaluate(con::CollisionConstraint{T,P}, x::SVector) where {T,P}
 	r = con.radius1 + con.radius2
 	-(x[x1] .- x[x2]).^2 - (x[y1] .- x[y2]).^2 .+ r.^2
 end
+
+struct EllipsoidConstraint123{T,P} <: TO.AbstractConstraint{Inequality,State,1}
+	n::Int
+	S::SMatrix{2,2,T,4} # Matrix transforming the unit circle into the desired collision avoidance ellipsoid
+	c::SVector{2,T} # center of the ellipsoid
+	inds::SVector{P,Int}  # indices of x-state that are check for collision
+	EllipsoidConstraint123(n::Int, S::SMatrix{2,2,T,4}, c::SVector{2,T}, inds::SVector{P,Int}) where {T,P} =
+		 new{T,P}(n,S,c,inds)
+end
+TO.state_dim(con::EllipsoidConstraint123) = con.n
+
+function TO.evaluate(con::EllipsoidConstraint123{T,P}, x::SVector) where {T,P}
+	c = con.c
+	S = con.S
+	inds = con.inds
+	δ = x[inds] .- c
+	SVector{1,T}(1.0) .- δ' * S * δ
+end
+
 
 # struct PenaltyCollisionConstraint{T,P} <: TO.AbstractConstraint{Inequality,State,P}
 # 	n::Int
@@ -162,7 +182,21 @@ function add_circle_boundary!(conSet::ConstraintSet, inds::Array{Int,1},
 	return nothing
 end
 
-
+function add_obstacle_avoidance!(conSet::ConstraintSet, obstacles_centers::Vector{Vector{T}},
+	obstacles_radii::Vector{T}, actors_radii::Vector{T}, px, con_inds) where T
+	p = length(px)
+	for i = 1:p
+		for j = 1:length(obstacles_radii)
+			con = CircleConstraint(conSet.n,
+				SVector{1}([obstacles_centers[j][1]]),
+				SVector{1}([obstacles_centers[j][2]]),
+				SVector{1}([obstacles_radii[j]+actors_radii[i]]),
+				px[i]...)
+			add_constraint!(conSet, con, con_inds)
+		end
+	end
+	return nothing
+end
 
 #
 # ############################################################################################

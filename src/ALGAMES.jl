@@ -5,22 +5,23 @@ Primary module for setting up and solving dynamic games problems.
 module ALGAMES
 
 using BenchmarkTools
-using Blink #
-using Colors: RGBA, RGB #
-using CoordinateTransformations #
+using Blink ###
+using Colors: RGBA, RGB ###
+using CoordinateTransformations ###
 using Dates #
-using FileIO #
-using GeometryTypes #
+using FileIO ###
+using GeometryTypes ###
 using JLD2 #
 using LinearAlgebra
 using Logging
-using MeshCat #
-using MeshIO #
+using MeshCat ###
+using MeshIO ###
 using Parameters
 using PartedArrays
 using PGFPlotsX #
 using Plots #
 using Random
+using Rotations
 using SparseArrays
 using StaticArrays
 using Statistics
@@ -60,15 +61,18 @@ export
 
 # Scenario
 export
-    Scenario,
+	Scenario,
+	AbstractMergingScenario,
     IntersectionScenario,
     StraightScenario,
     TIntersectionScenario,
-    MergingScenario,
+	MergingScenario,
+	MergingObstacleScenario,
 	add_rounded_boundary_constraints,
 	add_scenario_constraints
 
 export
+	Ellipsoid,
 	solver_scope,
 	animation,
 	build_actors,
@@ -245,6 +249,7 @@ export
 	add_collision_avoidance,
 	add_leader_constraints,
 	add_circle_boundary,
+	add_obstacle_avoidance!,
 	state_dim,
 	evaluate
 

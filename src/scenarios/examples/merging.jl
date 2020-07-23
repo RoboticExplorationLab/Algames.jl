@@ -3,7 +3,7 @@ export
 	add_scenario_constraints,
 	add_merging_constraints
 
-function build_scenario(vis::Visualizer, scenario::MergingScenario{T}; scale::T=10.) where T
+function build_scenario(vis::Visualizer, scenario::AbstractMergingScenario; scale::T=10.) where T
 	pkg_path = joinpath(dirname(@__FILE__), "../../../")
     # Plot Road in Meshcat
     road_image = PngImage(joinpath(pkg_path, "resources/textures/road.png"))
@@ -57,23 +57,50 @@ function build_scenario(vis::Visualizer, scenario::MergingScenario{T}; scale::T=
 	setobject!(vis["roadway/bot_bound"], bot_bound, bound_material)
 	setobject!(vis["roadway/ramp_bound"], ramp_bound, bound_material)
 	settransform!(vis["roadway/ramp_bound"], ramp_transformation)
+
+	# Plot obstacles in MeshCat.
+	obstacle_height = 0.75*bound_height
+	obstacle_material = bound_material
+	if typeof(scenario) <: MergingObstacleScenario
+		obs_centers = scenario.obstacles_centers
+		obs_radii = scenario.obstacles_radii
+		s = length(obs_radii)
+		for k = 1:s
+			# Add obstacle cylinders
+			obstacle_cylinder = Cylinder(
+				Point(scale*obs_centers[k][1],scale*obs_centers[k][2],0.0),
+				Point(scale*obs_centers[k][1],scale*obs_centers[k][2],obstacle_height),
+				scale*obs_radii[k])
+			setobject!(vis["roadway/obs_cyl_$k"], obstacle_cylinder, bound_material)
+		end
+	end
 	return nothing
 end
 
-
 # Add the intersection constraints to the car with id player_id driving on lane ∈ [1,4].
 function add_scenario_constraints(conSet::ConstraintSet,
-	scenario::MergingScenario, px, con_inds; constraint_type=:constraint)
-    for i = 1:length(px)
-        add_scenario_constraints(conSet::ConstraintSet, scenario::MergingScenario,
+	scenario::AbstractMergingScenario, px, con_inds; constraint_type=:constraint)
+	p = length(px)
+    for i = 1:p
+        add_scenario_constraints(conSet::ConstraintSet, scenario::AbstractMergingScenario,
             i, px, con_inds; constraint_type=constraint_type)
     end
+	# Obstacle constraints
+	if typeof(scenario) <: MergingObstacleScenario
+		add_obstacle_avoidance!(
+			conSet,
+			scenario.obstacles_centers,
+			scenario.obstacles_radii,
+			scenario.actors_radii,
+			px,
+			con_inds)
+	end
     return nothing
 end
 
 
 # Add the intersection constraints to the car with id player_id driving on lane ∈ [1,4].
-function add_scenario_constraints(conSet::ConstraintSet, scenario::MergingScenario,
+function add_scenario_constraints(conSet::ConstraintSet, scenario::AbstractMergingScenario,
     player_id, px, con_inds; constraint_type=:constraint)
 	road_length = scenario.road_length
 	road_width = scenario.road_width
@@ -99,5 +126,6 @@ function add_scenario_constraints(conSet::ConstraintSet, scenario::MergingScenar
     add_constraint!(conSet, con, con_inds)
 	con = BoundaryConstraint(conSet.n, b4, b5, v3, px[player_id]...)
     add_constraint!(conSet, con, con_inds)
+
     return nothing
 end

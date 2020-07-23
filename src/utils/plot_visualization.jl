@@ -14,24 +14,30 @@ export
     rectangle_shape
 
 
-function visualize_trajectory_car(solver::TO.ALTROSolver{T}; title::String="", save_figure::Bool=false) where T
+function visualize_trajectory_car(solver::TO.ALTROSolver{T}; title::String="",
+    plt::Plots.Plot=plot(), save_figure::Bool=false) where T
+
     conSet = solver.solver_al.solver_uncon.obj.constraints
     x0 = solver.solver_al.solver_uncon.x0
     xf = solver.solver_al.solver_uncon.xf
-    visualize_trajectory_car(solver, x0, xf, conSet; title=title, save_figure=save_figure)
+    visualize_trajectory_car(solver, x0, xf, conSet; title=title, plt=plt, save_figure=save_figure)
     return nothing
 end
 
-function visualize_trajectory_car(solver::TO.AbstractSolver{T}; title::String="", save_figure::Bool=false) where T
+function visualize_trajectory_car(solver::TO.AbstractSolver{T}; title::String="",
+    plt::Plots.Plot=plot(), save_figure::Bool=false) where T
+
     conSet = solver.constraints
     x0 = solver.x0
     xf = solver.xf
-    visualize_trajectory_car(solver, x0, xf, conSet; title=title, save_figure=save_figure)
+    visualize_trajectory_car(solver, x0, xf, conSet; title=title, plt=plt, save_figure=save_figure)
     return nothing
 end
 
-function visualize_trajectory_car(solver::TO.AbstractSolver{T}, x0::AbstractArray, xf::SVector{n1,T},
-    conSet::TO.ConstraintSet{T}; title::String="", save_figure::Bool=false) where {n1, T}
+function visualize_trajectory_car(solver::TO.AbstractSolver{T}, x0::AbstractArray,
+    xf::SVector{n1,T}, conSet::TO.ConstraintSet{T}; title::String="",
+    plt::Plots.Plot=plot(), save_figure::Bool=false) where {n1, T}
+
     n,m,N = size(solver)
     p  = get_model(solver).p
     pu = get_model(solver).pu
@@ -39,7 +45,6 @@ function visualize_trajectory_car(solver::TO.AbstractSolver{T}, x0::AbstractArra
 
     X = TO.states(solver)
     U = TO.controls(solver)./2000.
-    plt = plot()
     X_traj = [[[X[k][j] for k=1:N] for j in px[i]] for  i=1:p]
     U_traj = [[[U[k][j] for k=1:N-1] for j in pu[i]] for  i=1:p]
     colors = [:blue, :red, :yellow, :green, :green]
@@ -119,6 +124,21 @@ function visualize_trajectory_car(solver::TO.AbstractSolver{T}, x0::AbstractArra
             end
         end
     end
+
+    # Ellipsoid Constraints
+    actors_radii = get_actors_radii(solver)
+    if any(actors_radii .!= actors_radii[1]*ones(p))
+        @show "Inconsistent visualization due to different collision radii."
+    end
+    i_av = 1
+    for con in solver.constraints.constraints
+        if typeof(con.con) <: EllipsoidConstraint123
+            inflation = actors_radii[i_av]*ones(length(px[i_av]))
+            S = inv(inv(sqrt(con.con.S)) - Diagonal(inflation))
+            plot_ellipse!(S, con.con.c, color=:green, M=200)
+        end
+    end
+
     xlim = [Inf, -Inf]
     ylim = [Inf, -Inf]
     for i = 1:p
@@ -156,6 +176,43 @@ function visualize_trajectory_car(solver::TO.AbstractSolver{T}, x0::AbstractArra
     display(plt)
     return nothing
 end
+
+################################################################################
+################################################################################
+################################################################################
+
+function get_actors_radii(solver::DirectGamesSolver{T}) where T
+	model = get_model(solver)
+	p = model.p
+	px = model.px
+	actors_radii = Vector{T}(undef, p)
+	for con in solver.constraints.constraints
+		if typeof(con.con) <: CollisionConstraint
+			px1 = [con.con.x1, con.con.y1]
+			px2 = [con.con.x2, con.con.y2]
+			ind1 = findfirst(x -> x == px1, px)
+			ind2 = findfirst(x -> x == px2, px)
+			actors_radii[ind1] = con.con.radius1[1]
+			actors_radii[ind2] = con.con.radius2[1]
+		end
+	end
+	return actors_radii
+end
+
+
+function plot_ellipse!(S::AbstractMatrix{T}, c::AbstractArray{T}; M::Int=50, label::String="", color::Symbol=:blue) where T
+	Θ = [(k-1)/(M-1)*2*pi for k=1:M]
+	cir = [[cos(θ), sin(θ)] for θ in Θ]
+	ell_points = [(cir[k] ./ norm(S*cir[k],2)) .+ c for k=1:M]
+	ell_plot = [[e[1] for e in ell_points], [e[2] for e in ell_points]]
+	plot!(ell_plot..., label=label, linewidth=0.5, color=color)
+	# scatter!(ell_plot..., label=label, linewidth=0.5, color=color)
+	return ell_points
+end
+
+################################################################################
+################################################################################
+################################################################################
 
 function visualize_control(solver::TO.AbstractSolver{T}) where {T}
     visualize_control(TO.controls(solver), get_model(solver).pu)

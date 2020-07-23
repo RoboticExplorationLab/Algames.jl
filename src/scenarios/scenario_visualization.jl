@@ -10,6 +10,11 @@ export
 	animation_colors
 
 
+mutable struct Ellipsoid{n,T}
+	mean::SVector{n,T}
+	cov::Matrix{T}
+end
+
 @with_kw mutable struct AnimationOptions{T}
     # Options
 	"Suffix added at the end of the scope of the solver."
@@ -26,6 +31,12 @@ export
 
 	"Display the open-loop plan sampled by the human-driven vehicle for all the actors."
 	display_sampled_plan::Bool=false
+
+	"Display ellipse contour corresponding to the uncertainty about the position of human driver vehicles."
+	display_ellipse_contour::Bool=false
+
+	"Number of points on the border of the ellipse contour."
+	num_contour_points::Int=100
 
 	"Hide the blue background."
 	no_background::Bool=false
@@ -145,13 +156,18 @@ function animation(solver::TO.AbstractSolver, scenario::Scenario{T};
 		delete_object!(vis,scope,"sampled_plan")
 	end
 
+	if opts.display_ellipse_contour && occursin("UKFGamesSolver", string(scope))
+		build_ellipse_contour(vis, solver, scenario, opts)
+	else
+		delete_object!(vis,scope,"ellipse_contour")
+	end
+
 	# Animate the scene
 	anim = MeshCat.Animation(anim.clips, opts.framerate)
-	scene_animation(solver, vis, anim, opts)
+	scene_animation(solver, scenario, vis, anim, opts)
     MeshCat.setanimation!(vis, anim)
 	return vis, anim
 end
-
 
 function build_actors(vis::Visualizer, scenario::Scenario{T}, scope::Symbol,
 	opts::AnimationOptions{T}=AnimationOptions{T}()) where T
@@ -292,7 +308,69 @@ function build_sampled_plan(vis::Visualizer, solver::TO.AbstractSolver{T},
 	return nothing
 end
 
-function scene_animation(solver::TO.AbstractSolver, vis::Visualizer,
+# function build_ellipse_contour(vis::Visualizer, solver::TO.AbstractSolver{T},
+# 	opts::AnimationOptions{T}=AnimationOptions{T}()) where {T,K}
+#
+# 	scale = opts.scale
+# 	α_fading = opts.α_fading
+# 	col_val = animation_colors("yellow")
+#
+# 	cyl_height = 0.050*scale
+# 	cyl_radius = 0.005*scale
+#
+# 	model = TO.get_model(solver)
+# 	p = model.p
+# 	path = String(solver_scope(solver, opts))*"/ellipse_contour"
+# 	for l = 1:opts.num_contour_points
+# 		for i in setdiff(1:p, solver.i_av)
+# 			cyl = Cylinder(Point(0.0,0.0,0.0),
+# 				Point(0.0,0.0,cyl_height), cyl_radius)
+# 			cyl_material = MeshPhongMaterial(color=RGBA(col_val..., α_fading))
+# 			setobject!(vis[path*"/cyl_$i/sample_$l"], cyl, cyl_material)
+# 		end
+# 	end
+# 	return nothing
+# end
+
+function build_ellipse_contour(vis::Visualizer, solver::TO.AbstractSolver{T},
+	scenario::Scenario{T}, opts::AnimationOptions{T}=AnimationOptions{T}()) where {T,K}
+
+	scale = opts.scale
+	α_fading = opts.α_fading
+	horizon = opts.horizon
+	algo_type = solver.opts.algorithm_type
+	start_ind, end_ind, α = time_resampling([z.dt for z in solver.stats.traj], dt=opts.dt)
+	model = TO.get_model(solver)
+	p = model.p
+	px = model.px
+	path = String(solver_scope(solver, opts))*"/ellipse_contour"
+
+	col_val = animation_colors("yellow")
+	ellipse_thickness = 0.001*scale
+
+	for q = 1:length(α)
+		for k = 1:horizon
+			ellipse_height = 0.001*scale*(1+k/5)
+			col_val_k = col_val + [-k*0.04, 0, 0]
+			obj_material = MeshPhongMaterial(color=RGBA(col_val_k..., 0.5))#α_fading/10))
+			start_ell = solver.stats.traj_ellip[start_ind[q]][k]
+			end_ell = solver.stats.traj_ellip[end_ind[q]][k]
+			c = (1-α[q]) * start_ell.mean + α[q] * end_ell.mean
+			Σ = (1-α[q]) * start_ell.cov + α[q] * end_ell.cov
+			ell = Ellipsoid(c, Σ)
+			for i in setdiff(1:p, solver.i_av)
+				inds = px[i]
+				radius = scenario.actors_radii[i]
+				ell_i = Ellipsoid(SVector{length(px[i])}(ell.mean[inds]), ell.cov[inds, inds])
+				obj = build_ellipse_object(ell_i, radius; scale=opts.scale, height=ellipse_height, thickness=ellipse_thickness)
+				setobject!(vis[path*"/ell_$i/step_$k/time_$q"], obj, obj_material)
+			end
+		end
+	end
+	return nothing
+end
+
+function scene_animation(solver::TO.AbstractSolver, scenario::Scenario{T}, vis::Visualizer,
 	anim::MeshCat.Animation, opts::AnimationOptions{T}=AnimationOptions{T}())  where T
 
 	actor_tracking = opts.actor_tracking
@@ -333,6 +411,7 @@ function scene_animation(solver::TO.AbstractSolver, vis::Visualizer,
 	trajectory_path = String(scope)*"/trajectory"
 	open_loop_plan_path = String(scope)*"/open_loop_plan"
 	sampled_plan_path = String(scope)*"/sampled_plan"
+	ellipse_contour_path = String(scope)*"/ellipse_contour"
 	roadway_path = "roadway"
 
 	for k = 1:length(actor_translations)-1
@@ -381,6 +460,63 @@ function scene_animation(solver::TO.AbstractSolver, vis::Visualizer,
 									cyl_pos = compose(roadway_translation, Translation(scale*x[px[i]]..., 0))
 									settransform!(vis[sampled_plan_path*"/cyl_$i/stage_$j/sample_$l"], cyl_pos)
 								end
+							end
+						end
+					end
+				end
+				# if opts.display_ellipse_contour &&
+				# 	solver.opts.algorithm_type == :algames &&
+				# 	solver.opts.ellipsoid_collision
+				#
+				# 	if k > 2
+				# 		for i in setdiff(1:p, solver.i_av)
+				# 			cont_start = ellipse_trajectory_contour(
+				# 				solver.stats.traj_ellip[start_ind[k]],
+				# 				px[i],
+				# 				scenario.actors_radii[i];
+				# 				P=opts.num_contour_points,
+				# 				M=50)
+				# 			cont_end = ellipse_trajectory_contour(
+				# 				solver.stats.traj_ellip[end_ind[k]],
+				# 				px[i],
+				# 				scenario.actors_radii[i];
+				# 				P=opts.num_contour_points,
+				# 				M=50)
+				# 			for l = 1:opts.num_contour_points
+				# 				cont = cont_start[l,:] + α[k]*(cont_end[l,:]-cont_start[l,:])
+				# 				@show cont
+				# 				cyl_pos = compose(roadway_translation, Translation(scale*cont..., 0))
+				# 				settransform!(vis[ellipse_contour_path*"/cyl_$i/sample_$l"], cyl_pos)
+				# 			end
+				# 		end
+				# 	end
+				# end
+				if opts.display_ellipse_contour &&
+					solver.opts.algorithm_type in [:ground_truth, :algames, :frozen_learning] &&
+					solver.opts.ellipsoid_collision
+					for k = 1:length(α)
+						for j = 1:horizon
+							for i in setdiff(1:p, solver.i_av)
+								setvisible!(vis[ellipse_contour_path*"/ell_$i/step_$j/time_$k"], false)
+							end
+						end
+					end
+
+					if k > 2
+						for j = 1:horizon
+							start_ell = solver.stats.traj_ellip[start_ind[k]][j]
+							end_ell = solver.stats.traj_ellip[end_ind[k]][j]
+							c = (1-α[k]) * start_ell.mean + α[k] * end_ell.mean
+							Σ = (1-α[k]) * start_ell.cov + α[k] * end_ell.cov
+							ell = Ellipsoid(c, Σ)
+							for i in setdiff(1:p, solver.i_av)
+								inds = px[i]
+								radius = scenario.actors_radii[i]
+								ell_i = Ellipsoid(SVector{length(px[i])}(ell.mean[inds]), ell.cov[inds, inds])
+								transform = ellipse_transformation(ell_i, radius, scale=opts.scale)
+								ell_pos = compose(roadway_translation, transform)
+								settransform!(vis[ellipse_contour_path*"/ell_$i/step_$j"], ell_pos)
+								setvisible!(vis[ellipse_contour_path*"/ell_$i/step_$j/time_$k"], true)
 							end
 						end
 					end
@@ -460,7 +596,6 @@ function time_resampling(dts::Vector{T}; dt::T=5e-1) where {T}
 	α = zeros(T, M)
 	for k = 1:M
 		start_ind[k] = findlast(x -> x <= t, sum_dt)
-		@show length(sum_dt)
 		end_ind[k] = min(start_ind[k]+1, length(sum_dt)-1)
 		α[k] = (t - sum_dt[start_ind[k]])/(sum_dt[end_ind[k]] - sum_dt[start_ind[k]])
 		t += dt
@@ -515,4 +650,35 @@ function select_material(material_path::String)
     mtl_file = open(material_path)
     mtl = read(mtl_file, String)
     return mtl
+end
+
+
+function build_ellipse_object(ell::Ellipsoid{n,T}, radius::T; scale::T=0.1, s::T=5.991, height::T=0.0, thickness::T=0.05) where {n,T}
+	@assert n == 2
+	c = ell.mean
+	Σ = ell.cov
+	inflation = radius*ones(length(c))
+	Splot = inv(sqrt(s*Σ) + Diagonal(inflation))
+	λ1, λ2 = eigvals(Splot)
+
+	obj = HyperEllipsoid{3,T}(
+		Point(0., 0., height),
+		Vec(scale*1/λ1, scale*1/λ2, thickness)
+		)
+	return obj
+end
+
+function ellipse_transformation(ell::Ellipsoid{n,T}, radius::T; scale::T=0.1, s::T=5.991) where {n,T}
+	@assert n == 2
+	c = ell.mean
+	Σ = ell.cov
+	inflation = radius*ones(length(c))
+	Splot = inv(sqrt(s*Σ) + Diagonal(inflation))
+	e1 = eigvecs(Splot)[:,1]
+	θ1 = atan(e1[2], e1[1])
+
+	rot = LinearMap(AngleAxis(θ1, 0, 0, 1))
+	trans = Translation(scale .* c..., 0.)
+	transform = compose(trans, rot)
+	return transform
 end
