@@ -132,10 +132,13 @@ function visualize_trajectory_car(solver::TO.AbstractSolver{T}, x0::AbstractArra
     end
     i_av = 1
     for con in solver.constraints.constraints
-        if typeof(con.con) <: EllipsoidConstraint123
+        if typeof(con.con) <: EllipsoidConstraint121
             inflation = actors_radii[i_av]*ones(length(px[i_av]))
             S = inv(inv(sqrt(con.con.S)) - Diagonal(inflation))
-            plot_ellipse!(S, con.con.c, color=:green, M=200)
+            for k in con.inds
+                center = X[k][con.con.inds_human]
+                plot_ellipse!(S, con.con.c, color=:green, M=200)
+            end
         end
     end
 

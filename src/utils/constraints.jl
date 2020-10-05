@@ -30,21 +30,23 @@ function TO.evaluate(con::CollisionConstraint{T,P}, x::SVector) where {T,P}
 	-(x[x1] .- x[x2]).^2 - (x[y1] .- x[y2]).^2 .+ r.^2
 end
 
-struct EllipsoidConstraint123{T,P} <: TO.AbstractConstraint{Inequality,State,1}
+struct EllipsoidConstraint121{T,P} <: TO.AbstractConstraint{Inequality,State,1}
 	n::Int
 	S::SMatrix{2,2,T,4} # Matrix transforming the unit circle into the desired collision avoidance ellipsoid
 	c::SVector{2,T} # center of the ellipsoid
-	inds::SVector{P,Int}  # indices of x-state that are check for collision
-	EllipsoidConstraint123(n::Int, S::SMatrix{2,2,T,4}, c::SVector{2,T}, inds::SVector{P,Int}) where {T,P} =
-		 new{T,P}(n,S,c,inds)
+	inds::SVector{P,Int}  # indices of x-state for the autonomous vehicle that are checked for collision
+	inds_human::SVector{P,Int}  # indices of x-state for the human driven car that are checked for collision
+	EllipsoidConstraint121(n::Int, S::SMatrix{2,2,T,4}, c::SVector{2,T}, inds::SVector{P,Int}, inds_human::SVector{P,Int}) where {T,P} =
+		 new{T,P}(n,S,c,inds,inds_human)
 end
-TO.state_dim(con::EllipsoidConstraint123) = con.n
+TO.state_dim(con::EllipsoidConstraint121) = con.n
 
-function TO.evaluate(con::EllipsoidConstraint123{T,P}, x::SVector) where {T,P}
+function TO.evaluate(con::EllipsoidConstraint121{T,P}, x::SVector) where {T,P}
 	c = con.c
 	S = con.S
 	inds = con.inds
-	δ = x[inds] .- c
+	inds_human = con.inds_human
+	δ = x[inds] .- x[inds_human]
 	SVector{1,T}(1.0) .- δ' * S * δ
 end
 

@@ -46,6 +46,9 @@ function build_scenario(vis::Visualizer, scenario::AbstractMergingScenario; scal
 	bound_image = PngImage(joinpath(pkg_path, "resources/textures/light_boundary.png"))
 	bound_texture = Texture(image=bound_image)
 	bound_material = MeshLambertMaterial(map=bound_texture)
+	obs_image = PngImage(joinpath(pkg_path, "resources/textures/obstacle.png"))
+	obs_texture = Texture(image=obs_image)
+	obs_material = MeshLambertMaterial(map=obs_texture)
 	# Upper Boundary
 	up_bound = HyperRectangle(Vec(-road_length/2, road_width/2, 0.),
 		Vec(road_length, bound_width, bound_height))
@@ -59,8 +62,7 @@ function build_scenario(vis::Visualizer, scenario::AbstractMergingScenario; scal
 	settransform!(vis["roadway/ramp_bound"], ramp_transformation)
 
 	# Plot obstacles in MeshCat.
-	obstacle_height = 0.75*bound_height
-	obstacle_material = bound_material
+	obstacle_height = 1.25*bound_height
 	if typeof(scenario) <: MergingObstacleScenario
 		obs_centers = scenario.obstacles_centers
 		obs_radii = scenario.obstacles_radii
@@ -71,7 +73,7 @@ function build_scenario(vis::Visualizer, scenario::AbstractMergingScenario; scal
 				Point(scale*obs_centers[k][1],scale*obs_centers[k][2],0.0),
 				Point(scale*obs_centers[k][1],scale*obs_centers[k][2],obstacle_height),
 				scale*obs_radii[k])
-			setobject!(vis["roadway/obs_cyl_$k"], obstacle_cylinder, bound_material)
+			setobject!(vis["roadway/obs_cyl_$k"], obstacle_cylinder, obs_material)
 		end
 	end
 	return nothing

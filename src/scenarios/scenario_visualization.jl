@@ -492,7 +492,7 @@ function scene_animation(solver::TO.AbstractSolver, scenario::Scenario{T}, vis::
 				# 	end
 				# end
 				if opts.display_ellipse_contour &&
-					solver.opts.algorithm_type in [:ground_truth, :algames, :frozen_learning] &&
+					solver.opts.algorithm_type in [:ground_truth, :line_prediction, :algames, :frozen_learning] &&
 					solver.opts.ellipsoid_collision
 					for k = 1:length(α)
 						for j = 1:horizon
