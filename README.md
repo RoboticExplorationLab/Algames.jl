@@ -28,7 +28,7 @@ All methods utilize Julia's extensive autodifferentiation capabilities via [Forw
 To install ALGAMES.jl, run the following from the Julia REPL:
 ```julia
 Pkg.add(PackageSpec(name="TrajectoryOptimization", rev="v1.3"))
-Pkg.add(PackageSpec(url="https://github.com/RoboticExplorationLab/ALGAMES.jl.git"))
+Pkg.develop(PackageSpec(url="https://github.com/RoboticExplorationLab/ALGAMES.jl.git"))
 ```
 
 ## Quick Start
