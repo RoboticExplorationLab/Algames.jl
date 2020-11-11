@@ -356,7 +356,8 @@ function build_ellipse_contour(vis::Visualizer, solver::TO.AbstractSolver{T},
 			start_ell = solver.stats.traj_ellip[start_ind[q]][k]
 			end_ell = solver.stats.traj_ellip[end_ind[q]][k]
 			c = (1-α[q]) * start_ell.mean + α[q] * end_ell.mean
-			Σ = (1-α[q]) * start_ell.cov + α[q] * end_ell.cov
+			# Σ = (1-α[q]) * start_ell.cov + α[q] * end_ell.cov###############################################
+			Σ = (1-1.) * start_ell.cov + 1. * end_ell.cov
 			ell = Ellipsoid(c, Σ)
 			for i in setdiff(1:p, solver.i_av)
 				inds = px[i]
@@ -393,12 +394,12 @@ function scene_animation(solver::TO.AbstractSolver, scenario::Scenario{T}, vis::
     birdseye_rot = compose(
 		LinearMap(AngleAxis(-pi/2, 0, 0, 1)),
 		LinearMap(AngleAxis(-0.397*pi, 0, 1, 0)))
-	###
-	# birdseye_trans = Translation(0.0, 0.0, 1.0*scale)
-    # birdseye_rot = compose(
-	# 	LinearMap(AngleAxis(-pi/2, 0, 0, 1)),
-	# 	LinearMap(AngleAxis(-0.397*pi, 0, 1, 0)))
-	###
+	##
+	birdseye_trans = Translation(0.0, 0.0, 1.9*scale)
+    birdseye_rot = compose(
+		LinearMap(AngleAxis(-pi/2, 0, 0, 1)),
+		LinearMap(AngleAxis(-0.397*pi, 0, 1, 0)))
+	##
 
     # Compute actor transformations
     actor_translations, actor_rotations = actor_transformations(solver, opts)
@@ -534,18 +535,29 @@ function scene_animation(solver::TO.AbstractSolver, scenario::Scenario{T}, vis::
 			camera_transformation = compose(
 				birdseye_trans,
 				birdseye_rot)
-            # camera_transformation = compose(compose(
+            ##
+			# camera_transformation = compose(compose(
 			# 	Translation(-4.0, 0.0, -k*0.6),
 			# 	compose(
 			# 	birdseye_trans,
 			# 	birdseye_rot)),Translation(0.0, -k*0.3, -5+k*0.6))
+			# ##
 			settransform!(vis["/Cameras/default"], camera_transformation)
 
+			# ##
 			# setprop!(
 			# 	# vis["/Cameras/default"],
 			# 	vis["/Cameras/default/rotated/<object>"],
 			# 	"position",
-			# 	[-15.0 + 1.0*k, 0., 00.])
+			# 	[-15.0 + 1.0*k, 0., 0.])
+			# ##
+			##
+			setprop!(
+				# vis["/Cameras/default"],
+				vis["/Cameras/default/rotated/<object>"],
+				"position",
+				[-15., -5., +10.])
+			##
         end
 	end
 	setprop!(vis["/Lights/AmbientLight/<object>"], "intensity", 1.0)
