@@ -25,11 +25,20 @@ This package also features:
 All methods utilize Julia's extensive autodifferentiation capabilities via [ForwardDiff.jl](http://www.juliadiff.org/ForwardDiff.jl/) so that the user does not need to specify derivatives of dynamics, cost, or constraint functions.
 
 ## Installation
-To install ALGAMES.jl, run the following from the Julia REPL:
+To install ALGAMES.jl, in Atom, run the following from the Julia REPL:
 ```julia
 Pkg.add(PackageSpec(name="TrajectoryOptimization", rev="v1.3"))
-Pkg.develop(PackageSpec(url="https://github.com/RoboticExplorationLab/ALGAMES.jl.git"))
 ```
+Clone the repository:
+```julia
+git clone https://github.com/RoboticExplorationLab/ALGAMES.jl
+```
+Activate the project in Atom, instantiate the package:
+```julia
+(ALGAMES) pkg> instantiate
+using ALGAMES
+```
+
 
 ## Quick Start
 To run a simple example of a 2-player 2D double-integrator:
