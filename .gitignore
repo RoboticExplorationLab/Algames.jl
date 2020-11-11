@@ -11,6 +11,6 @@ ipopt.out
 temp/
 fort.10
 logs/
-Manifest.toml
+# Manifest.toml
 src/pf/*
 src/pf/
