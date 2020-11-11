@@ -111,16 +111,14 @@ anim = MeshCat.Animation()
 open(vis)
 # sleep(1.0)
 # Execute this line after the MeshCat tab is open
-vis, anim = animation(algames_solver,
-	t_intersection_2_players_scenario;
-	vis=vis, anim=anim,
-	open_vis=false,
+anim_opts = AnimationOptions(
 	display_actors=true,
 	display_trajectory=true,
 	camera_offset=false,
-	camera_mvt=false,
-	# α_fading=0.35
-	)
+	camera_mvt=false,)
+vis, anim = animation(algames_solver,
+	t_intersection_2_players_scenario;
+	vis=vis, anim=anim, opts=anim_opts)
 
 ################################################################################
 ################################################################################
@@ -176,16 +174,14 @@ anim_leader = MeshCat.Animation()
 open(vis_leader)
 sleep(1.0)
 # Execute this line after the MeshCat tab is open
-vis_leader, anim_leader = animation(leader_solver,
-	t_intersection_2_players_scenario;
-	vis=vis_leader, anim=anim_leader,
-	open_vis=false,
+anim_opts = AnimationOptions(
 	display_actors=true,
 	display_trajectory=true,
 	camera_offset=false,
-	camera_mvt=false,
-	# α_fading=0.35
-	)
+	camera_mvt=false,)
+vis_leader, anim_leader = animation(leader_solver,
+	t_intersection_2_players_scenario;
+	vis=vis_leader, anim=anim_leader, opts=anim_opts)
 
 
 
@@ -254,23 +250,21 @@ anim_follower = MeshCat.Animation()
 open(vis_follower)
 sleep(1.0)
 # Execute this line after the MeshCat tab is open
-vis_follower, anim_follower = animation(follower_solver,
-	t_intersection_2_players_scenario;
-	vis=vis_follower, anim=anim_follower,
-	open_vis=false,
+anim_opts = AnimationOptions(
 	display_actors=true,
 	display_trajectory=false,
 	camera_offset=false,
 	camera_mvt=false,
 	α_fading=0.30)
-
-vis_leader, anim_leader = animation(follower_solver,
+vis_follower, anim_follower = animation(follower_solver,
 	t_intersection_2_players_scenario;
-	vis=vis_leader, anim=anim_leader,
-	open_vis=false,
+	vis=vis_follower, anim=anim_follower, opts=anim_opts)
+
+anim_opts = AnimationOptions(
 	display_actors=true,
 	display_trajectory=true,
 	camera_offset=false,
-	camera_mvt=false,
-	# α_fading=0.30
-	)
+	camera_mvt=false,)
+vis_leader, anim_leader = animation(follower_solver,
+	t_intersection_2_players_scenario;
+	vis=vis_leader, anim=anim_leader, opts=anim_opts)

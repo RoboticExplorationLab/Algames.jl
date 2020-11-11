@@ -201,10 +201,14 @@ function build_actors(vis::Visualizer, scenario::Scenario{T}, scope::Symbol,
 			settransform!(vis[path*"$i/actor"], car_offset)
 		elseif actors_types[i] == :pedestrian
 			cylinder_height = cylinder_height_ped
-			actor = load(joinpath(pkg_path, "resources/object/pedestrian_geometry.obj"), GLUVMesh)
-			actor.vertices .*= 0.001/15 * scale
-			actor_material = MeshPhongMaterial(color=RGBA(0., 0., 0., 1.0))
-			setobject!(vis[path*"$i/actor"], actor, actor_material)
+			# actor = load(joinpath(pkg_path, "resources/object/pedestrian_geometry.obj"), GLUVMesh)
+			# actor.vertices .*= 0.001/15 * scale
+			# actor_material = MeshPhongMaterial(color=RGBA(0., 0., 0., 1.0))
+			obj_path = joinpath(pkg_path, "resources/object/pedestrian_geometry.obj")
+			mtl_path = joinpath(pkg_path, "resources/material/gray.mtl")
+			actor = ModifiedMeshFileObject(obj_path, mtl_path, scale=0.001/15 * scale)
+			setobject!(vis[path*"$i/actor"], actor)
+			# setobject!(vis[path*"$i/actor"], actor, actor_material)
 			settransform!(vis[path*"$i/actor"], ped_offset)
 		end
 		# Add collision avoidance cylinders
@@ -394,12 +398,7 @@ function scene_animation(solver::TO.AbstractSolver, scenario::Scenario{T}, vis::
     birdseye_rot = compose(
 		LinearMap(AngleAxis(-pi/2, 0, 0, 1)),
 		LinearMap(AngleAxis(-0.397*pi, 0, 1, 0)))
-	##
-	birdseye_trans = Translation(0.0, 0.0, 1.9*scale)
-    birdseye_rot = compose(
-		LinearMap(AngleAxis(-pi/2, 0, 0, 1)),
-		LinearMap(AngleAxis(-0.397*pi, 0, 1, 0)))
-	##
+
 
     # Compute actor transformations
     actor_translations, actor_rotations = actor_transformations(solver, opts)
@@ -552,12 +551,12 @@ function scene_animation(solver::TO.AbstractSolver, scenario::Scenario{T}, vis::
 			# 	[-15.0 + 1.0*k, 0., 0.])
 			# ##
 			##
-			setprop!(
-				# vis["/Cameras/default"],
-				vis["/Cameras/default/rotated/<object>"],
-				"position",
-				[-15., -5., +10.])
-			##
+			# setprop!(
+			# 	# vis["/Cameras/default"],
+			# 	vis["/Cameras/default/rotated/<object>"],
+			# 	"position",
+			# 	[-15., -5., +10.])
+			# ##
         end
 	end
 	setprop!(vis["/Lights/AmbientLight/<object>"], "intensity", 1.0)

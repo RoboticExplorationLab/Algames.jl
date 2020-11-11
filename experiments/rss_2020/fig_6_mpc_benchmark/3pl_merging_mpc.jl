@@ -167,12 +167,12 @@ resample!(mpc_solver)
 vis=AG.Visualizer()
 anim=AG.MeshCat.Animation()
 open(vis)
+anim_opts = AnimationOptions(display_actors=true,
+	display_trajectory=true)
 # Execute this line after the MeshCat tab is open
 vis, anim = animation(mpc_solver, scenario;
 	vis=vis, anim=anim,
-	open_vis=false,
-	display_actors=true,
-	display_trajectory=true)
+	opts=anim_opts)
 
 iter = mpc_solver.stats.iterations
 mean_solve_time = mean(mpc_solver.stats.solve_time[1:iter])
@@ -189,7 +189,7 @@ mpc_solver.opts.log_level = AG.Logging.Debug
 for k = 1:samples
 	@show k
 	algames_solver = DirectGamesSolver(algames_prob, algames_opts)
-	mpc_solver = MPCGamesSolver(algames_solver, dxf, opts_mpc)
+	mpc_solver = MPCGamesSolver(algames_solver, opts_mpc)
 
     reset!(mpc_solver, reset_type=:full)
     solve!(mpc_solver, wait=false)
