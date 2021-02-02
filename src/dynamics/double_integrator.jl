@@ -1,23 +1,30 @@
-# Define the dynamics model of the game.
-struct DoubleIntegratorGame{N,M,P} <: AbstractGameModel
+# Define the dynamics model of the model.
+struct DoubleIntegratorGame{N,M,P,SVu,SVx,SVz} <: AbstractGameModel
     n::Int  # Number of states
     m::Int  # Number of controls
 	p::Int  # Number of players
-	pu::Vector{Vector{Int}} # Indices of the each player's controls
-	px::Vector{Vector{Int}} # Indices of the each player's x and y positions
+	ni::Vector{Int}  # Number of states for each player
+	mi::Vector{Int}  # Number of controls for each player
+	pu::SVu # Indices of the each player's controls
+	px::SVx # Indices of the each player's x and y positions
+	pz::SVz # Indices of the each player's states
 end
-DoubleIntegratorGame(;p::Int=2, d::Int=2) = DoubleIntegratorGame{2*d*p,d*p,p}(
-	# P = number of players
-	# d = dimension of the integrator
-	2*d*p,
-	d*p,
-	p,
-	[[(j-1)*p+i for j=1:d] for i=1:p],
-	[[(j-1)*p+i for j=1:d] for i=1:p])
-Base.size(model::DoubleIntegratorGame{N,M,P}) where {N,M,P} = N,M,
-	[[(j-1)*P+i for j=1:Int(M/P)] for i=1:P],P # n,m,pu,p
 
-@generated function TO.dynamics(model::DoubleIntegratorGame{N,M,P}, x, u) where {N,M,P}
+function DoubleIntegratorGame(;p::Int=2, d::Int=2)
+	# p = number of players
+	# d = dimension of the integrator
+	n = 2d*p
+	m = d*p
+	pu = [SVector{d,Int}([i + (j-1)*p for j=1:d]) for i=1:p]
+	px = [SVector{2,Int}([i + (j-1)*p for j=1:2]) for i=1:p]
+	pz = [SVector{2d,Int}([i + (j-1)*p for j=1:2d]) for i=1:p]
+	TYPE = typeof.((pu,px,pz))
+	ni = 2d*ones(Int,p)
+	mi = d*ones(Int,p)
+	return DoubleIntegratorGame{n,m,p,TYPE...}(n,m,p,ni,mi,pu,px,pz)
+end
+
+@generated function RobotDynamics.dynamics(model::DoubleIntegratorGame{N,M,P}, x, u) where {N,M,P}
 	qd  = [:(x[$i]) for i=M+1:N]
 	qdd = [:(u[$i]) for i=1:M]
 	return :(SVector{$N}($(qd...), $(qdd...)))

@@ -1,45 +1,54 @@
-using ALGAMES
-using TrajectoryOptimization
 using Test
+using Algames
+using Altro
 using BenchmarkTools
+using ForwardDiff
 using LinearAlgebra
+using Parameters
+using Printf
 using Random
-using StaticArrays
+using RobotDynamics
 using SparseArrays
-using Logging
-const TO = TrajectoryOptimization
-const AG = ALGAMES
+using StaticArrays
+using TrajectoryOptimization
 
-# include("../src/game_problems.jl")
+# Dynamics
+include("dynamics/double_integrator.jl")
+include("dynamics/unicycle.jl")
+include("dynamics/bicycle.jl")
 
-@testset "algames" begin
-    include("test_algames.jl")
-end
+# Struct
+include("struct/problem_size.jl")
+include("struct/statistics.jl")
+include("struct/primal_dual_traj.jl")
+include("struct/violations.jl")
+include("struct/regularizer.jl")
+include("struct/options.jl")
 
-@testset "ilqgames" begin
-    include("test_ilqgames.jl")
-end
+# Core
+include("core/stamp.jl")
+include("core/newton_core.jl")
 
-@testset "sampler" begin
-    include("test_sampler.jl")
-end
+# Constraints
+include("constraints/control_bound_constraint.jl")
+include("constraints/wall_constraint.jl")
+include("constraints/game_constraints.jl")
+include("constraints/constraints_methods.jl")
+include("constraints/constraint_derivatives.jl")
 
-@testset "lq_game" begin
-    include("test_lq_game.jl")
-end
+# Objective
+include("objective/objective.jl")
 
-@testset "mpc" begin
-    include("test_mpc.jl")
-end
+# Problem
+include("problem/problem.jl")
+include("problem/local_quantities.jl")
+include("problem/global_quantities.jl")
+include("problem/solver_methods.jl")
 
-@testset "constraints" begin
-    include("test_constraints.jl")
-end
+# Equilibrium Subspace
+include("active_set/active_set_stamp.jl")
+include("active_set/active_set_core.jl")
+include("active_set/active_set_methods.jl")
 
-@testset "animation" begin
-    include("test_animation.jl")
-end
-
-@testset "visualization" begin
-    include("test_visualization.jl")
-end
+# Plots
+include("plots/solver_plots.jl")
