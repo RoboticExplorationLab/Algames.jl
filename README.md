@@ -15,6 +15,9 @@ Pkg.add("Algames")
 ## Autonomous Robots paper submission:
 The experiments are available [here](https://github.com/simon-lc/AlgamesDriving.jl/releases/tag/autonomous_robots_v1.0).
 
+## RSS 2020 paper submission:
+The experiments presented in the [RSS 2020 paper](http://www.roboticsproceedings.org/rss16/p091.pdf) can be found [here](https://github.com/RoboticExplorationLab/Algames.jl/tree/rss_2020/experiments/rss_2020
+) in the `rss_2020` branch of the repository. 
 ## Quick Start
 To run a simple example of a dynamic game see script in /examples/intro_example.jl. For autonomous driving examples see [AlgamesDriving.jl](https://github.com/simon-lc/AlgamesDriving.jl).
 
