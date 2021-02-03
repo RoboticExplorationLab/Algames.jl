@@ -136,8 +136,6 @@ export
     plot_traj!,
     plot_violation!
 
-include("newcode.jl")
-
 # Dynamics
 include("dynamics/game_model.jl")
 include("dynamics/double_integrator.jl")

@@ -20,5 +20,5 @@ makedocs(
 )
 
 deploydocs(
-    repo = "github.com/simon-lc/Algames.jl.git",
+    repo = "github.com/RoboticExplorationLab/Algames.jl.git",
 )

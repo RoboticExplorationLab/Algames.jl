@@ -1,2 +1,0 @@
-] activate /home/simon/.julia/dev/Algames/
-; cd /home/simon/.julia/dev/Algames/
