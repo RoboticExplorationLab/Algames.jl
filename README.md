@@ -3,7 +3,7 @@
 [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://RoboticExplorationLab.github.io/Algames.jl/dev)
 
 ## Purpose
-This package implements ALGAMES: a solver for constrained dynamic games. To set up autonomous driving problems and visualize the results see [AlgamesDriving.jl](https://github.com/RoboticExplorationLab/AlgamesDriving.jl).
+This package implements ALGAMES: a solver for constrained dynamic games. To set up autonomous driving problems and visualize the results see [AlgamesDriving.jl](https://github.com/simon-lc/AlgamesDriving.jl).
 
 ## Installation
 ```
