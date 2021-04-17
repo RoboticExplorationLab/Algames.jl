@@ -44,6 +44,10 @@ add_collision_avoidance!(game_con, radius)
 u_max =  5*ones(SVector{m,T})
 u_min = -5*ones(SVector{m,T})
 add_control_bound!(game_con, u_max, u_min)
+# # Add state bounds for player 1
+x_max =  5*ones(SVector{n,T})
+x_min = -5*ones(SVector{n,T})
+add_state_bound!(game_con, 1, x_max, x_min)
 # Add wall constraint
 walls = [Wall([0.0,-0.4], [1.0,-0.4], [0.,-1.])]
 add_wall_constraint!(game_con, walls)
@@ -52,6 +56,7 @@ xc = [1., 2., 3.]
 yc = [1., 2., 3.]
 radius = [0.1, 0.2, 0.3]
 add_circle_constraint!(game_con, xc, yc, radius)
+
 
 # Define the initial state of the system
 x0 = SVector{model.n,T}([

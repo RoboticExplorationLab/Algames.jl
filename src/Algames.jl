@@ -51,6 +51,7 @@ export
 export
     GameConstraintValues,
     ControlBoundConstraint,
+    StateBoundConstraint,
     WallConstraint,
     add_collision_avoidance!,
     add_control_bound!,
@@ -155,6 +156,7 @@ include("struct/regularizer.jl")
 include("struct/options.jl")
 
 # Constraints
+include("constraints/state_bound_constraint.jl")
 include("constraints/control_bound_constraint.jl")
 include("constraints/wall_constraint.jl")
 include("constraints/game_constraints.jl")

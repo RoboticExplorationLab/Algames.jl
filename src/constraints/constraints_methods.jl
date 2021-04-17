@@ -39,6 +39,23 @@ function add_collision_avoidance!(game_con::GameConstraintValues, radius::T) whe
 end
 
 ################################################################################
+# Add State Bounds
+################################################################################
+
+function add_state_bound!(game_con::GameConstraintValues, i::Int, x_max::AbstractVector, x_min::AbstractVector)
+	probsize = game_con.probsize
+	N = probsize.N
+	n = probsize.n
+	m = probsize.m
+	add_constraint!(game_con.state_conlist[i], StateBoundConstraint(n,x_max=x_max,x_min=x_min), 2:N)
+	con  = game_con.state_conlist[i].constraints[end]
+	inds = game_con.state_conlist[i].inds[end]
+	conval = Altro.ALConVal(n,m,con,inds)
+	push!(game_con.state_conval[i], conval)
+	return nothing
+end
+
+################################################################################
 # Add Control Bounds
 ################################################################################
 
@@ -54,7 +71,6 @@ function add_control_bound!(game_con::GameConstraintValues, u_max::AbstractVecto
 	push!(game_con.control_conval, conval)
 	return nothing
 end
-
 
 ################################################################################
 # Add Circle Constraint
