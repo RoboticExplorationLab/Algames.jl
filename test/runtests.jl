@@ -30,6 +30,7 @@ include("core/stamp.jl")
 include("core/newton_core.jl")
 
 # Constraints
+include("constraints/state_bound_constraint.jl")
 include("constraints/control_bound_constraint.jl")
 include("constraints/wall_constraint.jl")
 include("constraints/game_constraints.jl")
