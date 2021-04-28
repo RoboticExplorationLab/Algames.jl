@@ -3,7 +3,9 @@ function add_velocity_bound!(model::AbstractGameModel, game_con::GameConstraintV
 	p = model.p
 	@assert length(v_max) == length(v_min) == p
 	for i = 1:p
-		add_velocity_bound!(model, game_con, i, v_max[i], v_min[i])
+		if (v_max != Inf) || (v_min != -Inf)
+			add_velocity_bound!(model, game_con, i, v_max[i], v_min[i])
+		end
 	end
 	return nothing
 end
