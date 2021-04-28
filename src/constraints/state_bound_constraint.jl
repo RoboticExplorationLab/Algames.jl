@@ -62,20 +62,6 @@ function TrajectoryOptimization.con_label(con::StateBoundConstraint, ind::Int)
 	end
 end
 
-function checkBounds(n::Int, u::AbstractVector, l::AbstractVector)
-	if all(u .>= l)
-		return SVector{n}(u), SVector{n}(l)
-	else
-		throw(ArgumentError("Upper bounds must be greater than or equal to lower bounds"))
-	end
-end
-
-checkBounds(n::Int, u::Real, l::Real) =
-	checkBounds(n, (@SVector fill(u,n)), (@SVector fill(l,n)))
-checkBounds(n::Int, u::AbstractVector, l::Real) = checkBounds(n, u, fill(l,n))
-checkBounds(n::Int, u::Real, l::AbstractVector) = checkBounds(n, fill(u,n), l)
-
-
 @inline TrajectoryOptimization.state_dim(con::StateBoundConstraint) = con.n
 @inline TrajectoryOptimization.is_bound(::StateBoundConstraint) = true
 @inline TrajectoryOptimization.lower_bound(bnd::StateBoundConstraint) = bnd.x_min
