@@ -3,7 +3,7 @@ function add_velocity_bound!(model::AbstractGameModel, game_con::GameConstraintV
 	p = model.p
 	@assert length(v_max) == length(v_min) == p
 	for i = 1:p
-		if (v_max != Inf) || (v_min != -Inf)
+		if (v_max[i] != Inf) || (v_min[i] != -Inf)
 			add_velocity_bound!(model, game_con, i, v_max[i], v_min[i])
 		end
 	end
@@ -22,7 +22,7 @@ function add_velocity_bound!(model::AbstractGameModel, game_con::GameConstraintV
 	x_min[vel_index_i] = v_min
 	# Add the state bound to all players
 	for j = 1:p
-		Algames.add_state_bound!(game_con, j, x_max, x_min)
+		add_state_bound!(game_con, j, x_max, x_min)
 	end
 	return nothing
 end

@@ -36,6 +36,7 @@ include("constraints/wall_constraint.jl")
 include("constraints/game_constraints.jl")
 include("constraints/constraints_methods.jl")
 include("constraints/constraint_derivatives.jl")
+include("constraints/velocity_constraint.jl")
 
 # Objective
 include("objective/objective.jl")
