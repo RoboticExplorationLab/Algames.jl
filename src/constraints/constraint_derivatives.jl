@@ -28,7 +28,7 @@ function constraint_jacobian_residual!(prob::GameProblem, pdtraj::PrimalDualTraj
             for i = 1:p
                 stampify!(stamp,  :opt, i, :u, i, k, :u, i, k)
                 valid(stamp,N,p)  ? add2sub(jac_sub[stamp],  conval.hess[j][pu[i],pu[i]]) : nothing # Be careful this assumes that the control constraints are decoupled per player
-                # To introduce control constraints coupled per player we would need to have a separete set of control constraint for each player.
+                # To introduce control constraints coupled per player we would need to have a separate set of control constraint for each player.
             end
         end
     end
@@ -66,7 +66,7 @@ function constraint_residual!(prob::GameProblem, pdtraj::PrimalDualTraj)
             for i = 1:p
                 stampify!(vstamp, :opt, i, :u, i, k)
                 valid(vstamp,N,p) ? add2sub(res_sub[vstamp], conval.grad[j][pu[i]]) : nothing # Be careful this assumes that the control constraints are decoupled per player
-                # To introduce control constraints coupled per player we would need to have a separete set of control constraint for each player.
+                # To introduce control constraints coupled per player we would need to have a separate set of control constraint for each player.
             end
         end
     end

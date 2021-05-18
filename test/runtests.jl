@@ -4,18 +4,22 @@ using Altro
 using BenchmarkTools
 using ForwardDiff
 using LinearAlgebra
+using MeshCat
 using Parameters
 using Printf
 using Random
 using RobotDynamics
+using Rotations
 using SparseArrays
 using StaticArrays
 using TrajectoryOptimization
+
 
 # Dynamics
 include("dynamics/double_integrator.jl")
 include("dynamics/unicycle.jl")
 include("dynamics/bicycle.jl")
+include("dynamics/quadrotor.jl")
 
 # Struct
 include("struct/problem_size.jl")
@@ -33,6 +37,7 @@ include("core/newton_core.jl")
 include("constraints/state_bound_constraint.jl")
 include("constraints/control_bound_constraint.jl")
 include("constraints/wall_constraint.jl")
+include("constraints/cylinder_constraint.jl")
 include("constraints/game_constraints.jl")
 include("constraints/constraints_methods.jl")
 include("constraints/constraint_derivatives.jl")

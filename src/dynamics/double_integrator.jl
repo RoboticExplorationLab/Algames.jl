@@ -29,3 +29,22 @@ end
 	qdd = [:(u[$i]) for i=1:M]
 	return :(SVector{$N}($(qd...), $(qdd...)))
 end
+
+function build_robot!(vis::Visualizer, model::DoubleIntegratorGame; name::Symbol=:Robot, α=0.8)
+    p = model.p
+	orange_mat, blue_mat, black_mat = get_material(;α=α)
+    for i = 1:p
+        setobject!(vis[name]["player$i"], Sphere(Point3f0(0.0), 0.08), orange_mat)
+    end
+    return nothing
+end
+
+function set_robot!(vis::Visualizer, model::DoubleIntegratorGame, s::AbstractVector; name::Symbol=:Robot)
+    p = model.p
+    pz = model.pz
+    for i = 1:p
+        x = s[pz[i][1:3]]
+        settransform!(vis[name]["player$i"], MeshCat.Translation(x...))
+    end
+    return nothing
+end

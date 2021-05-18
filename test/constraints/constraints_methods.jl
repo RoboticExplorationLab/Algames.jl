@@ -27,6 +27,33 @@
     @test game_con.state_conlist[3].constraints[1].x2 == pu[1]
     @test game_con.state_conlist[3].constraints[2].x2 == pu[2]
 
+    # Test Spherical Collision Avoidance
+    T = Float64
+    N = 20
+    dt = 0.1
+    p = 3
+    d = 3
+    model = DoubleIntegratorGame(p=p, d=d)
+    probsize = ProblemSize(N,model)
+    game_con = GameConstraintValues(probsize)
+    radius = 1.0
+    add_spherical_collision_avoidance!(game_con, radius)
+
+    pu = model.pu
+    @test game_con.state_conlist[1].constraints[1].x1 == pu[1]
+    @test game_con.state_conlist[1].constraints[2].x1 == pu[1]
+    @test game_con.state_conlist[1].constraints[1].x2 == pu[2]
+    @test game_con.state_conlist[1].constraints[2].x2 == pu[3]
+
+    @test game_con.state_conlist[2].constraints[1].x1 == pu[2]
+    @test game_con.state_conlist[2].constraints[2].x1 == pu[2]
+    @test game_con.state_conlist[2].constraints[1].x2 == pu[1]
+    @test game_con.state_conlist[2].constraints[2].x2 == pu[3]
+
+    @test game_con.state_conlist[3].constraints[1].x1 == pu[3]
+    @test game_con.state_conlist[3].constraints[2].x1 == pu[3]
+    @test game_con.state_conlist[3].constraints[1].x2 == pu[1]
+    @test game_con.state_conlist[3].constraints[2].x2 == pu[2]
 
     # Test Control Bounds
     T = Float64

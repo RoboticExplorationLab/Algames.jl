@@ -39,6 +39,48 @@ function add_collision_avoidance!(game_con::GameConstraintValues, radius::T) whe
 end
 
 ################################################################################
+# Add Spherical Collision Avoidance
+################################################################################
+
+function add_spherical_collision_avoidance!(game_con::GameConstraintValues, i::Int, j::Int, radius::T) where {T}
+	probsize = game_con.probsize
+	N = probsize.N
+	n = probsize.n
+	m = probsize.m
+	p = probsize.p
+	pz = probsize.pz
+
+	pzi = pz[i][1:3] # assumes that the 3 first dimensions of the state of player i correspond to x,y,z.
+	pzj = pz[j][1:3] # assumes that the 3 first dimensions of the state of player i correspond to x,y,z.
+	add_constraint!(game_con.state_conlist[i], CollisionConstraint(n,pzi,pzj,radius), 2:N)
+	con  = game_con.state_conlist[i].constraints[end]
+	inds = game_con.state_conlist[i].inds[end]
+	conval = Altro.ALConVal(n,m,con,inds)
+	push!(game_con.state_conval[i], conval)
+	return nothing
+end
+
+function add_spherical_collision_avoidance!(game_con::GameConstraintValues, radius::Vector{T}) where {T}
+	probsize = game_con.probsize
+	p = probsize.p
+	@assert p == length(radius)
+	for i = 1:p
+		for j in setdiff(1:p,i)
+			ri = radius[i]
+			rj = radius[j]
+			add_spherical_collision_avoidance!(game_con, i, j, ri+rj)
+		end
+	end
+	return nothing
+end
+
+function add_spherical_collision_avoidance!(game_con::GameConstraintValues, radius::T) where {T}
+	p = game_con.probsize.p
+	add_spherical_collision_avoidance!(game_con, radius*ones(p))
+	return nothing
+end
+
+################################################################################
 # Add State Bounds
 ################################################################################
 
@@ -108,8 +150,9 @@ end
 ################################################################################
 # Wall Constraint
 ################################################################################
+abstract type AbstractWall end
 
-mutable struct Wall
+mutable struct Wall <: AbstractWall
 	p1::AbstractVector # initial point of the boundary
 	p2::AbstractVector # final point of the boundary
 	v::AbstractVector  # vector orthogonal to (p2 - p1) and indicating the forbiden halfspace
@@ -143,11 +186,98 @@ function add_wall_constraint!(game_con::GameConstraintValues, i::Int, walls::Abs
 	return nothing
 end
 
-function add_wall_constraint!(game_con::GameConstraintValues, walls::AbstractVector{Wall})
+function add_wall_constraint!(game_con::GameConstraintValues, walls::AbstractVector{<:AbstractWall})
 	p = game_con.probsize.p
 	for i = 1:p
 		add_wall_constraint!(game_con, i, walls)
 	end
+	return nothing
+end
+
+################################################################################
+# Wall3D Constraint
+################################################################################
+
+mutable struct Wall3D <: AbstractWall
+	p1::AbstractVector # initial point of the boundary
+	p2::AbstractVector # middle point of the boundary
+	p3::AbstractVector # final point of the boundary
+	v::AbstractVector  # vector orthogonal to the plane defined by (p1,p2,p3) and indicating the forbiden halfspace
+end
+
+function add_wall_constraint!(game_con::GameConstraintValues, i::Int, walls::AbstractVector{Wall3D})
+	probsize = game_con.probsize
+	N = probsize.N
+	n = probsize.n
+	m = probsize.m
+	p = probsize.p
+	pz = probsize.pz
+
+	n_wall = length(walls)
+	T = eltype(walls[1].p1)
+	x1 = SVector{n_wall,T}([wall.p1[1] for wall in walls])
+	y1 = SVector{n_wall,T}([wall.p1[2] for wall in walls])
+	z1 = SVector{n_wall,T}([wall.p1[3] for wall in walls])
+	x2 = SVector{n_wall,T}([wall.p2[1] for wall in walls])
+	y2 = SVector{n_wall,T}([wall.p2[2] for wall in walls])
+	z2 = SVector{n_wall,T}([wall.p2[3] for wall in walls])
+	x3 = SVector{n_wall,T}([wall.p3[1] for wall in walls])
+	y3 = SVector{n_wall,T}([wall.p3[2] for wall in walls])
+	z3 = SVector{n_wall,T}([wall.p3[3] for wall in walls])
+	xv = SVector{n_wall,T}([wall.v[1] for wall in walls])
+	yv = SVector{n_wall,T}([wall.v[2] for wall in walls])
+	zv = SVector{n_wall,T}([wall.v[3] for wall in walls])
+
+	add_constraint!(
+		game_con.state_conlist[i],
+		Wall3DConstraint(n,
+			x1, y1, z1,
+			x2, y2, z2,
+			x3, y3, z3,
+			xv, yv, zv, pz[i][1], pz[i][2], pz[i][3]),
+		2:N)
+	con  = game_con.state_conlist[i].constraints[end]
+	inds = game_con.state_conlist[i].inds[end]
+	conval = Altro.ALConVal(n,m,con,inds)
+	push!(game_con.state_conval[i], conval)
+	return nothing
+end
+################################################################################
+# CylinderWall Constraint
+################################################################################
+
+mutable struct CylinderWall <: AbstractWall
+	p::AbstractVector # initial point of the boundary
+	v::Symbol         # middle point of the boundary
+	l::Real           # final point of the boundary
+	r::Real           # vector orthogonal to the plane defined by (p1,p2,p3) and indicating the forbiden halfspace
+end
+
+function add_wall_constraint!(game_con::GameConstraintValues, i::Int, walls::AbstractVector{CylinderWall})
+	probsize = game_con.probsize
+	N = probsize.N
+	n = probsize.n
+	m = probsize.m
+	p = probsize.p
+	pz = probsize.pz
+
+	n_wall = length(walls)
+	T = eltype(walls[1].p)
+	p1 = SVector{n_wall,T}([wall.p[1] for wall in walls])
+	p2 = SVector{n_wall,T}([wall.p[2] for wall in walls])
+	p3 = SVector{n_wall,T}([wall.p[3] for wall in walls])
+	v = SVector{n_wall,Symbol}([wall.v for wall in walls])
+	l = SVector{n_wall,T}([wall.l for wall in walls])
+	r = SVector{n_wall,T}([wall.r for wall in walls])
+
+	add_constraint!(
+		game_con.state_conlist[i],
+		CylinderConstraint(n, p1, p2, p3, v, l, r, pz[i][1], pz[i][2], pz[i][3]),
+		2:N)
+	con  = game_con.state_conlist[i].constraints[end]
+	inds = game_con.state_conlist[i].inds[end]
+	conval = Altro.ALConVal(n,m,con,inds)
+	push!(game_con.state_conval[i], conval)
 	return nothing
 end
 
@@ -247,6 +377,7 @@ function evaluate!(game_con::GameConstraintValues, traj::Traj)
     end
     return nothing
 end
+
 import RobotDynamics.jacobian!
 function jacobian!(game_con::GameConstraintValues, traj::Traj)
     p = game_con.probsize.p
