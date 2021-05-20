@@ -1,4 +1,3 @@
-
 function build_wall!(vis::Visualizer, walls::AbstractVector{<:AbstractWall}; name::Symbol=:Env, α=0.2)
     for i in eachindex(walls)
         build_wall!(vis, walls[i], name=name, id=i, α=α)

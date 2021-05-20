@@ -43,12 +43,13 @@ function build_traj!(vis::Visualizer, model::AbstractGameModel, traj::Traj; name
 	r = convert(Float32, r)
     p = model.p
     pz = model.pz
+	d = dim(model)
 	orange_mat, blue_mat, black_mat = get_material(;α=α)
 
     for t in eachindex(traj)
         s = TrajectoryOptimization.state(traj[t])
         for i = 1:p
-            x = s[pz[i][1:3]]
+            x = [s[pz[i][1:d]]; zeros(3-d)]
             setobject!(vis[name]["player$i"]["t$t"], Sphere(Point3f0(0.0), r), blue_mat)
             settransform!(vis[name]["player$i"]["t$t"], MeshCat.Translation(x...))
         end
@@ -60,10 +61,11 @@ function build_xf!(vis::Visualizer, model::AbstractGameModel, xf::AbstractVector
 	default_background!(vis)
     p = model.p
     pz = model.pz
+	d = dim(model)
 	orange_mat, blue_mat, black_mat = get_material(;α=α)
 
     for i = 1:p
-        x = xf[i][1:3]
+        x = [xf[i][1:d]; zeros(3-d)]
         setobject!(vis[name]["player$i"], Sphere(Point3f0(0.0), 0.05), orange_mat)
         settransform!(vis[name]["player$i"], MeshCat.Translation(x...))
     end
