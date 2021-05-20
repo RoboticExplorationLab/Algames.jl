@@ -93,7 +93,6 @@ function idx(core::NewtonCore, stamp::Stamp)
 	hstamp = stampify(stamp.n2, stamp.i2, stamp.v2)
 	verti = vertical_idx(core, vstamp)
 	horiz = horizontal_idx(core, hstamp)
-	# horiz = horizontal_idx(core, stamp.n2, stamp.i2, stamp.v2)
 	return (verti, horiz)
 end
 
@@ -196,4 +195,102 @@ function dynamics_indices(probsize::ProblemSize)
 		dyn[:u][i] = SVector{mi[i],Int}(n .+ pu[i])
 	end
 	return dyn
+end
+
+
+################################################################################
+# Player specific mask
+################################################################################
+
+function vertical_mask(core::NewtonCore, i::Int)
+	vertical_mask(core.probsize, core.verti_inds, i)
+end
+
+function vertical_mask(probsize::ProblemSize, verti_inds::Dict, i::Int)
+	N = probsize.N
+	p = probsize.p
+	# pi = probsize.pz[i]
+	pi = Vector(1:probsize.n)
+
+	msk = Vector{Int}()
+	stamp = VStamp()
+
+	# Select the optimality indices
+	prob = :opt
+	i0 = i
+	for n1 in (:x,:u)
+		for i1 = 1:p
+			for v1 = 1:N
+				stampify!(stamp, prob, i0, n1, i1, v1)
+				if valid(stamp,N,p)
+					ind = Vector(vertical_idx(verti_inds, stamp))
+					(n1 == :x) && (ind = ind[pi])
+					push!(msk, ind...)
+				end
+			end
+		end
+	end
+
+	# Select the dynamics indices
+	prob = :dyn
+	i0 = 1
+	n1 = :x
+	i1 = 1
+	for v1 = 1:N
+		stampify!(stamp, prob, i0, n1, i1, v1)
+		if valid(stamp,N,p)
+			ind = Vector(vertical_idx(verti_inds, stamp)[pi])
+			push!(msk, ind...)
+		end
+	end
+	return msk
+end
+
+
+function horizontal_mask(core::NewtonCore, i::Int)
+	horizontal_mask(core.probsize, core.horiz_inds, i)
+end
+
+function horizontal_mask(probsize::ProblemSize, horiz_inds::Dict, i::Int)
+	N = probsize.N
+	p = probsize.p
+	# pi = probsize.pz[i]
+	pi = Vector(1:probsize.n)
+
+	msk = Vector{Int}()
+	stamp = HStamp()
+
+	# Select the state indices
+	n2 = :x
+	i2 = 1
+	for v2 = 1:N
+		stampify!(stamp, n2, i2, v2)
+		if valid(stamp,N,p)
+			ind = Vector(horizontal_idx(horiz_inds, stamp)[pi])
+			push!(msk, ind...)
+		end
+	end
+
+	# Select the control indices
+	n2 = :u
+	i2 = i
+	for v2 = 1:N
+		stampify!(stamp, n2, i2, v2)
+		if valid(stamp,N,p)
+			ind = Vector(horizontal_idx(horiz_inds, stamp))
+			push!(msk, ind...)
+		end
+	end
+
+	# Select the multipliers indices
+	n2 = :λ
+	i2 = i
+	for v2 = 1:N
+		stampify!(stamp, n2, i2, v2)
+		if valid(stamp,N,p)
+			ind = Vector(horizontal_idx(horiz_inds, stamp)[pi])
+			push!(msk, ind...)
+		end
+	end
+	return msk
 end

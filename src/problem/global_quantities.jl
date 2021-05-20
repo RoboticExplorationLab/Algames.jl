@@ -244,7 +244,7 @@ function ibr_residual!(prob::GameProblem{KN,n,m,T,SVd,SVx}, pdtraj::PrimalDualTr
     return nothing
 end
 
-function ibr_regularize_residual!(core::NewtonCore, opts::Options, pdtraj::PrimalDualTraj, pdtraj_ref::PrimalDualTraj, i::Int)
+function regularize_ibr_residual!(core::NewtonCore, opts::Options, pdtraj::PrimalDualTraj, pdtraj_ref::PrimalDualTraj, i::Int)
 	N = core.probsize.N
 	p = core.probsize.p
 	pu = core.probsize.pu
@@ -269,7 +269,7 @@ end
 ################################################################################
 
 function ibr_residual_jacobian!(prob::GameProblem{KN,n,m,T,SVd,SVx}, i::Int) where {KN,n,m,T,SVd,SVx}
-	residual_jacobian!(prob, prob.pdtraj, i)
+	ibr_residual_jacobian!(prob, prob.pdtraj, i)
 	return nothing
 end
 
@@ -336,7 +336,7 @@ function ibr_residual_jacobian!(prob::GameProblem{KN,n,m,T,SVd,SVx},
     return nothing
 end
 
-function ibr_regularize_residual_jacobian!(prob::GameProblem{KN,n,m,T,SVd,SVx}, i::Int) where {KN,n,m,T,SVd,SVx}
+function regularize_ibr_residual_jacobian!(prob::GameProblem{KN,n,m,T,SVd,SVx}, i::Int) where {KN,n,m,T,SVd,SVx}
 	N = prob.probsize.N
 	p = prob.probsize.p
 	pu = prob.probsize.pu

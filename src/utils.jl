@@ -77,7 +77,7 @@ function scn(a::Number; digits::Int=1)
 	else
 		strm = string(m)
 		is_neg = m < 0.
-		strm = strm*"0"^(2+digits+is_neg-length(strm))
+		strm = strm*"0"^abs(2+digits+is_neg-length(strm))
     end
     sgn = a >= 0 ? " " : ""
     sgne = e >= 0 ? "+" : ""

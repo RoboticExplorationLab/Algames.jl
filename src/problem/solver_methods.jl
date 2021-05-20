@@ -25,6 +25,7 @@ function newton_solve!(prob::GameProblem{KN,n,m,T,SVd,SVx}) where {KN,n,m,T,SVd,
 	opts.dual_reset ? reset!(game_con) : nothing
 	# Iterative solve
 	out = 0
+	Δ = 0.0
     for k = 1:opts.outer_iter
 		out = k
 		# plot_traj!(model, prob.pdtraj.pr)
@@ -35,7 +36,7 @@ function newton_solve!(prob::GameProblem{KN,n,m,T,SVd,SVx}) where {KN,n,m,T,SVd,
 		#XXX opts.inner_print ? display_condition_header() : nothing
         for l = 1:opts.inner_iter
 			set!(opts.reg, opts.reg_0*l^4)
-			LS_count, control_flow = inner_iteration(prob, LS_count, k, l)
+			LS_count, control_flow, Δ = inner_iteration(prob, LS_count, Δ, k, l)
 			LS_count >= 1 || control_flow == :break ? break : nothing
 		end
 
@@ -56,11 +57,11 @@ function newton_solve!(prob::GameProblem{KN,n,m,T,SVd,SVx}) where {KN,n,m,T,SVd,
 		prob.pen.ρ = min.(prob.pen.ρ * opts.ρ_increase, opts.ρ_max)
 		penalty_update!(game_con)
     end
-	record!(prob.stats, core, model, game_con, prob.pdtraj, out)
+	record!(prob.stats, core, model, game_con, prob.pdtraj, Δ, out)
     return nothing
 end
 
-function inner_iteration(prob::GameProblem, LS_count::Int, k::Int, l::Int)
+function inner_iteration(prob::GameProblem, LS_count::Int, Δ::T, k::Int, l::Int) where {T}
 	core = prob.core
 	opts = prob.opts
 	# plot_traj!(prob.model, prob.pdtraj.pr)
@@ -68,11 +69,13 @@ function inner_iteration(prob::GameProblem, LS_count::Int, k::Int, l::Int)
 	# Residual
 	residual!(prob, prob.pdtraj)
 	opts.regularize ? regularize_residual!(core, opts, prob.pdtraj, prob.pdtraj) : nothing # should do nothing since we regularize around pdtraj
-	record!(prob.stats, prob.core, prob.model, prob.game_con, prob.pdtraj, k)
+	record!(prob.stats, prob.core, prob.model, prob.game_con, prob.pdtraj, Δ, k)
 	res_norm = norm(core.res, 1)/length(core.res)
 
+	# Reset Δ_traj to zero
+	Δ = 0.0
 	if prob.stats.opt_vio[end].max < opts.ϵ_opt
-		return LS_count, :break
+		return LS_count, :break, Δ
 	end
 	# Residual Jacobian
 	residual_jacobian!(prob)
@@ -88,12 +91,12 @@ function inner_iteration(prob::GameProblem, LS_count::Int, k::Int, l::Int)
 	update_traj!(prob.pdtraj, prob.pdtraj, α, prob.Δpdtraj)
 	Δ = Δ_step(prob.Δpdtraj, α)
 	if Δ < opts.Δ_min
-		return LS_count, :break
+		return LS_count, :break, Δ
 	end
 
 	opts.inner_print ? display_solver_data(k, l, j, Δ, res_norm, opts.reg) : nothing
 	#XXX opts.inner_print ? display_condition_data(res) : nothing
-	return LS_count, :continue
+	return LS_count, :continue, Δ
 end
 
 function line_search(prob::GameProblem, res_norm::T) where {T}
@@ -126,7 +129,8 @@ end
 
 function ibr_newton_solve!(prob::GameProblem{KN,n,m,T,SVd,SVx};
 		ibr_opts::IBROptions=IBROptions()) where {KN,n,m,T,SVd,SVx}
-
+	opts = prob.opts
+	p = prob.probsize.p
 
 	# Set initial trajectory
 	Random.seed!(opts.seed)
@@ -137,10 +141,33 @@ function ibr_newton_solve!(prob::GameProblem{KN,n,m,T,SVd,SVx};
 	rollout!(RK3, prob.model, prob.pdtraj.pr)
 	rollout!(RK3, prob.model, prob.pdtraj_trial.pr)
 
+	# Records all the players that changed their strategies at the last iteration:
+	# when all the players stuck to their strategies we can safely exit the IBR iteration.
+	Δ_change = trues(p)
 	for q = 1:ibr_opts.ibr_iter # need a better stopping criterion, based on convergence
-		for i = 1:p
-			ibr_newton_solve!(prob, ibr_opts.ordering[i])
+		@show q
+		for id = 1:p
+			i = ibr_opts.ordering[id]
+
+
+			ibr_newton_solve!(prob, i)
+			verti_mask = vertical_mask(prob.core, i)
+			ibr_residual!(prob, prob.pdtraj, i)
+			# println("ibr_res $i : ", scn(norm(prob.core.res[verti_mask], 1)/length(prob.core.res[verti_mask])))
+			Δ_change[i] = !(ibr_opts.Δ_min > maximum(prob.stats.Δ_traj))
+			println("Δ : ", maximum(prob.stats.Δ_traj))
+			ibr_opts.live_plotting && Algames.plot_traj!(prob.model, prob.pdtraj.pr)
+			# ibr_opts.live_plotting && Algames.plot_violation!(prob_ibr.stats)
+
 		end
+		residual!(prob, prob.pdtraj)
+		# println("res : ", scn(norm(prob.core.res, 1)/length(prob.core.res)))
+		verti_mask = vertical_mask(prob.core, p)
+		# ibr_residual!(prob, prob.pdtraj, p)
+		# println("ibr_res $p : ", scn(norm(prob.core.res[verti_mask], 1)/length(prob.core.res[verti_mask])))
+
+		# If we see no change for one full IBR iteration, then we break out of the loop.
+		all(.!Δ_change) && break
 	end
 	return nothing
 end
@@ -157,9 +184,14 @@ function ibr_newton_solve!(prob::GameProblem{KN,n,m,T,SVd,SVx}, i::Int) where {K
 
 	# Reset Statistics and constraints
 	reset!(prob.stats)
-	opts.dual_reset ? reset!(game_con) : nothing
+	# reset!(game_con)
+	if opts.dual_reset
+		# reset_duals!(pdtraj)
+	end
+
 	# Iterative solve
 	out = 0
+	Δ = 0.0
     for k = 1:opts.outer_iter
 		out = k
 		# plot_traj!(model, prob.pdtraj.pr)
@@ -170,7 +202,7 @@ function ibr_newton_solve!(prob::GameProblem{KN,n,m,T,SVd,SVx}, i::Int) where {K
 		#XXX opts.inner_print ? display_condition_header() : nothing
         for l = 1:opts.inner_iter
 			set!(opts.reg, opts.reg_0*l^4)
-			LS_count, control_flow = ibr_inner_iteration(prob, LS_count, k, l, i)
+			LS_count, control_flow, Δ = ibr_inner_iteration(prob, LS_count, Δ, k, l, i)
 			LS_count >= 1 || control_flow == :break ? break : nothing
 		end
 
@@ -191,56 +223,70 @@ function ibr_newton_solve!(prob::GameProblem{KN,n,m,T,SVd,SVx}, i::Int) where {K
 		prob.pen.ρ = min.(prob.pen.ρ * opts.ρ_increase, opts.ρ_max)
 		penalty_update!(game_con)
     end
-	record!(prob.stats, core, model, game_con, prob.pdtraj, out)
+	record!(prob.stats, core, model, game_con, prob.pdtraj, Δ, out, i)
     return nothing
 end
 
-function ibr_inner_iteration(prob::GameProblem, LS_count::Int, k::Int, l::Int, i::Int)
+function ibr_inner_iteration(prob::GameProblem, LS_count::Int, Δ::T, k::Int, l::Int, i::Int) where {T}
 	core = prob.core
 	opts = prob.opts
-	res_mask = residual_mask(prob, i)
-	jac_mask = jacobian_mask(prob, i)
+	verti_mask = vertical_mask(prob.core, i)
+	horiz_mask = horizontal_mask(prob.core, i)
 	# plot_traj!(prob.model, prob.pdtraj.pr)
 
 	# Residual
 	ibr_residual!(prob, prob.pdtraj, i)
 	opts.regularize ? regularize_ibr_residual!(core, opts, prob.pdtraj, prob.pdtraj, i) : nothing # should do nothing since we regularize around pdtraj
-	record!(prob.stats, prob.core, prob.model, prob.game_con, prob.pdtraj, k)
-	res_norm = norm(core.res[res_mask], 1)/length(core.res[res_mask])
+	record!(prob.stats, prob.core, prob.model, prob.game_con, prob.pdtraj, Δ, k, i)
+	res_norm = norm(core.res[verti_mask], 1)/length(core.res[verti_mask])
 
+	# Reset Δ_traj to zero
+	Δ = 0.0
 	if prob.stats.opt_vio[end].max < opts.ϵ_opt
-		return LS_count, :break
+		return LS_count, :break, Δ
 	end
 	# Residual Jacobian
 	ibr_residual_jacobian!(prob, i)
 	regularize_ibr_residual_jacobian!(prob, i)
 
 	Δtraj = zeros(prob.probsize.S)
-	Δtraj[res_traj] = - \(lu(core.jac[jac_mask]), core.res[res_mask])
+	Δtraj[horiz_mask] = - \(lu(core.jac[verti_mask, horiz_mask]), core.res[verti_mask])
 	set_traj!(core, prob.Δpdtraj, Δtraj)
 
 	# Line Search
-	α, j = line_search(prob, res_norm)
+	α, j = ibr_line_search(prob, res_norm, i)
 	failed_ls = j == opts.ls_iter
 	failed_ls ? LS_count += 1 : LS_count = 0
 	update_traj!(prob.pdtraj, prob.pdtraj, α, prob.Δpdtraj)
 	Δ = Δ_step(prob.Δpdtraj, α)
 	if Δ < opts.Δ_min
-		return LS_count, :break
+		return LS_count, :break, Δ
 	end
 
 	opts.inner_print ? display_solver_data(k, l, j, Δ, res_norm, opts.reg) : nothing
 	#XXX opts.inner_print ? display_condition_data(res) : nothing
-	return LS_count, :continue
+	return LS_count, :continue, Δ
 end
 
-# ibr_residual! DDDDDDDDDD
-# regularize_ibr_residual!DDDDDDDDDDDD
-# ibr_residual_jacobian!DDDDDDDDDDDDDDD
-# regularize_ibr_residual_jacobian!DDDDDDDDDDDDDDDDD
-# res_mask = residual_mask(prob, i)
-# jac_mask = jacobian_mask(prob, i)
-# record needs to be investigated in
-prob.core.res
+function ibr_line_search(prob::GameProblem, res_norm::T, i::Int) where {T}
+	core = prob.core
+	opts = prob.opts
+	verti_mask = vertical_mask(prob.core, i)
 
-prob.probsize.S
+	j = 1
+	α = 1.0
+	while j < opts.ls_iter
+		update_traj!(prob.pdtraj_trial, prob.pdtraj, α, prob.Δpdtraj)
+		ibr_residual!(prob, prob.pdtraj_trial, i)
+		opts.regularize ? regularize_ibr_residual!(core, opts, prob.pdtraj_trial, prob.pdtraj, i) : nothing# should add regularization term to prevent deviation from pdtraj
+		res_norm_trial = norm(core.res[verti_mask], 1)/length(core.res[verti_mask])
+		if res_norm_trial <= (1.0-α*opts.β)*res_norm
+			LS_count = 0
+			break
+		else
+			α *= opts.α_decrease # step size decrease
+			j += 1
+		end
+	end
+	return α, j
+end

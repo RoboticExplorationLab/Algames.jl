@@ -123,11 +123,14 @@ end
 @with_kw mutable struct IBROptions{T}
     # Options
 	"Number of iterative best response iterations."
-	ibr_iter::Int=1
+	ibr_iter::Int=100
 
 	"Ordering of players, in the iterative best response scheme."
 	ordering::Vector{Int}=Vector(1:100)
 
 	"Minimum progress allowed before breaking out of the iterative best response loop."
 	Δ_min::T=1e-9
+
+	"Live plotting of the trajectories obtained through the iterative best response scheme."
+	live_plotting::Bool=false
 end

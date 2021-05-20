@@ -25,6 +25,18 @@ function dynamics_violation(model::AbstractGameModel, pdtraj::PrimalDualTraj)
     return dyn_vio
 end
 
+function dynamics_violation(model::AbstractGameModel, pdtraj::PrimalDualTraj, i::Int)
+    N = pdtraj.probsize.N
+	pi = pdtraj.probsize.pz[i]
+
+    dyn_vio = DynamicsViolation(N)
+    for k = 1:N-1
+        dyn_vio.vio[k] = maximum(abs.(dynamics_residual(model, pdtraj, k)[pi]))
+    end
+	dyn_vio.max = maximum(dyn_vio.vio)
+    return dyn_vio
+end
+
 ################################################################################
 # Control Violation
 ################################################################################
@@ -49,6 +61,21 @@ function control_violation(game_con::GameConstraintValues, pdtraj::PrimalDualTra
 		TrajectoryOptimization.evaluate!(conval, pdtraj.pr)
 		TrajectoryOptimization.max_violation!(conval)
 		u_vio.vio[conval.inds] = max.(u_vio.vio[conval.inds], conval.c_max)
+	end
+	u_vio.max = maximum(u_vio.vio)
+    return u_vio
+end
+
+function control_violation(game_con::GameConstraintValues, pdtraj::PrimalDualTraj, i::Int)
+	N = pdtraj.probsize.N
+	pi = pdtraj.probsize.pu[i]
+
+	u_vio = ControlViolation(N)
+	for conval in game_con.control_conval
+		TrajectoryOptimization.evaluate!(conval, pdtraj.pr)
+		TrajectoryOptimization.max_violation!(conval)
+		c_max = [max(0.0, maximum(v[pi])) for v in conval.vals]
+		u_vio.vio[conval.inds] = max.(u_vio.vio[conval.inds], c_max)
 	end
 	u_vio.max = maximum(u_vio.vio)
     return u_vio
@@ -86,6 +113,26 @@ function state_violation(game_con::GameConstraintValues, pdtraj::PrimalDualTraj)
     return x_vio
 end
 
+function state_violation(game_con::GameConstraintValues, pdtraj::PrimalDualTraj, i::Int)
+	N = pdtraj.probsize.N
+	p = game_con.probsize.p
+
+	x_vio = StateViolation(N)
+	for conval in game_con.state_conval[i]
+		TrajectoryOptimization.evaluate!(conval, pdtraj.pr)
+		TrajectoryOptimization.max_violation!(conval)
+		# @show size(conval.vals)
+		# @show size(conval.vals[1])
+		# @show conval.vals[1]
+		# ned to identify the constraint that apply to player i
+		# c_max = [max(0.0, maximum(v)) for v in conval.vals]
+		# x_vio.vio[conval.inds] = max.(x_vio.vio[conval.inds], c_max)
+		x_vio.vio[conval.inds] = max.(x_vio.vio[conval.inds], conval.c_max)
+	end
+	x_vio.max = maximum(x_vio.vio)
+    return x_vio
+end
+
 ################################################################################
 # Optimality Violation
 ################################################################################
@@ -115,6 +162,21 @@ function optimality_violation(core::NewtonCore)
 			stampify!(stamp, :opt, i, :u, i, k)
 			valid(stamp, N, p) ? o_vio.vio[k] = max(o_vio.vio[k], maximum(abs.(core.res_sub[stamp]))) : nothing
 		end
+	end
+	o_vio.max = maximum(o_vio.vio)
+    return o_vio
+end
+
+function optimality_violation(core::NewtonCore, i::Int)
+	N = core.probsize.N
+	p = core.probsize.p
+	o_vio = OptimalityViolation(N)
+	stamp = VStamp()
+	for k = 1:N
+		stampify!(stamp, :opt, i, :x, 1, k)
+		valid(stamp, N, p) ? o_vio.vio[k] = max(o_vio.vio[k], maximum(abs.(core.res_sub[stamp]))) : nothing
+		stampify!(stamp, :opt, i, :u, i, k)
+		valid(stamp, N, p) ? o_vio.vio[k] = max(o_vio.vio[k], maximum(abs.(core.res_sub[stamp]))) : nothing
 	end
 	o_vio.max = maximum(o_vio.vio)
     return o_vio

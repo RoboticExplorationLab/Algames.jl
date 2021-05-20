@@ -102,6 +102,8 @@ export
     residual_views,
     jacobian_views,
     dynamics_indices,
+    vertical_mask,
+    horizontal_mask,
     Stamp,
     VStamp,
     HStamp,
@@ -125,11 +127,18 @@ export
     residual_jacobian!,
     regularize_residual!, # need test
     regularize_residual_jacobian!, # need test
+    ibr_residual!,
+    ibr_residual_jacobian!,
+    regularize_ibr_residual!,
+    regularize_ibr_residual_jacobian!,
     dynamics_residual,
     ∇dynamics!,
     newton_solve!,
     inner_iteration,
-    line_search
+    line_search,
+    ibr_newton_solve!,
+    ibr_inner_iteration!,
+    ibr_line_search
 
 # Active Set
 export
