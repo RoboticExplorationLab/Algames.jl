@@ -1,5 +1,5 @@
 ################################################################################
-# GameOptions
+# Options
 ################################################################################
 
 @with_kw mutable struct Options{T}
@@ -41,6 +41,9 @@
 
 	"Number of line search iterations."
 	ls_iter::Int=25
+
+	"Minimum progress allowed before breaking out of inner loop."
+	Δ_min::T=1e-9
 
 	# Augmented Lagrangian Penalty
 	"Initial augmented Lagrangian penalty."
@@ -110,4 +113,21 @@
 
 	"Reseting the duals."
 	dual_reset::Bool=true
+end
+
+
+################################################################################
+# Iterative Best Response Solver Options
+################################################################################
+
+@with_kw mutable struct IBROptions{T}
+    # Options
+	"Number of iterative best response iterations."
+	ibr_iter::Int=1
+
+	"Ordering of players, in the iterative best response scheme."
+	ordering::Vector{Int}=Vector(1:100)
+
+	"Minimum progress allowed before breaking out of the iterative best response loop."
+	Δ_min::T=1e-9
 end

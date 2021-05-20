@@ -17,6 +17,13 @@ using SparseArrays
 using StaticArrays
 using TrajectoryOptimization
 
+# Utils
+export
+    add2sub,
+    addI2sub,
+    sparse_zero!,
+    scn
+
 # Dynamics
 export
     AbstractGameModel,
@@ -118,10 +125,6 @@ export
     residual_jacobian!,
     regularize_residual!, # need test
     regularize_residual_jacobian!, # need test
-    add2sub,
-    addI2sub,
-    sparse_zero!,
-    scn,
     dynamics_residual,
     ∇dynamics!,
     newton_solve!,
@@ -149,6 +152,9 @@ export
 export
     plot_traj!,
     plot_violation!
+
+# Utils
+include("utils.jl")
 
 # Dynamics
 include("dynamics/game_model.jl")

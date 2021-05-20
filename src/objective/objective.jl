@@ -43,10 +43,19 @@ end
 function cost_gradient!(game_obj::GameObjective, pdtraj::PrimalDualTraj)
 	p = game_obj.probsize.p
 	for i = 1:p
-		n_obj = length(game_obj.E[i])
-		for j = 1:n_obj
-			TrajectoryOptimization.cost_gradient!(game_obj.E[i][j], game_obj.obj[i][j], pdtraj.pr, true)
-		end
+		# n_obj = length(game_obj.E[i])
+		# for j = 1:n_obj
+		# 	TrajectoryOptimization.cost_gradient!(game_obj.E[i][j], game_obj.obj[i][j], pdtraj.pr, true)
+		# end
+		cost_gradient!(game_obj, pdtraj, i)
+	end
+	return nothing
+end
+
+function cost_gradient!(game_obj::GameObjective, pdtraj::PrimalDualTraj, i::Int)
+	n_obj = length(game_obj.E[i])
+	for j = 1:n_obj
+		TrajectoryOptimization.cost_gradient!(game_obj.E[i][j], game_obj.obj[i][j], pdtraj.pr, true)
 	end
 	return nothing
 end
@@ -54,10 +63,19 @@ end
 function cost_hessian!(game_obj::GameObjective, pdtraj::PrimalDualTraj)
 	p = game_obj.probsize.p
 	for i = 1:p
-		n_obj = length(game_obj.E[i])
-		for j = 1:n_obj
-			TrajectoryOptimization.cost_hessian!(game_obj.E[i][j], game_obj.obj[i][j], pdtraj.pr, true, true)
-		end
+		# n_obj = length(game_obj.E[i])
+		# for j = 1:n_obj
+		# 	TrajectoryOptimization.cost_hessian!(game_obj.E[i][j], game_obj.obj[i][j], pdtraj.pr, true, true)
+		# end
+		cost_hessian!(game_obj, pdtraj, i)
+	end
+	return nothing
+end
+
+function cost_hessian!(game_obj::GameObjective, pdtraj::PrimalDualTraj, i::Int)
+	n_obj = length(game_obj.E[i])
+	for j = 1:n_obj
+		TrajectoryOptimization.cost_hessian!(game_obj.E[i][j], game_obj.obj[i][j], pdtraj.pr, true, true)
 	end
 	return nothing
 end
