@@ -198,13 +198,15 @@ end
 function ibr_inner_iteration(prob::GameProblem, LS_count::Int, k::Int, l::Int, i::Int)
 	core = prob.core
 	opts = prob.opts
+	res_mask = residual_mask(prob, i)
+	jac_mask = jacobian_mask(prob, i)
 	# plot_traj!(prob.model, prob.pdtraj.pr)
 
 	# Residual
 	ibr_residual!(prob, prob.pdtraj, i)
 	opts.regularize ? regularize_ibr_residual!(core, opts, prob.pdtraj, prob.pdtraj, i) : nothing # should do nothing since we regularize around pdtraj
 	record!(prob.stats, prob.core, prob.model, prob.game_con, prob.pdtraj, k)
-	res_norm = norm(core.res, 1)/length(core.res)
+	res_norm = norm(core.res[res_mask], 1)/length(core.res[res_mask])
 
 	if prob.stats.opt_vio[end].max < opts.ϵ_opt
 		return LS_count, :break
@@ -213,8 +215,9 @@ function ibr_inner_iteration(prob::GameProblem, LS_count::Int, k::Int, l::Int, i
 	ibr_residual_jacobian!(prob, i)
 	regularize_ibr_residual_jacobian!(prob, i)
 
-	Δtraj = - \(lu(core.jac), core.res)
-	set_traj!(core, prob.Δpdtraj, Δtraj, i)
+	Δtraj = zeros(prob.probsize.S)
+	Δtraj[res_traj] = - \(lu(core.jac[jac_mask]), core.res[res_mask])
+	set_traj!(core, prob.Δpdtraj, Δtraj)
 
 	# Line Search
 	α, j = line_search(prob, res_norm)
@@ -235,4 +238,9 @@ end
 # regularize_ibr_residual!DDDDDDDDDDDD
 # ibr_residual_jacobian!DDDDDDDDDDDDDDD
 # regularize_ibr_residual_jacobian!DDDDDDDDDDDDDDDDD
-# set_traj!(core, prob.Δpdtraj, Δtraj, i)
+# res_mask = residual_mask(prob, i)
+# jac_mask = jacobian_mask(prob, i)
+# record needs to be investigated in
+prob.core.res
+
+prob.probsize.S

@@ -20,7 +20,7 @@
 
 
     @test norm(TrajectoryOptimization.evaluate(con,X0) - [8.0, 3.0, 0.0, 8.0, 1.0], 1) < 1e-10
-    @test (@ballocated TrajectoryOptimization.evaluate($con,$X0)) == 0
+    @test (@ballocated $(TrajectoryOptimization.evaluate)($con,$X0)) == 0
 
     function easy_jacobian(con,X)
         function local_evaluate(X)
@@ -32,6 +32,6 @@
     ∇c = zeros(MMatrix{P,n,T,P*n})
     jacobian!(∇c,con,X0)
     @test norm(∇c - ∇c_easy, 1) < 1e-10
-    @test (@ballocated jacobian!($∇c,$con,$X0)) == 0
+    @test (@ballocated $jacobian!($∇c,$con,$X0)) == 0
 
 end

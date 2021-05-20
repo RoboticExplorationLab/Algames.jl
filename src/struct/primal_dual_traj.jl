@@ -74,6 +74,7 @@ function set_traj!(core::NewtonCore, Δpdtraj::PrimalDualTraj{KN,n,m,T,SVd},
     return nothing
 end
 
+
 function get_traj!(core::NewtonCore, Δpdtraj::PrimalDualTraj{KN,n,m,T,SVd},
     Δtraj::AbstractVector) where {KN,n,m,T,SVd}
     N = core.probsize.N
