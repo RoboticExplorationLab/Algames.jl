@@ -5,6 +5,7 @@
     N = 10
     dt = 0.1
     p = 3
+    i = 2
     model = UnicycleGame(p=p)
     probsize = ProblemSize(N,model)
     x0 = rand(SVector{model.n,T})
@@ -20,9 +21,11 @@
     prob = GameProblem(N, dt, x0, model, opts, game_obj, game_con)
     @test typeof(prob) <: GameProblem
     residual!(prob)
+    ibr_residual!(prob, i)
 
     # Test Residual Jacobian
     residual_jacobian!(prob)
+    ibr_residual_jacobian!(prob, i)
 
     # Test scn
     @test scn(1234.0) == " 1.2e+3"
@@ -35,6 +38,5 @@
     @test scn(1234, digits=3) == " 1.234e+3"
     @test scn(1234, digits=0) == " 1e+3"
     @test_throws AssertionError scn(1234, digits=-1) == " 1e+3"
-
 
 end

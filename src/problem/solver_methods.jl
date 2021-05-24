@@ -179,7 +179,8 @@ function ibr_newton_solve!(prob::GameProblem{KN,n,m,T,SVd,SVx}, i::Int) where {K
 	# reset!(prob.stats)
 	if opts.dual_reset
 		reset!(game_con)
-		reset_duals!(pdtraj)
+		reset_duals!(prob.pdtraj)
+		reset_duals!(prob.pdtraj_trial)
 	end
 
 	# Iterative solve

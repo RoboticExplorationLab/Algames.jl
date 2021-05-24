@@ -52,6 +52,15 @@
       @test stats.t_elap == [0.2,0.2]
       stats.t_elap
 
+      k = 3
+      i = 2
+      record!(stats, prob, model, game_con, pdtraj, t_elap, Δ_traj, k, i)
+      @test stats.iter == 3
+      @test stats.outer_iter == [1,2,3]
+      @test stats.Δ_traj == [0.1,0.1,0.1]
+      @test stats.t_elap == [0.2,0.2,0.2]
+      stats.t_elap
+
       reset!(stats)
       @test stats.iter == 0
       @test stats.outer_iter == Vector{Int}()

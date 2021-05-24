@@ -73,6 +73,7 @@ end
 # Run it twice to avoid including compile times.
 plt = plot(layout = (2, 2), xlabel="time (s)", ylabel="residual")
 for (i,p) in enumerate([2,4,7,10])
+# for (i,p) in enumerate([2,4])
 	prob_alg, prob_ibr = ibr_experiment(p)
 	plot!(plt[i], cumsum(prob_alg.stats.t_elap), log.(10, prob_alg.stats.res),
 		linewidth=3.0, color=:blue, label="Algames")
