@@ -202,15 +202,14 @@ end
 # Player specific mask
 ################################################################################
 
-function vertical_mask(core::NewtonCore, i::Int)
-	vertical_mask(core.probsize, core.verti_inds, i)
+function vertical_mask(core::NewtonCore, i::Int, splitted_state::Bool=false)
+	vertical_mask(core.probsize, core.verti_inds, i, splitted_state=splitted_state)
 end
 
-function vertical_mask(probsize::ProblemSize, verti_inds::Dict, i::Int)
+function vertical_mask(probsize::ProblemSize, verti_inds::Dict, i::Int; splitted_state::Bool=false)
 	N = probsize.N
 	p = probsize.p
-	# pi = probsize.pz[i]
-	pi = Vector(1:probsize.n)
+	pi = splitted_state ? probsize.pz[i] : Vector(1:probsize.n)
 
 	msk = Vector{Int}()
 	stamp = VStamp()
@@ -247,15 +246,14 @@ function vertical_mask(probsize::ProblemSize, verti_inds::Dict, i::Int)
 end
 
 
-function horizontal_mask(core::NewtonCore, i::Int)
-	horizontal_mask(core.probsize, core.horiz_inds, i)
+function horizontal_mask(core::NewtonCore, i::Int, splitted_state::Bool=false)
+	horizontal_mask(core.probsize, core.horiz_inds, i, splitted_state=splitted_state)
 end
 
-function horizontal_mask(probsize::ProblemSize, horiz_inds::Dict, i::Int)
+function horizontal_mask(probsize::ProblemSize, horiz_inds::Dict, i::Int; splitted_state::Bool=false)
 	N = probsize.N
 	p = probsize.p
-	# pi = probsize.pz[i]
-	pi = Vector(1:probsize.n)
+	pi = splitted_state ? probsize.pz[i] : Vector(1:probsize.n)
 
 	msk = Vector{Int}()
 	stamp = HStamp()

@@ -120,16 +120,21 @@ end
     model = UnicycleGame(p=p)
     probsize = ProblemSize(N,model)
     verti_inds = vertical_indices(probsize)
+    n = probsize.n
     ni = probsize.ni[1]
     mi = probsize.mi[1]
 
     msk = []
+    msks = []
     for i = 1:p
-        m = vertical_mask(probsize, verti_inds, i)
+        ms = vertical_mask(probsize, verti_inds, i, splitted_state=true)
+        m = vertical_mask(probsize, verti_inds, i, splitted_state=false)
         push!(msk, m)
-        @test length(m) == (N - 1) * (2ni + mi)
+        push!(msks, ms)
+        @test length(m) == (N - 1) * (2n + mi)
+        @test length(ms) == (N - 1) * (2ni + mi)
     end
-    @test length(intersect(msk...)) == 0
+    @test length(intersect(msks...)) == 0
 
     # Test horizontal Mask
     N = 6
@@ -141,11 +146,15 @@ end
     mi = probsize.mi[1]
 
     msk = []
+    msks = []
     for i = 1:p
-        m = horizontal_mask(probsize, horiz_inds, i)
+        m = horizontal_mask(probsize, horiz_inds, i, splitted_state=false)
+        ms = horizontal_mask(probsize, horiz_inds, i, splitted_state=true)
         push!(msk, m)
-        @test length(m) == (N - 1) * (2ni + mi)
+        push!(msks, ms)
+        @test length(m) == (N - 1) * (2n + mi)
+        @test length(ms) == (N - 1) * (2ni + mi)
     end
-    @test length(intersect(msk...)) == 0
+    @test length(intersect(msks...)) == 0
 
 end
