@@ -85,6 +85,17 @@ function regularize_residual!(core::NewtonCore, opts::Options, pdtraj::PrimalDua
 	return nothing
 end
 
+function residual_norm(prob::GameProblem{KN,n,m,T,SVd,SVx}) where {KN,n,m,T,SVd,SVx}
+	residual_norm(prob, prob.pdtraj)
+end
+
+function residual_norm(prob::GameProblem{KN,n,m,T,SVd,SVx},
+		pdtraj::PrimalDualTraj{KN,n,m,T,SVd}; update_residual::Bool=true) where {KN,n,m,T,SVd,SVx}
+	update_residual && residual!(prob, pdtraj)
+	res_norm = norm(prob.core.res, 1)/length(prob.core.res)
+	return res_norm
+end
+
 
 ################################################################################
 # Residual Jacobian

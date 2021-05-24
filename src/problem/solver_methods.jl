@@ -25,6 +25,7 @@ function newton_solve!(prob::GameProblem{KN,n,m,T,SVd,SVx}) where {KN,n,m,T,SVd,
 	opts.dual_reset ? reset!(game_con) : nothing
 	# Iterative solve
 	out = 0
+	t_elap = 0.0
 	Δ = 0.0
     for k = 1:opts.outer_iter
 		out = k
@@ -36,7 +37,9 @@ function newton_solve!(prob::GameProblem{KN,n,m,T,SVd,SVx}) where {KN,n,m,T,SVd,
 		#XXX opts.inner_print ? display_condition_header() : nothing
         for l = 1:opts.inner_iter
 			set!(opts.reg, opts.reg_0*l^4)
-			LS_count, control_flow, Δ = inner_iteration(prob, LS_count, Δ, k, l)
+			t_elap = @elapsed begin
+				LS_count, control_flow, Δ = inner_iteration(prob, LS_count, t_elap, Δ, k, l)
+			end
 			LS_count >= 1 || control_flow == :break ? break : nothing
 		end
 
@@ -57,11 +60,11 @@ function newton_solve!(prob::GameProblem{KN,n,m,T,SVd,SVx}) where {KN,n,m,T,SVd,
 		prob.pen.ρ = min.(prob.pen.ρ * opts.ρ_increase, opts.ρ_max)
 		penalty_update!(game_con)
     end
-	record!(prob.stats, core, model, game_con, prob.pdtraj, Δ, out)
+	record!(prob.stats, prob, model, game_con, prob.pdtraj, t_elap, Δ, out)
     return nothing
 end
 
-function inner_iteration(prob::GameProblem, LS_count::Int, Δ::T, k::Int, l::Int) where {T}
+function inner_iteration(prob::GameProblem, LS_count::Int, t_elap::T, Δ::T, k::Int, l::Int) where {T}
 	core = prob.core
 	opts = prob.opts
 	# plot_traj!(prob.model, prob.pdtraj.pr)
@@ -69,7 +72,7 @@ function inner_iteration(prob::GameProblem, LS_count::Int, Δ::T, k::Int, l::Int
 	# Residual
 	residual!(prob, prob.pdtraj)
 	opts.regularize ? regularize_residual!(core, opts, prob.pdtraj, prob.pdtraj) : nothing # should do nothing since we regularize around pdtraj
-	record!(prob.stats, prob.core, prob.model, prob.game_con, prob.pdtraj, Δ, k)
+	record!(prob.stats, prob, prob.model, prob.game_con, prob.pdtraj, t_elap, Δ, k)
 	res_norm = norm(core.res, 1)/length(core.res)
 
 	# Reset Δ_traj to zero
@@ -132,6 +135,8 @@ function ibr_newton_solve!(prob::GameProblem{KN,n,m,T,SVd,SVx};
 	opts = prob.opts
 	p = prob.probsize.p
 
+	# Reset Statistics
+	reset!(prob.stats)
 	# Set initial trajectory
 	Random.seed!(opts.seed)
 	init_traj!(prob.pdtraj; x0=prob.x0, f=opts.f_init, amplitude=opts.amplitude_init, s=opts.shift)
@@ -145,27 +150,15 @@ function ibr_newton_solve!(prob::GameProblem{KN,n,m,T,SVd,SVx};
 	# when all the players stuck to their strategies we can safely exit the IBR iteration.
 	Δ_change = trues(p)
 	for q = 1:ibr_opts.ibr_iter # need a better stopping criterion, based on convergence
-		@show q
 		for id = 1:p
 			i = ibr_opts.ordering[id]
-
-
 			ibr_newton_solve!(prob, i)
-			verti_mask = vertical_mask(prob.core, i)
-			ibr_residual!(prob, prob.pdtraj, i)
-			# println("ibr_res $i : ", scn(norm(prob.core.res[verti_mask], 1)/length(prob.core.res[verti_mask])))
 			Δ_change[i] = !(ibr_opts.Δ_min > maximum(prob.stats.Δ_traj))
-			println("Δ : ", maximum(prob.stats.Δ_traj))
 			ibr_opts.live_plotting && Algames.plot_traj!(prob.model, prob.pdtraj.pr)
-			# ibr_opts.live_plotting && Algames.plot_violation!(prob_ibr.stats)
-
+			ibr_opts.live_plotting && Algames.plot_violation!(prob_ibr.stats)
 		end
 		residual!(prob, prob.pdtraj)
-		# println("res : ", scn(norm(prob.core.res, 1)/length(prob.core.res)))
-		verti_mask = vertical_mask(prob.core, p)
-		# ibr_residual!(prob, prob.pdtraj, p)
-		# println("ibr_res $p : ", scn(norm(prob.core.res[verti_mask], 1)/length(prob.core.res[verti_mask])))
-
+		res = norm(prob.core.res, 1)/length(prob.core.res)
 		# If we see no change for one full IBR iteration, then we break out of the loop.
 		all(.!Δ_change) && break
 	end
@@ -183,14 +176,15 @@ function ibr_newton_solve!(prob::GameProblem{KN,n,m,T,SVd,SVx}, i::Int) where {K
 	prob.pen.ρ_trial = SVector{1,T}([opts.ρ_trial])
 
 	# Reset Statistics and constraints
-	reset!(prob.stats)
-	# reset!(game_con)
+	# reset!(prob.stats)
 	if opts.dual_reset
-		# reset_duals!(pdtraj)
+		reset!(game_con)
+		reset_duals!(pdtraj)
 	end
 
 	# Iterative solve
 	out = 0
+	t_elap = 0.0
 	Δ = 0.0
     for k = 1:opts.outer_iter
 		out = k
@@ -202,7 +196,9 @@ function ibr_newton_solve!(prob::GameProblem{KN,n,m,T,SVd,SVx}, i::Int) where {K
 		#XXX opts.inner_print ? display_condition_header() : nothing
         for l = 1:opts.inner_iter
 			set!(opts.reg, opts.reg_0*l^4)
-			LS_count, control_flow, Δ = ibr_inner_iteration(prob, LS_count, Δ, k, l, i)
+			t_elap = @elapsed begin
+				LS_count, control_flow, Δ = ibr_inner_iteration(prob, LS_count, t_elap, Δ, k, l, i)
+			end
 			LS_count >= 1 || control_flow == :break ? break : nothing
 		end
 
@@ -223,11 +219,11 @@ function ibr_newton_solve!(prob::GameProblem{KN,n,m,T,SVd,SVx}, i::Int) where {K
 		prob.pen.ρ = min.(prob.pen.ρ * opts.ρ_increase, opts.ρ_max)
 		penalty_update!(game_con)
     end
-	record!(prob.stats, core, model, game_con, prob.pdtraj, Δ, out, i)
+	record!(prob.stats, prob, model, game_con, prob.pdtraj, t_elap, Δ, out, i)
     return nothing
 end
 
-function ibr_inner_iteration(prob::GameProblem, LS_count::Int, Δ::T, k::Int, l::Int, i::Int) where {T}
+function ibr_inner_iteration(prob::GameProblem, LS_count::Int, t_elap, Δ::T, k::Int, l::Int, i::Int) where {T}
 	core = prob.core
 	opts = prob.opts
 	verti_mask = vertical_mask(prob.core, i)
@@ -237,7 +233,7 @@ function ibr_inner_iteration(prob::GameProblem, LS_count::Int, Δ::T, k::Int, l:
 	# Residual
 	ibr_residual!(prob, prob.pdtraj, i)
 	opts.regularize ? regularize_ibr_residual!(core, opts, prob.pdtraj, prob.pdtraj, i) : nothing # should do nothing since we regularize around pdtraj
-	record!(prob.stats, prob.core, prob.model, prob.game_con, prob.pdtraj, Δ, k, i)
+	record!(prob.stats, prob, prob.model, prob.game_con, prob.pdtraj, t_elap, Δ, k, i)
 	res_norm = norm(core.res[verti_mask], 1)/length(core.res[verti_mask])
 
 	# Reset Δ_traj to zero

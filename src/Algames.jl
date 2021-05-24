@@ -127,6 +127,7 @@ export
     residual_jacobian!,
     regularize_residual!, # need test
     regularize_residual_jacobian!, # need test
+    residual_norm,
     ibr_residual!,
     ibr_residual_jacobian!,
     regularize_ibr_residual!,
