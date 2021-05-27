@@ -18,7 +18,9 @@ m = model.m
 
 # Define the horizon of the problem
 N = 20 # N time steps
+N = 50 # N time steps
 dt = 0.40 # each step lasts 0.1 second
+dt = 0.16 # each step lasts 0.1 second
 probsize = ProblemSize(N,model) # Structure holding the relevant sizes of the problem
 
 # Define the objective of each player
@@ -47,10 +49,10 @@ radius = 0.08
 add_spherical_collision_avoidance!(game_con, radius)
 # Add wall constraint
 room_walls = [
-    Wall3D([-3.00, -1.00, -1.00], [3.00, -1.00, -1.00], [3.00,  1.00, -1.00], [0.00,  0.00, -1.00]),
-    Wall3D([-3.00, -1.00,  1.00], [3.00, -1.00,  1.00], [3.00,  1.00,  1.00], [0.00,  0.00,  1.00]),
-    Wall3D([-3.00, -1.00, -1.00], [3.00, -1.00, -1.00], [3.00, -1.00,  1.00], [0.00, -1.00,  0.00]),
-    Wall3D([-3.00,  1.00, -1.00], [3.00,  1.00, -1.00], [3.00,  1.00,  1.00], [0.00,  1.00,  0.00]),
+    Wall3D([-1.50, -1.00, -1.00], [1.50, -1.00, -1.00], [1.50,  1.00, -1.00], [0.00,  0.00, -1.00]),
+    Wall3D([-1.50, -1.00,  1.00], [1.50, -1.00,  1.00], [1.50,  1.00,  1.00], [0.00,  0.00,  1.00]),
+    Wall3D([-1.50, -1.00, -1.00], [1.50, -1.00, -1.00], [1.50, -1.00,  1.00], [0.00, -1.00,  0.00]),
+    Wall3D([-1.50,  1.00, -1.00], [1.50,  1.00, -1.00], [1.50,  1.00,  1.00], [0.00,  1.00,  0.00]),
     ]
 door_cylinders = [
 	CylinderWall([0.00, -1.00, -1.00], :z, 2.00, 0.95),
@@ -61,18 +63,14 @@ door_cylinders = [
 add_wall_constraint!(game_con, room_walls)
 add_wall_constraint!(game_con, door_cylinders)
 
-build_wall!(vis, room_walls, α=0.1, name=:Room)
-build_cylinder!(vis, door_cylinders, radius=radius, α=0.1, name=:Door1)
-a = ones(4)
-b = zeros(4)
+build_wall!(vis, room_walls, α=0.05, name=:Room)
+build_cylinder!(vis, door_cylinders, radius=radius, α=0.05, name=:Door1)
+build_door_frame!(vis, size=10, α=1.0)
 
-reshape(vcat(a', b'), (8))
-
-reshape([a'; b'], (8,1))
 # Define the initial state of the system
 x0 = [
 	[-1.0, -0.4, -0.6, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-	[-0.8,  0.4,  0.6, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+	[-0.8,  0.4,  0.4, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
 	[-1.4,  0.2,  0.3, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
 	[-1.6, -0.3, -0.3, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
 	]
@@ -92,10 +90,24 @@ using Plots
 Algames.plot_traj!(prob.model, prob.pdtraj.pr)
 Algames.plot_violation!(prob.stats)
 
-build_traj!(vis, model, prob.pdtraj.pr, α=1.0, name=:Traj)
+build_traj!(vis, model, prob.pdtraj.pr, α=1.0, name=:Traj_orange)
 build_xf!(vis, model, xf, α=1.0, name=:Xf)
 
 anim = visualize_robot!(vis, model, prob.pdtraj.pr)
 
 plot(hcat([state(prob.pdtraj.pr[i]) for i=1:N]...)')
 plot(hcat([control(prob.pdtraj.pr[i]) for i=1:N]...)')
+
+
+
+# filename = "4_drones_door"
+# MeshCat.convert_frames_to_video(
+#     "/home/simon/Downloads/$filename.tar",
+#     "/home/simon/Documents/$filename.mp4", overwrite=true)
+#
+# convert_video_to_gif(
+#     "/home/simon/Documents/$filename.mp4",
+#     "/home/simon/Documents/$filename.gif", overwrite=true)
+#
+# using FFMPEG
+#
