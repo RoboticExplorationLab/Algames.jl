@@ -31,11 +31,13 @@ export
     UnicycleGame,
     BicycleGame,
     QuadrotorGame,
-    dynamics
+    dynamics,
+    dim
 
 # Struct
 export
     Options,
+    IBROptions,
     ProblemSize,
     PrimalDualTraj,
     init_traj!,
