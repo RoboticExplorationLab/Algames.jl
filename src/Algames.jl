@@ -174,7 +174,6 @@ include("dynamics/double_integrator.jl")
 include("dynamics/unicycle.jl")
 include("dynamics/bicycle.jl")
 include("dynamics/quadrotor.jl")
-include("dynamics/visuals.jl")
 
 # Struct
 include("struct/problem_size.jl")
@@ -196,7 +195,6 @@ include("constraints/cylinder_constraint.jl")
 include("constraints/game_constraints.jl")
 include("constraints/constraints_methods.jl")
 include("constraints/velocity_constraint.jl")
-include("constraints/visuals.jl")
 
 # Struct
 include("struct/violations.jl")

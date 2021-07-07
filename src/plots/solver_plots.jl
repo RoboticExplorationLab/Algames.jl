@@ -2,7 +2,7 @@
 # Trajectory Plot
 ################################################################################
 
-function plot_traj!(model::AbstractGameModel, traj::Algames.Traj; plt=plot())
+function plot_traj!(model::AbstractGameModel, traj::Traj; plt=plot())
     plot!(plt, legend=false, aspect_ratio=:equal)
     N = length(traj)
     for i = 1:model.p
