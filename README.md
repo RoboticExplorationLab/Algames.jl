@@ -13,7 +13,7 @@ Pkg.add("Algames")
 [RSS 2020](http://www.roboticsproceedings.org/rss16/p091.pdf)
 
 ## Autonomous Robots paper submission:
-The experiments are available [here](https://github.com/RoboticExplorationLab/AlgamesDriving.jl/tree/autonomous_robots_2021/autonomous_robots_figures) in the `autonomous_robots_2021` branch of the repository.
+The experiments are available [here](https://github.com/RoboticExplorationLab/AlgamesDriving.jl/tree/autonomous_robots_2021_revisions/autonomous_robots_figures) in the `autonomous_robots_2021_revisions` branch of the repository.
 
 ## RSS 2020 paper submission:
 The experiments presented in the [RSS 2020 paper](http://www.roboticsproceedings.org/rss16/p091.pdf) can be found [here](https://github.com/RoboticExplorationLab/Algames.jl/tree/rss_2020/experiments/rss_2020
