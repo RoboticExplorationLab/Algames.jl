@@ -110,7 +110,7 @@ end
 	title       --> "Constraint Violation"
 	linewidth   --> [zeros(N_epochs)... 5.0 5.0 5.0 5.0]
 	label       --> [fill("", N_epochs)... "dyn" "con" "sta" "opt" ]
-	fillrange   --> [[fill(y_min*ones(90), N_epochs)... dyn con sta opt ]
+	fillrange   --> [[fill(y_min*ones(iter), N_epochs)... dyn con sta opt ]
 					 [fill(zeros(iter), N_epochs)... zeros(iter) zeros(iter) zeros(iter) zeros(iter) ]]
 	fillalpha   --> [fill(0.1, N_epochs)... 0.0 0.0 0.0 0.0]
 

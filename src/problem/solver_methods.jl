@@ -29,7 +29,7 @@ function newton_solve!(prob::GameProblem{KN,n,m,T,SVd,SVx}) where {KN,n,m,T,SVd,
 	Δ = 0.0
     for k = 1:opts.outer_iter
 		out = k
-		# plot_traj!(model, prob.pdtraj.pr)
+		# plot!(model, prob.pdtraj.pr)
 		# Initialize regularization and failed line search count.
 		set!(opts.reg, opts.reg_0)
 		LS_count = 0
@@ -67,7 +67,7 @@ end
 function inner_iteration(prob::GameProblem, LS_count::Int, t_elap::T, Δ::T, k::Int, l::Int) where {T}
 	core = prob.core
 	opts = prob.opts
-	# plot_traj!(prob.model, prob.pdtraj.pr)
+	# plot!(prob.model, prob.pdtraj.pr)
 
 	# Residual
 	residual!(prob, prob.pdtraj)
@@ -154,8 +154,8 @@ function ibr_newton_solve!(prob::GameProblem{KN,n,m,T,SVd,SVx};
 			i = ibr_opts.ordering[id]
 			ibr_newton_solve!(prob, i)
 			Δ_change[i] = !(ibr_opts.Δ_min > maximum(prob.stats.Δ_traj))
-			ibr_opts.live_plotting && Algames.plot_traj!(prob.model, prob.pdtraj.pr)
-			ibr_opts.live_plotting && Algames.plot_violation!(prob_ibr.stats)
+			ibr_opts.live_plotting && plot!(prob.model, prob.pdtraj.pr)
+			ibr_opts.live_plotting && plot!(prob_ibr.stats)
 		end
 		residual!(prob, prob.pdtraj)
 		res = norm(prob.core.res, 1)/length(prob.core.res)
@@ -189,7 +189,7 @@ function ibr_newton_solve!(prob::GameProblem{KN,n,m,T,SVd,SVx}, i::Int) where {K
 	Δ = 0.0
     for k = 1:opts.outer_iter
 		out = k
-		# plot_traj!(model, prob.pdtraj.pr)
+		# plot!(model, prob.pdtraj.pr)
 		# Initialize regularization and failed line search count.
 		set!(opts.reg, opts.reg_0)
 		LS_count = 0
@@ -229,7 +229,7 @@ function ibr_inner_iteration(prob::GameProblem, LS_count::Int, t_elap, Δ::T, k:
 	opts = prob.opts
 	verti_mask = vertical_mask(prob.core, i)
 	horiz_mask = horizontal_mask(prob.core, i)
-	# plot_traj!(prob.model, prob.pdtraj.pr)
+	# plot!(prob.model, prob.pdtraj.pr)
 
 	# Residual
 	ibr_residual!(prob, prob.pdtraj, i)
