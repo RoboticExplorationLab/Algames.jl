@@ -75,5 +75,6 @@ prob = GameProblem(N,dt,x0,model,opts,game_obj,game_con)
 @time newton_solve!(prob)
 
 # Visualize the Results
-Algames.plot_traj!(prob.model, prob.pdtraj.pr)
-Algames.plot_violation!(prob.stats)
+using Plots
+plot(prob.model, prob.pdtraj.pr)
+plot(prob.stats)

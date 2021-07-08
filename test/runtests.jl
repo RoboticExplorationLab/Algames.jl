@@ -4,10 +4,10 @@ using Altro
 using BenchmarkTools
 using ForwardDiff
 using LinearAlgebra
-using MeshCat
 using Parameters
 using Printf
 using Random
+using RecipesBase
 using RobotDynamics
 using Rotations
 using SparseArrays

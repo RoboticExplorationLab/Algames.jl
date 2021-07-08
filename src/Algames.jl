@@ -6,11 +6,10 @@ using Altro
 using BenchmarkTools
 using ForwardDiff
 using LinearAlgebra
-using MeshCat
-using GeometryBasics
 using Parameters
 using Printf
 using Random
+using RecipesBase
 using RobotDynamics
 using Rotations
 using SparseArrays
@@ -162,8 +161,9 @@ export
 
 # Plots
 export
-    plot_traj!,
-    plot_violation!
+    recipe_traj,
+    recipe_violation
+
 
 # Utils
 include("utils.jl")
