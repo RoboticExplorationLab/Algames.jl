@@ -6,7 +6,7 @@
     dt = 0.1
     model = UnicycleGame(p=3)
     probsize = ProblemSize(N,model)
-    pdtraj = PrimalDualTraj(probsize, dt, f=ones, amplitude=0.1)
+    pdtraj = PrimalDualTraj(probsize, dt, f=(rng,args)->ones(args), amplitude=0.1)
     game_con = GameConstraintValues(probsize)
 
     u_max =  ones(SVector{model.m,T})
