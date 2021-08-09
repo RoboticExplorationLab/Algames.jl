@@ -211,14 +211,14 @@
     @test game_con.state_conval[1][1].λ[1] == 0.0*ones(P)
 
     pdtraj = PrimalDualTraj(probsize, dt)
-    init_traj!(pdtraj, f=ones, amplitude=1e2)
+    init_traj!(pdtraj, f=(rng,args)->ones(args), amplitude=1e2)
     evaluate!(game_con, pdtraj.pr)
     @test game_con.control_conval[1].vals[1] == [90*ones(model.m); -110*ones(model.m)]
     dual_update!(game_con)
     @test game_con.control_conval[1].λ[1] == 1e-3 * [90*ones(model.m); 0*ones(model.m)]
     @test game_con.state_conval[1][1].λ[1] == 1e-3 * max.(0, game_con.state_conval[1][1].vals[1])
 
-    init_traj!(pdtraj, f=ones, amplitude=1e5)
+    init_traj!(pdtraj, f=(rng,args)->ones(args), amplitude=1e5)
     evaluate!(game_con, pdtraj.pr)
     @test game_con.control_conval[1].vals[1] == [(1e5-10)*ones(model.m); -(1e5+10)*ones(model.m)]
     dual_update!(game_con)

@@ -8,15 +8,15 @@ mutable struct PrimalDualTraj{KN,n,m,T,SVd}
     du::Vector{SVd} # Dual trajectory
 end
 
-function PrimalDualTraj(probsize::ProblemSize, dt::T; f=rand, amplitude=1e-8) where {T}
+function PrimalDualTraj(probsize::ProblemSize, dt::T; f=rand, amplitude=1e-8, rng=Random.GLOBAL_RNG) where {T}
     N = probsize.N
     n = probsize.n
     m = probsize.m
     p = probsize.p
     pr = Traj(n,m,dt,N)
-    du = [[amplitude*f(SVector{n,T}) for k=1:N-1] for i=1:p]
+    du = [[amplitude*f(rng, SVector{n,T}) for k=1:N-1] for i=1:p]
     for k = 1:N
-        pr[k].z = amplitude*f(n+m)
+        pr[k].z = amplitude*f(rng, n+m)
     end
     TYPE = (eltype(pr),n,m,T,eltype(du))
     return PrimalDualTraj{TYPE...}(probsize, pr, du)
@@ -26,17 +26,21 @@ end
 # Methods
 ################################################################################
 
-function init_traj!(pdtraj::PrimalDualTraj{KN,n,m,T,SVd}; x0=1e-8*rand(SVector{n,T}),
+"""
+
+- `f`: Always takes two arguments (rng, TYPE).
+"""
+function init_traj!(pdtraj::PrimalDualTraj{KN,n,m,T,SVd}; rng=Random.GLOBAL_RNG, x0=1e-8*rand(rng, SVector{n,T}),
     s::Int=2^10, f=rand, amplitude=1e-8) where {KN,n,m,T,SVd}
     N = pdtraj.probsize.N
     p = pdtraj.probsize.p
 
     for k = 1:N
-        pdtraj.pr[k].z = (k+s<=N) ? pdtraj.pr[k+s].z : amplitude*f(SVector{n+m,T})
+        pdtraj.pr[k].z = (k+s<=N) ? pdtraj.pr[k+s].z : amplitude*f(rng, SVector{n+m,T})
     end
     for i = 1:p
         for k = 1:N-1
-            pdtraj.du[i][k] = (k+s<=N-1) ? pdtraj.du[i][k+s] : amplitude*f(SVector{n,T})
+            pdtraj.du[i][k] = (k+s<=N-1) ? pdtraj.du[i][k+s] : amplitude*f(rng, SVector{n,T})
         end
     end
     RobotDynamics.set_state!(pdtraj.pr[1], x0)
