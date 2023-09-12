@@ -18,7 +18,7 @@
     # Test init_traj!
     T = Float64
     x0 = rand(SVector{model.n,T})
-    init_traj!(pdtraj, x0=x0, f=ones, amplitude=10.0)
+    init_traj!(pdtraj, x0=x0, f=(rng, args) -> ones(args), amplitude=10.0)
     @test state(pdtraj.pr[1]) == x0
     @test state(pdtraj.pr[2]) == 10*ones(model.n)
     @test control(pdtraj.pr[1]) == 10*ones(model.m)
@@ -33,7 +33,7 @@
     x0 = rand(SVector{model.n,T})
     Δpdtraj = PrimalDualTraj(probsize, dt)
     Δtraj = ones(n*(N-1)+m*(N-1)+n*p*(N-1))
-    init_traj!(Δpdtraj, x0=x0, f=ones, amplitude=10.0)
+    init_traj!(Δpdtraj, x0=x0, f=(rng, args)->ones(args), amplitude=10.0)
     set_traj!(core, Δpdtraj, Δtraj)
 
     @test state(Δpdtraj.pr[1]) == x0
@@ -46,7 +46,7 @@
     @test Δpdtraj.du[end][end] == ones(n)
 
     Δtraj = rand(n*(N-1)+m*(N-1)+n*p*(N-1))
-    init_traj!(Δpdtraj, x0=x0, f=ones, amplitude=10.0)
+    init_traj!(Δpdtraj, x0=x0, f=(rng,args)->ones(args), amplitude=10.0)
     set_traj!(core, Δpdtraj, Δtraj)
 
     @test state(Δpdtraj.pr[1]) == x0
@@ -91,9 +91,9 @@
     target = PrimalDualTraj(probsize, dt)
     source = PrimalDualTraj(probsize, dt)
     Δ = PrimalDualTraj(probsize, dt)
-    init_traj!(target, x0=x0, f=ones, amplitude=0.0)
-    init_traj!(source, x0=x0, f=ones, amplitude=10.0)
-    init_traj!(Δ, x0=x0, f=ones, amplitude=100.0)
+    init_traj!(target, x0=x0, f=(rng,args)->ones(args), amplitude=0.0)
+    init_traj!(source, x0=x0, f=(rng, args)->ones(args), amplitude=10.0)
+    init_traj!(Δ, x0=x0, f=(rng,args)->ones(args), amplitude=100.0)
     α = 0.5
     update_traj!(target, source, α, Δ)
 
@@ -118,7 +118,7 @@
     m = model.m
     x0 = 1e3*ones(SVector{model.n,T})
     Δ = PrimalDualTraj(probsize, dt)
-    init_traj!(pdtraj, x0=x0, f=ones, amplitude=10.0)
+    init_traj!(pdtraj, x0=x0, f=(rng,args)->ones(args), amplitude=10.0)
     α = 0.5
     @test Δ_step(pdtraj, α) == 10.0*α
 

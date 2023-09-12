@@ -9,10 +9,11 @@ function newton_solve!(prob::GameProblem{KN,n,m,T,SVd,SVx}) where {KN,n,m,T,SVd,
 	opts = prob.opts
 
 	# Set initial trajectory
-	Random.seed!(opts.seed)
-	init_traj!(prob.pdtraj; x0=prob.x0, f=opts.f_init, amplitude=opts.amplitude_init, s=opts.shift)
-	init_traj!(prob.pdtraj_trial; x0=prob.x0, f=opts.f_init, amplitude=opts.amplitude_init, s=opts.shift)
-	init_traj!(prob.Δpdtraj; x0=prob.x0, f=zeros, amplitude=0.0)
+	#Random.seed!(opts.seed)
+	rng = MersenneTwister(opts.seed)
+	init_traj!(prob.pdtraj; rng=rng, x0=prob.x0, f=opts.f_init, amplitude=opts.amplitude_init, s=opts.shift)
+	init_traj!(prob.pdtraj_trial; rng=rng, x0=prob.x0, f=opts.f_init, amplitude=opts.amplitude_init, s=opts.shift)
+	init_traj!(prob.Δpdtraj; rng=rng, x0=prob.x0, f=(rng, args)->zeros(args), amplitude=0.0)
 
 	rollout!(RK3, prob.model, prob.pdtraj.pr)
 	rollout!(RK3, prob.model, prob.pdtraj_trial.pr)
@@ -138,10 +139,11 @@ function ibr_newton_solve!(prob::GameProblem{KN,n,m,T,SVd,SVx};
 	# Reset Statistics
 	reset!(prob.stats)
 	# Set initial trajectory
-	Random.seed!(opts.seed)
-	init_traj!(prob.pdtraj; x0=prob.x0, f=opts.f_init, amplitude=opts.amplitude_init, s=opts.shift)
-	init_traj!(prob.pdtraj_trial; x0=prob.x0, f=opts.f_init, amplitude=opts.amplitude_init, s=opts.shift)
-	init_traj!(prob.Δpdtraj; x0=prob.x0, f=zeros, amplitude=0.0)
+	#Random.seed!(opts.seed)
+	rng = MersenneTwister(opts.seed)
+	init_traj!(prob.pdtraj; rng=rng, x0=prob.x0, f=opts.f_init, amplitude=opts.amplitude_init, s=opts.shift)
+	init_traj!(prob.pdtraj_trial; rng=rng, x0=prob.x0, f=opts.f_init, amplitude=opts.amplitude_init, s=opts.shift)
+	init_traj!(prob.Δpdtraj; rng=rng, x0=prob.x0, f=(rng, args)->zeros(args), amplitude=0.0)
 
 	rollout!(RK3, prob.model, prob.pdtraj.pr)
 	rollout!(RK3, prob.model, prob.pdtraj_trial.pr)
